@@ -1,0 +1,56 @@
+
+	<h6>Neuigkeiten & Wissenswertes</h6>
+	<?php if($this->member_id == $artist->member_id): ?>
+	<div class="posting">
+		<div class="posting-head">
+			<a href="detailansicht-<?= $profiletype ?>/<?= $artist->alias ?>.html">
+				<img src="<?= $imgPath ?>" alt="<?= @$imgMeta['alt'] ?>">
+			</a>
+			<div>
+				<a href="#"><?= $artist->name ?></a><br>
+				<small>Jetzt</small>
+			</div>
+		</div>
+		<div class="posting-content">
+			<form class="formbody mt-2" id="posting-data">
+				<div class="widget">
+					<input type="hidden" name="posting_type" value="posting">
+					<input type="hidden" name="member_id" value="<?= $this->member_id ?>">
+					<input type="hidden" name="profile_id" value="<?= $artist->id ?>">
+					<input type="hidden" name="profile_type" value="<?= $profiletable ?>">
+
+					<textarea name="content" required maxlength="500" placeholder="Was gibt es Neues? Erzählen Sie dem SE-KulturNetz interessante Neuigkeiten über Ihr Profil und Ihre Tätigkeiten ..."></textarea>
+				</div>
+				<button type="submit" class="btn btn-primary posting-submit"><i class="fa-solid fa-paper-plane"></i> Beitrag veröffentlichen</button>
+			</form>
+		</div>
+	</div>
+	<?php endif; ?>
+
+	<?php if($this->postings != null): ?>
+	<?php foreach($this->postings as $post): ?>
+	<div class="posting" data-security="<?= sha1($post->id.$post->member_id) ?>" data-id="<?= $post->id ?>" data-mid="<?= $post->member_id ?>" data-pid="<?= $post->profile_id ?>" data-ptype="<?= $post->profile_type ?>">
+		<div class="posting-head">
+			<a href="detailansicht-<?= $profiletype ?>/<?= $artist->alias ?>.html">
+				<img src="<?= $imgPath ?>" alt="<?= @$imgMeta['alt'] ?>">
+			</a>
+			<div>
+				<a href="#"><?= $artist->name ?></a><br>
+				<small title="Am <?= date('d.m.Y - H:i', $post->tstamp) ?> Uhr"><?= $post->timeago ?></small>
+			</div>
+			
+			<?php if($this->member_id == $artist->member_id): ?>
+			<div class="actions">
+				<a href="#" class="posting-edit"><i class="fa-solid fa-pen-to-square"></i></a>
+				<a href="#" class="posting-delete"><i class="fa-solid fa-trash-can"></i></a>
+			</div>
+			<?php endif; ?>
+		</div>
+		<div class="posting-content">
+			<p><?= nl2br($post->content) ?></p>
+		</div>
+	</div>
+	<?php endforeach; ?>
+	<?php else: ?>
+	Bisher hat <?= $artist->name ?> noch keinen Beitrag verfasst.
+	<?php endif; ?>

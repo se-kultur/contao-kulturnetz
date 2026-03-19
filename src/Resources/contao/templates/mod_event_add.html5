@@ -1,0 +1,316 @@
+<?php 
+	$GLOBALS['TL_CSS'][] = 'files/se-kultur.de/vendor/Croppie-master/croppie.css';
+	$GLOBALS['FOOTERJS'][] ='<script src="files/se-kultur.de/vendor/Croppie-master/croppie.js"></script>';  
+	$GLOBALS['FOOTERJS'][] ='<script src="files/se-kultur.de/vendor/jquery.dirty.js"></script>';  
+
+	$GLOBALS['TL_JAVASCRIPT'][] ='files/se-kultur.de/js/eventform.js';  
+	$GLOBALS['FOOTERJS'][] ='<script src="files/se-kultur.de/js/fileuploader.js"></script>';  
+?>
+<form class="artistform" method="post" action="files/se-kultur.de/code/insertEvent.php" data-type="add">
+<div class="flex gap-2 mt-4 wrap">
+<div class="col-8 col-md-12 order-md-2">
+<div class="formbody mod_profiles">
+	
+	<div class="bg-kulturnetz p-4 mb-1">
+		<h3>Veranstaltung erstellen</h3>
+		<p>Im nachfolgenden Formular können Sie Ihre Veranstaltung eingeben. Versuchen Sie, dabei möglichst alle Felder auszufüllen. Aber keine Angst, falls Sie etwas vergessen haben – Sie können Ihre Veranstaltung jederzeit bearbeiten.</p>
+		<p class="hide-xs hide-sm hide-md">Rechts, in der blauen Leiste, finden Sie wichtige Hinweise und Tipps zu einzelnen Feldern, sobald Sie das entsprechende Eingabefeld angeklickt haben.</p>
+		<p>Nach erfolgter Prüfung informieren wir Sie über die Freischaltung Ihres Events per E-Mail.</p>
+	</div>
+		
+	<div class="bg-kulturnetz p-4 mb-4">
+		<p>Sie selbst sind im Kulturbereich des Kreises Segeberg oder des südlichen Kreises Rendsburg-Eckernförde aktiv? Im SE-KulturNetz erhalten Sie als regional verwurzelte Kulturakteurin oder Kulturakteur die Möglichkeit, sich zu präsentieren und zu vernetzen.</p>
+		<p>Sie können dazu optional ganz einfach ein Künstler*innenprofil, ein Veranstalter*innenprofil oder ein Profil für Ihre Location anlegen und anschließend Ihr(e) Profil(e) mit diesem Event verlinken.</p>
+		
+		<p>Sie sind Einzelkünstler*in und gleichzeitig in einem Ensemble aktiv? Kein Problem – auch mehrere Profile sind in Ihrem Konto möglich.</p>
+		
+		<a class="btn btn-outline" href="eigene-profile.html">Profil(e) im SE-KulturNetz anlegen</a>
+		<!--<a class="btn btn-outline" href="kuenstlerprofil-anlegen.html">Künstler*innenprofil anlegen</a>
+		<a class="btn btn-outline" href="veranstalterprofil-anlegen.html">Veranstalter*innenprofil anlegen</a>
+		<a class="btn btn-outline" href="locationprofil-anlegen.html">Locationprofil anlegen</a>-->
+	</div>
+	
+	<fieldset>
+		<legend>Allgemeine Daten</legend>
+		
+		<input type="hidden" name="member_id" value="{{user::id|attr}}">
+		
+		<figure class="avatar">
+			<img src="files/se-kultur.de/img/noavatar.jpg">	
+			<div class="actions">
+				<a href="#" class="upload"><i class="fa-solid fa-cloud-arrow-up"></i></a>
+				<!--<a href="#" class="edit"><i class="fa-solid fa-pen-to-square"></i></a>
+				<a href="#" class="delete"><i class="fa-solid fa-trash-can"></i></a>-->
+			</div>
+		</figure>
+		
+		<input type="hidden" name="avatar">
+		
+		<div style="flex:1">
+			<div class="info">
+				<strong>Event-Titelbild</strong><br>
+				Das Titelbild Ihrer Veranstaltung wird auf unserer Webseite dargestellt. Wir bitten Sie daher, ein aussagekräftiges Foto mit einer Auflösung von mindestens 1000 x 1000 Pixeln zu verwenden. Außerdem müssen die Bildrechte vorhanden sein - Fotograf*in oder Urheber*in muss angegeben werden.
+			</div>
+		</div>
+		
+		<div class="widget widget-text">
+			<label class="mandatory">Name der Veranstaltung<span class="mandatory">*</span></label>
+			<input type="text" name="name" required="">
+		</div>
+		
+		<div class="widget widget-text">
+			<label class="mandatory">Kulturform(en)<span class="mandatory">*</span></label>
+			<input type="hidden" name="sparten">
+			<span class="spartenselector" data-value=""></span>
+		</div>
+		
+		<div class="widget widget-text">
+			<label class="mandatory">Zielgruppe(n)<span class="mandatory">*</span></label>
+			<input type="hidden" name="zielgruppen">
+			<span class="zielgruppenselector" data-value=""></span>
+		</div>
+		
+		<div class="widget widget-text ui-widget">
+			<label class="mandatory">Teilnehmende/r Künstler*in(nen)<span class="mandatory">*</span></label>
+			<input type="text" name="artists">
+			
+			<div class="linked_artists"></div>
+			<input type="hidden" name="linked_artists" value="[]">
+		</div>
+		
+	</fieldset>
+	
+	<fieldset id="price-items">
+		<legend>Eintritt &amp; Anmeldung</legend>
+		
+		<div class="widget widget-checkbox">
+			<input type="checkbox" id="eintrittfrei" name="eintrittfrei" checked>
+			<label for="eintrittfrei">Eintritt frei?</label>
+		</div>
+		
+		<div class="toggleeintritt prices">
+			<div class="price-item">
+				<div class="widget widget-text pricetag">
+					<label class="mandatory">Titel<span class="mandatory">*</span></label>
+					<input type="text" name="pricetag[]" value="Regulärer Eintritt" placeholder="VVK, Abendkasse, Ermäßigung, ...">
+				</div>
+
+				<div class="widget widget-text price">
+					<label class="mandatory">Preis<span class="mandatory">*</span></label>
+					<input type="text" name="price[]">
+				</div>
+
+				<div class="widget priceactions">
+					<button class="btn btn-outline deleteprice" disabled><i class="fa-solid fa-trash-can"></i></button>
+				</div>
+			</div>
+		</div>
+		
+		<div class="toggleeintritt mb-2">
+			<a href="#" class="btn btn-outline addprice btn-sm"><i class="fa-solid fa-plus"></i> Eintrittspreis hinzufügen</a>
+		</div>
+		
+		<div class="widget widget-textarea toggleeintritt">
+			<label>Kommentar zu Eintrittspreisen / ggf. Vorverkaufsstellen</label>
+			<textarea maxlength="1000" name="pricecomment"></textarea>
+		</div>
+		
+		<div class="widget widget-checkbox">
+			<input type="checkbox" id="spenden" name="spenden">
+			<label for="spenden">Spenden erbeten?</label>
+		</div>
+		
+		<div class="widget widget-checkbox">
+			<input type="checkbox" id="anmeldung" name="anmeldung">
+			<label for="anmeldung">Anmeldung/Reservierung erforderlich?</label>
+		</div>
+		
+		<div class="widget widget-text toggleanmeldung">
+			<label class="mandatory">Anmeldestelle<span class="mandatory">*</span></label>
+			<input type="text" name="anmeldestelle">
+		</div>
+	</fieldset>
+	
+	<fieldset id="events-items">
+		<legend>Termin(e) / Öffnungszeiten</legend>
+		
+		<div class="event-item">
+			<div class="widget widget-text eventdate">
+				<label class="mandatory">Datum<span class="mandatory">*</span></label>
+				<div class="inputgroup">
+					<input type="text" name="eventdate[]">
+				</div>
+			</div>
+
+			<div class="widget widget-text eventtime">
+				<label class="mandatory">Beginn<span class="mandatory">*</span></label>
+				<input type="text" name="eventtimestart[]">
+			</div>
+
+			<div class="widget widget-text eventtime">
+				<label class="mandatory">Ende<span class="mandatory">*</span></label>
+				<input type="text" name="eventtimeend[]">
+			</div>
+			
+			<div class="widget widget-text eventcomment">
+				<label>Kommentar (optional)</label>
+				<input type="text" name="eventcomment[]">
+			</div>
+		
+			<div class="widget eventactions">
+				<button class="btn btn-outline sorthandle" role="tooltip" aria-label="Terminzeile verschieben" disabled><i class="fa-solid fa-sort"></i></button>
+				<button class="btn btn-outline copydate" role="tooltip" aria-label="Terminzeile duplizieren"><i class="fa-solid fa-copy"></i></button>
+				<button class="btn btn-outline deletedate" role="tooltip" aria-label="Terminzeile löschen" disabled><i class="fa-solid fa-trash-can"></i></button>
+			</div>
+		</div>
+		
+		<div>
+			<a href="#" class="btn btn-outline addeventdate btn-sm"><i class="fa-solid fa-plus"></i> Terminfelder hinzufügen</a>
+		</div>
+	</fieldset>
+	
+	<fieldset>
+		<legend>Veranstaltungsort</legend>
+		
+		<div class="widget widget-text">
+			<label class="mandatory">Name der Location<span class="mandatory">*</span></label>
+			<input type="text" name="locations">
+			
+			<div class="linked_locations"></div>
+			<input type="hidden" name="linked_locations" value="[]">
+			
+			<!-- Ergebnisliste mit FREIGESCHALTETEN UND EIGENEN (auch frischen, NICHT freigeschalteten) Ergebnissen -->
+		</div>
+		
+		<div class="widget widget-text">
+			<label class="mandatory">Straße und Hausnummer<span class="mandatory">*</span></label>
+			<input type="text" name="location_adresse">
+		</div>
+		
+		<div class="widget widget-text postal">
+			<label class="mandatory">Postleitzahl<span class="mandatory">*</span></label>
+			<input type="text" name="location_plz" maxlength="5">
+		</div>
+		
+		<div class="widget widget-text city">
+			<label class="mandatory">Ort<span class="mandatory">*</span></label>
+			<input type="text" name="location_ort">
+		</div>
+		
+		<div class="widget widget-text">
+			<label>Barrierefreiheit</label>
+			<input type="text" name="location_barrierefreiheit">
+		</div>
+		
+		<div class="widget widget-text">
+			<label>Telefon- oder Handynummer</label>
+			<input type="tel" name="location_telefon">
+		</div>
+		
+		<div class="widget widget-text">
+			<label>E-Mail-Adresse</label>
+			<input type="email" name="location_email">
+		</div>
+		
+		<div class="widget widget-url">
+			<label>Internetseite</label>
+			<input type="text" name="location_website">
+		</div>
+	</fieldset>
+	
+	<fieldset>
+		<legend>Veranstalter*in</legend>
+		
+		<div class="widget widget-text">
+			<label class="mandatory">Veranstalter*in<span class="mandatory">*</span></label>
+			<input type="text" name="hosts">
+			
+			<div class="linked_hosts"></div>
+			<input type="hidden" name="linked_hosts" value="[]">
+			
+			<!-- Ergebnisliste mit FREIGESCHALTETEN UND EIGENEN (auch frischen, NICHT freigeschalteten) Ergebnissen -->
+		</div>
+		
+		<div class="widget widget-text">
+			<label class="mandatory">Straße und Hausnummer<span class="mandatory">*</span></label>
+			<input type="text" name="host_adresse">
+		</div>
+		
+		<div class="widget widget-text postal">
+			<label class="mandatory">Postleitzahl<span class="mandatory">*</span></label>
+			<input type="text" name="host_plz" maxlength="5">
+		</div>
+		
+		<div class="widget widget-text city">
+			<label class="mandatory">Ort<span class="mandatory">*</span></label>
+			<input type="text" name="host_ort">
+		</div>
+		
+		<div class="widget widget-text">
+			<label>Telefon- oder Handynummer</label>
+			<input type="tel" name="host_telefon">
+		</div>
+		
+		<div class="widget widget-text">
+			<label>E-Mail-Adresse</label>
+			<input type="email" name="host_email">
+		</div>
+		
+		<div class="widget widget-url">
+			<label>Internetseite</label>
+			<input type="text" name="host_website">
+		</div>
+	</fieldset>
+	
+	<fieldset>
+		<legend>Informationen</legend>
+		
+		<div class="widget widget-textarea">
+			<label class="mandatory">Event-Kurzbeschreibung<span class="mandatory">*</span></label>
+			<textarea maxlength="255" name="kurzbeschreibung" class="nobreaks" required=""></textarea>
+		</div>
+		
+		<div class="widget widget-textarea">
+			<label class="mandatory">Event-Langbeschreibung<span class="mandatory">*</span></label>
+			<textarea class="textarea useEditorFrontend" name="beschreibung"></textarea>
+		</div>
+		
+		<div class="widget widget-textarea">
+			<label>Kooperationspartner*in(nen)</label>
+			<textarea maxlength="255" name="kooperationspartner" class="nobreaks"></textarea>
+		</div>
+		
+		<p class="info"><i class="fa-solid fa-images"></i> <strong>Bildergalerie</strong><br>Ihre Bildergalerie können Sie direkt in der Detailansicht Ihres Events anlegen und verwalten. Speichern Sie zunächst Ihre Angaben und gehen Sie anschließend auf die Detailansicht Ihres Events, um die Galerie zu erstellen.</p>
+	</fieldset>
+	
+</div>
+</div>
+<div class="col-4 col-md-12 bg-primary p-4 mb-2">
+	<?php $hilfekasten = 'event_add'; require_once('hilfekasten.html5'); ?>
+</div>
+</div>
+
+
+<div class="formbody">
+	<div class="widget widget-checkbox">
+		<input type="checkbox" id="confirmation" required>
+		<label for="confirmation">Mit der Erstellung meines Events erkläre ich mich damit einverstanden, dass die angegebenen Daten öffentlich in auf der Webseite www.se-kultur.de einsehbar sind. Ich versichere, alle Urheberrechte beachtet zu haben.</label>
+	</div>
+</div>
+
+<div>
+	<!--<input type="submit" class="btn-primary" value="Angaben speichern">-->
+	<button class="btn-primary" type="submit"><i class="fa-regular fa-floppy-disk"></i> Angaben speichern</button>
+	<a href="{{link_url::eigene-profile|urlattr}}" class="btn btn-outline">Abbrechen & zurück</a>
+</div>
+</form>
+{{file::se-kultur-de/tinyMCE.html5}}
+{{file::se-kultur-de/fileuploader.php?upload=event}}
+
+
+<div id="loader">
+	<div class="inner">
+	<i class="fa-solid fa-spinner"></i>
+	<span>Ihre Angaben werden überprüft</span>
+	</div>
+</div>

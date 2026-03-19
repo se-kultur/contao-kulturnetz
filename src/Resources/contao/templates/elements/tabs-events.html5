@@ -1,0 +1,21 @@
+<?php ob_start(); ?>
+<h6>Veranstaltungskalender</h6>
+<?php if(is_array($this->events) && count($this->events) > 0): ?>
+<?php require_once(__DIR__.'/../mod_events_list.html5'); ?>
+<?php endif; ?>
+
+<?php if($eventscount == 0): ?>
+Es stehen momentan keine Veranstaltungen von <?= $artist->name ?> bevor.
+<?php endif; ?>
+<?php $events_output = ob_get_clean(); ?>
+
+<?php if(1 == 2): ?>
+<?php if(is_array($this->sekevents) && count($this->sekevents) > 0): ?>
+<h6>SE-KulturTage</h6>
+<?php $this->events = $this->sekevents ?>
+<?php //var_dump($this->events) ?>
+<?php require_once(__DIR__.'/../mod_sekevents_list.html5'); ?>
+<?php endif; ?>
+<?php endif; ?>
+
+<?= $events_output ?>

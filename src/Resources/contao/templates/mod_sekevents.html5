@@ -1,0 +1,137 @@
+<?php 
+$artist = $this->event; 
+if($objFile = \Contao\FilesModel::findByUuid($artist->avatar)) {
+	$imgPath = $objFile->path;
+	$imgMeta = ($objFile->meta != NULL) ? unserialize($objFile->meta)['de'] : false;
+} else {
+	$imgPath = 'files/se-kultur.de/img/noavatar.jpg';
+}
+
+if($this->member_id == $artist->member_id) {
+	$GLOBALS['TL_CSS'][] = 'files/se-kultur.de/vendor/Croppie-master/croppie.css';
+	$GLOBALS['FOOTERJS'][] ='<script src="files/se-kultur.de/vendor/Croppie-master/croppie.js"></script>';  
+	
+	$GLOBALS['FOOTERJS'][] ='<script src="files/se-kultur.de/vendor/jquery.dirty.js"></script>';  
+	$GLOBALS['FOOTERJS'][] ='<script src="files/se-kultur.de/js/fileuploader.js"></script>';  
+}
+?>
+<div class="artist-headline mt-4">
+<?php if($this->member_id == $artist->member_id): ?>
+<div class="badges">
+	<a href="sekultur-event-bearbeiten/<?= $artist->alias ?>.html" class="btn btn-primary btn-sm">Event bearbeiten</a>
+
+	<?php if($artist->disable == '1'): ?>
+	<span class="badge bg-error"><i class="fa-solid fa-eye-slash"></i> Nicht öffentlich</span>
+	<?php endif; ?>
+</div>
+<?php endif; ?>
+<h2><a href="javascript:history.back()" aria-label="Zurück zur vorigen Seite" role="tooltip"><i class="fa-solid fa-arrow-left-long"></i></a> SE-Kultur Event <?= date('Y') ?></h2>
+</div>
+
+<div class="artist-details flex gap-2 space-between mb-4">
+	<div class="sidebar col-3">
+		<figure class="avatar">
+			<a href="<?= $imgPath ?>" data-fslightbox data-caption="<?= @$imgMeta['title'] ?><br><span style='font-size:0.8em;'>© <?= @$imgMeta['caption'] ?></span>">
+				<img src="<?= $imgPath ?>" alt="<?= @$imgMeta['alt'] ?>">
+			</a>
+			<figcaption>
+				<span class="title"><?= @$imgMeta['title'] ?></span>
+				<span class="copyright">&copy; <?= @$imgMeta['caption'] ?></span>
+			</figcaption>
+		</figure>
+		
+		<h6><?= $artist->name ?></h6>
+		
+		<p class="kurzbeschreibung"><?= $artist->kurzbeschreibung ?></p>
+		
+		<div class="data">
+			<span class="sparten"><?= trim(strtoupper(str_replace(',',' | ',$artist->sparten))) ?></span>
+			<?php if(strlen($artist->location_ort) > 0): ?><span class="ort"><?= trim($artist->location_plz.' '.$artist->location_ort) ?></span><?php endif; ?>
+			<?php if(strlen($artist->location_adresse) > 0): ?><span class="adresse"><?= $artist->location_adresse ?></span><?php endif; ?>
+			<br><br>
+			
+		</div>
+	</div>
+	<div class="main col-9">	
+		<?php if(strlen($artist->zitat) > 0): ?>
+		<h3>&bdquo;<?= $artist->zitat ?>&rdquo;</h3>
+		<?php endif; ?>
+		
+		<div class="beschreibung"><?= $artist->beschreibung ?></div>
+		
+	</div>
+</div>
+
+
+<?php if($this->member_id == $artist->member_id): ?>
+<div class="text-right mb-2" style="opacity:0.8">
+	<a href="#" class="btn btn-primary btn-sm galleryupload">Foto(s) hochladen</a>
+	<a href="#" class="btn btn-outline btn-sm galleryedit">Fotos verwalten</a>
+</div>
+
+{{file::se-kultur-de/fileuploader.php?upload=gallery&alias=<?= $artist->alias ?>&type=sekevents&id=<?= $artist->id ?>}}
+<?php endif; ?>
+
+<?php if($artist->orderSRC != NULL && $artist->orderSRC != 'a:0:{}'): ?>
+<?php $imgs = \Contao\FilesModel::findMultipleByUuids(deserialize($artist->orderSRC, true));  ?>
+<div class="ce_gallery">
+	<div class="swiper">
+	  <div class="swiper-wrapper">
+	  <?php //$loop = [1 => 5, 2 => 3, 3 => 2, 4 => 2]; if(count($imgs) < 5){ for($i = 1; $i < $loop[count($imgs)]; $i++): } ?>
+	  <?php foreach ($imgs as $img): $meta = unserialize($img->meta)['de'] ?>
+		<div class="swiper-slide">
+			<div class="swiper-carousel-animate-opacity">
+				<figure class="image_container">
+					<a data-fslightbox data-caption="<?= $meta['title'] ?><br><span style='font-size:0.8em;'>&copy; <?= $meta['caption'] ?></span>" href="<?= $img->path ?>" title="<?= $meta['title'] ?>" data-lightbox="lb419">
+						<img src="<?= $img->path ?>" alt="">
+					</a>
+					<figcaption>
+						<span class="title"><?= $meta['title'] ?></span>
+						<span class="copyright">&copy; <?= $meta['caption'] ?></span>
+					</figcaption>
+				</figure>
+			</div>
+		</div>
+	  <?php endforeach; ?>
+	  <?php //if(count($imgs) < 5) { endfor; } ?>
+	  </div>
+
+		<div class="swipe-prev"><i class="fa-solid fa-arrow-left-long"></i></div>
+		<div class="swipe-next"><i class="fa-solid fa-arrow-right-long"></i></div>
+		<div class="swiper-pagination"></div>
+	</div>
+</div>
+
+<?php elseif(($artist->orderSRC == NULL || $artist->orderSRC == 'a:0:{}') && $this->member_id == $artist->member_id): ?>
+<div class="ce_gallery" id="galerie">
+	<div class="swiper">
+	  <div class="swiper-wrapper">
+	  <?php for($i = 1; $i <= 5; $i++): ?>
+		<div class="swiper-slide">
+			<div class="swiper-carousel-animate-opacity">
+				<figure class="image_container">
+					<a data-fslightbox data-caption="Beispiel eines Fototitels #<?= $i ?><br><span style='font-size:0.8em;'>&copy; Fotograf</span>" href="files/se-kultur.de/img/beispielfoto.jpg" title="Beispiel eines Fototitels #<?= $i ?>" data-lightbox="lb419">
+						<img src="files/se-kultur.de/img/beispielfoto.jpg" alt="">
+					</a>
+					<figcaption>
+						<span class="title">Beispiel eines Fototitels #<?= $i ?></span>
+						<span class="copyright">&copy; Fotograf</span>
+					</figcaption>
+				</figure>
+			</div>
+		</div>
+	  <?php endfor; ?>
+	  </div>
+
+		<div class="swipe-prev"><i class="fa-solid fa-arrow-left-long"></i></div>
+		<div class="swipe-next"><i class="fa-solid fa-arrow-right-long"></i></div>
+		<div class="swiper-pagination"></div>
+	</div>
+</div>
+<p class="info">Diese Bildergalerie können nur Sie sehen - sie dient lediglich als Veranschaulichung. Laden Sie für eine optimale Darstellung fünf oder mehr Fotos hoch.</p>
+<?php endif; ?>
+
+<div class="mt-4 mb-4 text-center">
+	<a href="{{link_url::kuenstler-innen}}" class="btn btn-primary">Zurück zur Übersicht</a>
+</div>
+

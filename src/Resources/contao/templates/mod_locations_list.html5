@@ -1,0 +1,73 @@
+<?php global $objPage; ?>
+<?php if(isset($this->filter) && @$this->filter == true): ?>
+<form method="get" id="search" class="formbody">
+	<div class="widget widget-text">
+		<label>Volltextsuche</label>
+		<input name="text" type="text" placeholder="Namen oder Ort eingeben" value="<?= @$_GET['text'] ?>">
+	</div>
+	
+	<div>
+		<button type="submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i><span class="hide-xs hide-sm hide-md"> Suchen</span></button>
+		<?php if(isset($_GET['text'])): ?>
+		<a href="<?= $objPage->alias ?>.html" class="btn btn-outline"><i class="fa-solid fa-xmark"></i><span class="hide-xs hide-sm hide-md">  Zurücksetzen</span></a>
+		<?php endif; ?>
+	</div>
+</form>
+<?php endif; ?>
+
+<div class="artists-list">
+	<?php foreach ($this->locations as $artist): ?>
+	<?php
+	if($objFile = \Contao\FilesModel::findByUuid($artist->avatar)) {
+		$imgPath = $objFile->path;
+		$imgMeta = ($objFile->meta != NULL) ? unserialize($objFile->meta)['de'] : false;
+	} else {
+		$imgPath = 'files/se-kultur.de/img/noavatar.jpg';
+	}
+	?>
+	<div class="artist<?= ($artist->id == 16) ? ' highlight' : '' ?>">
+		<a href="detailansicht-locationprofil/<?= $artist->alias ?>.html">
+			<figure class="avatar">
+				<img src="<?= $imgPath ?>" alt="<?= @$imgMeta['alt'] ?>">	
+			</figure>
+		</a>
+		<div class="infos">
+			<?php if($this->member_id == $artist->member_id): ?>
+			<div class="badges">
+				<?php if($artist->disable == '1'): ?>
+				<span class="badge bg-error"><i class="fa-solid fa-eye-slash"></i><span class="hide-xs hide-sm hide-md"> Nicht öffentlich</span></span>
+				<?php endif; ?>
+				
+				<a href="locationprofil-bearbeiten/<?= $artist->alias ?>.html" class="btn btn-primary btn-sm">
+					<i class="fa-solid fa-pen-to-square"></i><span class="hide-sm hide-xs hide-md"> Profil bearbeiten</span>
+				</a>
+				<a href="detailansicht-locationprofil/<?= $artist->alias ?>.html#galerie" class="btn btn-outline btn-sm">
+					<i class="fa-solid fa-images"></i><span class="hide-sm hide-xs hide-md"> Galerie</span>
+				</a>
+				
+			</div>
+			<?php else: ?>
+			<div class="badges">
+				<?php if($artist->created > time()-86400*7): ?>
+				<span class="badge bg-error"><i class="fa-solid fa-bolt"></i> NEU</span>
+				<?php endif; ?>
+				
+				<?php if($artist->id == 16): ?>
+				<span class="badge bg-kulturnetz hide-xs"><i class="fa-solid fa-star"></i> Musterprofil</span>
+				<?php endif; ?>
+			</div>
+			<?php endif; ?>
+			
+			<a href="detailansicht-locationprofil/<?= $artist->alias ?>.html"><h6><?= $artist->name ?></h6></a>
+			<p class="beschreibung"><?= $artist->kurzbeschreibung ?></p>
+			<div class="footer">
+				<span class="sparten"></span>
+				<span class="ort"><?= $artist->ort ?></span>
+				<div>
+					<a href="detailansicht-locationprofil/<?= $artist->alias ?>.html"><i class="fa-solid fa-arrow-right-long"></i></a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<?php endforeach; ?>
+</div>

@@ -1,0 +1,245 @@
+	
+	<div class="fixed-scroll">
+		<h4>Infos & Hilfe</h4>
+		<div class="focus-help nofocus show">
+			<?php if(@$hilfekasten == 'host_add'): ?>
+			<p>Schön, dass Sie ein Veranstalter*innenprofil anlegen und sich am SE-KulturNetz beteiligen möchten!</p>
+			<?php elseif(@$hilfekasten == 'location_add'): ?>
+			<p>Schön, dass Sie ein Locationprofil anlegen und sich am SE-KulturNetz beteiligen möchten!</p>
+			<?php elseif(@$hilfekasten == 'artist_add'): ?>
+			<p>Schön, dass Sie ein Künstler*innenprofil anlegen und sich am SE-KulturNetz beteiligen möchten!</p>
+			<?php elseif(@$hilfekasten == 'sekevent_add'): ?>
+			<p>Schön, dass Sie ein Event für die SE-KulturTage anlegen möchten!</p>
+			<?php endif; ?>
+			
+			<p class="hide-xs hide-sm hide-md">An dieser Stelle zeigen wir Ihnen wichtige Hinweise zur Eingabe im Formular. Klicken Sie dazu einfach in eines der Texteingabefelder im Formular und der Hilfetext in diesem blauen Kasten ändert sich entsprechend.</p>
+			
+			<p><strong>Wichtig:</strong> Alle Felder, die mit einem <strong>roten Kreissymbol <span style="color: Red;"><i class="fa-solid fa-circle-exclamation"></i></span></strong> markiert sind, sind Pflichtfelder und somit unbedingt auszufüllen!</p>
+		</div>
+		
+		<?php if(@$hilfekasten == 'host_add' || @$hilfekasten == 'host_edit'): ?>
+		<div class="focus-help name">
+			<p>Der Name Ihrer Institution oder Ihres Vereins steht sowohl auf Ihrem Profil als auch an verschiedenen Stellen des SE-KulturNetz im Vordergrund. Es kann sich hierbei um Ihren Vollnamen, den Namen Ihrer Band oder Ihres Vereins oder eben um Ihren Künstlernamen handeln.</p>
+		</div>
+		
+		<div class="focus-help themen">
+			<p>Geben Sie hier bitte einen oder mehrere spezifische Themenschwerpunkte durch Kommas getrennt an.</p>
+		</div>
+		
+		<div class="focus-help kurzbeschreibung">
+			<p>Die Kurzbeschreibung wird in Übersichten und Listenansichten angezeigt und sollte kurz und prägnant sein. Sie darf maximal 255 Zeichen haben. Bitte beschreiben Sie sich oder Ihre Gruppe in der dritten Person, z. B.: <br><em>"Anne Muster ist als Tänzerin weit über den Kreis Segeberg hinaus bekannt"</em> <br>anstatt <br><em>"Ich bin als Tänzerin weit ..."</em></p>
+		</div>
+		
+		<div class="focus-help beschreibung">
+			<p>In der Beschreibung haben Sie die Möglichkeit, sich, Ihren Verein oder Ihre Gruppe ausführlich und ohne Textlängenbegrenzung darzustellen. Hier können Sie Ihrer Kreativität freien Lauf lassen - individuell und in Ihrem persönlichen Schreibstil.</p>
+		</div>
+		
+		<div class="focus-help zitat">
+			<p>Wenn Sie möchten, kann Ihr persönliches Veranstalter*innenprofil im SE-KulturNetz mit einem Zitat beginnen. Beginnen Sie z.B. mit "Kultur ist" und fahren Sie dann einfach fort und erzählen uns in einem (kurzen) Satz, was Kultur für Sie bedeutet.</p>
+		</div>
+		
+		<?php elseif(@$hilfekasten == 'location_add' || @$hilfekasten == 'location_edit'): ?>
+		<div class="focus-help name">
+			<p>Der Locationname steht sowohl auf Ihrem Profil als auch an verschiedenen Stellen des SE-KulturNetz im Vordergrund. Es kann sich hierbei um Ihren Vollnamen, den Namen Ihrer Band oder Ihres Vereins oder eben um Ihren Künstlernamen handeln.</p>
+		</div>
+		
+		<div class="focus-help themen">
+			<p>Geben Sie hier bitte einen oder mehrere spezifische Themenschwerpunkte durch Kommas getrennt an.</p>
+		</div>
+		
+		<div class="focus-help barrierefreiheit">
+			<p>Dies können sein: Rampen für Rollstuhlfahrer, breite Türen und Gänge für Rollstühle und Rollatoren,  barrierefreie Treppen, Aufzügen und Toiletten, taktile Leitsysteme als Orientierungshilfen, visuelle Alarme oder die Möglichkeit für Untertitel, u.v.m. Beschreiben Sie auch gerne Ihre grundsätzliche Haltung, z.B. "Wir heißen Menschen mit Behinderungen herzlich willkommen und laden sie dazu ein, sich bei uns zu melden, um ihre speziellen Bedürfnisse zu besprechen."</p>
+		</div>
+		
+		<div class="focus-help kurzbeschreibung">
+			<p>Die Kurzbeschreibung wird in Übersichten und Listenansichten angezeigt und sollte kurz und prägnant sein. Sie darf maximal 255 Zeichen haben. Bitte beschreiben Sie sich oder Ihre Gruppe in der dritten Person, z. B.: <br><em>"Anne Muster ist als Tänzerin weit über den Kreis Segeberg hinaus bekannt"</em> <br>anstatt <br><em>"Ich bin als Tänzerin weit ..."</em></p>
+		</div>
+		
+		<div class="focus-help beschreibung">
+			<p>In der Beschreibung haben Sie die Möglichkeit, Ihre Location ausführlich und ohne Textlängenbegrenzung darzustellen. Hier können Sie Ihrer Kreativität freien Lauf lassen - individuell und in Ihrem persönlichen Schreibstil.</p>
+			<p>Bedenken Sie hier bitte folgende Aspekte: technische Ausstattung wie Muskianlage, Lichtanlage, Mikrofone, Beamer u.ä., außerdem: Künstlergarderobe, Parkplatzsituation, Erreichbarkeit über den ÖPNV, Ihr Programm, ambiente, besondere Merkmale.</p>
+		</div>
+		
+		<div class="focus-help zitat">
+			<p>Wenn Sie möchten, kann Ihr persönliches Locationprofil im SE-KulturNetz mit einem Zitat beginnen. Beginnen Sie z.B. mit "Kultur ist" und fahren Sie dann einfach fort und erzählen uns in einem (kurzen) Satz, was Kultur für Sie bedeutet.</p>
+		</div>
+		
+		
+		<?php elseif(@$hilfekasten == 'artist_add' || @$hilfekasten == 'artist_edit'): ?>
+		<div class="focus-help kuenstlername">
+			<p>Der Künstler*innenname steht sowohl auf Ihrem Profil als auch an verschiedenen Stellen des SE-KulturNetz im Vordergrund. Es kann sich hierbei um Ihren Vollnamen, den Namen Ihrer Band oder Ihres Vereins oder eben um Ihren Künstlernamen handeln.</p>
+		</div>
+		
+		<div class="focus-help themen">
+			<p>Geben Sie hier bitte einen oder mehrere spezifische Themenschwerpunkte durch Kommas getrennt an.</p>
+		</div>
+		
+		<div class="focus-help kurzbeschreibung">
+			<p>Die Kurzbeschreibung wird in Übersichten und Listenansichten angezeigt und sollte kurz und prägnant sein. Sie darf maximal 255 Zeichen haben. Bitte beschreiben Sie sich oder Ihre Gruppe in der dritten Person, z. B.: <br><em>"Anne Muster ist als Tänzerin weit über den Kreis Segeberg hinaus bekannt"</em> <br>anstatt <br><em>"Ich bin als Tänzerin weit ..."</em></p>
+		</div>
+		
+		<div class="focus-help beschreibung">
+			<p>In der Beschreibung haben Sie die Möglichkeit, sich, Ihren Verein oder Ihre Gruppe ausführlich und ohne Textlängenbegrenzung darzustellen. Hier können Sie Ihrer Kreativität freien Lauf lassen - individuell und in Ihrem persönlichen Schreibstil.</p>
+		</div>
+		
+		<div class="focus-help zitat">
+			<p>Wenn Sie möchten, kann Ihr persönliches Künstler*innenprofil im SE-KulturNetz mit einem Zitat beginnen. Beginnen Sie z.B. mit "Kultur ist" und fahren Sie dann einfach fort und erzählen uns in einem (kurzen) Satz, was Kultur für Sie bedeutet.</p>
+		</div>
+		
+		
+		<?php elseif(@$hilfekasten == 'sekevent_add' || @$hilfekasten == 'sekevent_edit'): ?>
+		<div class="focus-help name">
+			<p>Der Name Ihres Events wird an verschiedenen Stellen auf den Seiten der SE-KulturTage sowie im Programmheft und ggf. auf Plakaten eingesetzt.</p><p>Der Name sollte daher möglichst prägnant, aussagekräftig, jedoch nicht zu lang sein.</p>
+		</div>
+		
+		<div class="focus-help eventcomment">
+			<p>Im Kommentarfeld können Sie angeben, ob es sich an diesem Datum um eine spezielle Veranstaltung handelt, z. B. eine "Vernissage", "Finissage", "nur für Kinder", ...</p>
+		</div>
+		
+		<div class="focus-help locationbarrierefreiheit">
+			<p>Dies können sein: Rampen für Rollstuhlfahrer, breite Türen und Gänge für Rollstühle und Rollatoren,  barrierefreie Treppen, Aufzügen und Toiletten, taktile Leitsysteme als Orientierungshilfen, visuelle Alarme oder die Möglichkeit für Untertitel, u.v.m. Beschreiben Sie auch gerne Ihre grundsätzliche Haltung, z.B. "Wir heißen Menschen mit Behinderungen herzlich willkommen und laden sie dazu ein, sich bei uns zu melden, um ihre speziellen Bedürfnisse zu besprechen."</p>
+		</div>
+		
+		<div class="focus-help locationtelefon">
+			<p>Geben Sie die Telefon- oder Handynummer bitte im Format "04551-1234567" oder "0176-1234567" an.</p>
+		</div>
+		
+		<div class="focus-help hosttelefon">
+			<p>Geben Sie die Telefon- oder Handynummer bitte im Format "04551-1234567" oder "0176-1234567" an.</p>
+		</div>
+		
+		<div class="focus-help artists">
+			<p>In diesem Feld können Sie einen oder mehrere Künstler*innen eingeben. Wenn der/die Künstler*in ein Profil im SE-KulturNetz besitzt, wird es in der Liste unterhalb dieses Feldes angezeigt, wenn Sie die ersten Buchstaben des Namens eingeben. Das Profil kann dann durch Anklicken ausgewählt werden.</p><p>Das ausgewählte Profil wird später entsprechend im Event verlinkt. Künstler*innen, die nicht im SE-KulturNetz eingetragen sind, können als Freitext in diesem Feld angegeben werden. Mehrere Künstler*innen sind durch Kommas getrennt anzugeben.</p>
+			<p>Vorschläge mit einem <i class="fa-solid fa-user"></i>-Symbol gehören zu Ihrem Benutzerkonto. Sofern ein Profil noch nicht freigeschaltet wurde, wird es zusätzlich mit dem <i class="fa-solid fa-eye-slash"></i>-Symbol dargestellt.</p>
+		</div>
+		
+		<div class="focus-help hosts">
+			<p>In diesem Feld können Sie einen oder mehrere Veranstalter*innen eingeben. Wenn der/die Veranstalter*in ein Profil im SE-KulturNetz besitzt, wird es in der Liste unterhalb dieses Feldes angezeigt, wenn Sie die ersten Buchstaben des Namens eingeben. Das Profil kann dann durch Anklicken ausgewählt werden.</p><p>Das ausgewählte Profil wird später entsprechend im Event verlinkt. Veranstalter*innen, die nicht im SE-KulturNetz eingetragen sind, können als Freitext in diesem Feld angegeben werden. Mehrere Veranstalter*innen sind durch Kommas getrennt anzugeben.</p>
+			<p>Vorschläge mit einem <i class="fa-solid fa-user"></i>-Symbol gehören zu Ihrem Benutzerkonto. Sofern ein Profil noch nicht freigeschaltet wurde, wird es zusätzlich mit dem <i class="fa-solid fa-eye-slash"></i>-Symbol dargestellt.</p>
+		</div>
+		
+		<div class="focus-help locations">
+			<p>In diesem Feld können Sie eine Location eingeben. Wenn die Location mit einem Profil im SE-KulturNetz vertreten ist, wird es in der Liste unterhalb dieses Feldes angezeigt, wenn Sie die ersten Buchstaben des Namens eingeben. Das Profil kann dann durch Anklicken ausgewählt werden.</p><p>Das ausgewählte Profil wird später entsprechend im Event verlinkt. Locations, die nicht im SE-KulturNetz eingetragen sind, können als Freitext in diesem Feld angegeben werden.</p>
+			<p>Vorschläge mit einem <i class="fa-solid fa-user"></i>-Symbol gehören zu Ihrem Benutzerkonto. Sofern ein Profil noch nicht freigeschaltet wurde, wird es zusätzlich mit dem <i class="fa-solid fa-eye-slash"></i>-Symbol dargestellt.</p>
+		</div>
+		
+		<div class="focus-help themen">
+			<p>Geben Sie hier bitte einen oder mehrere spezifische Themenschwerpunkte durch Kommas getrennt an.</p>
+		</div>
+		
+		<div class="focus-help kurzbeschreibung">
+			<p>Mit der Kurzbeschreibung bewerben Sie Ihr Event im Programmheft und auf der Homepage.</p>
+			<p>Formulieren Sie Ihren Textvorschlag einladend und informativ, er ist ein wichtiges Werbeelement.</p>
+			<p>Vermeiden Sie die "ich/wir-Schreibweise", verzichten Sie auf die Nennung von Datum und Zeit, da diese bereits an anderen Stellen abgefragt und dargestellt werden.</p>
+			<p><strong>Muster: Gute Laune-Tour</strong><br>
+			Mit ihrer von Pop, Jazz und Reggae inspirierten besonderen Musik trifft die Jeanine Vahldiek
+			Band genau ins Herz und in die Seele. Durch ihre erfrischende Art wird sofort klar: Egal wie
+			der Tag war, diese Gute Laune-Tour wirkt.</p>
+		</div>
+		
+		<div class="focus-help beschreibung">
+			<p>Mit der Langbeschreibung bewerben Sie Ihr Event ausschließlich auf der Homepage. </p>			<p>Anders, als in der Event-Kurzbeschreibung mit nur 255 Satzzeichen, dürfen Sie hier ausführlich berichten und die Besonderheiten des Events in den Fokus stellen. </p>
+			<p>Formatieren Sie Ihren Text nach Belieben, verlinken Sie nach Bedarf auf andere Webseiten. Vermeiden Sie die „ich/wir-Schreibweise“. </p>
+			<p>Verzichten Sie auf die Nennung von Datum und Zeit (bereits abgefragt).</p> 
+			<p>Wir behalten uns vor, den Text, in Absprache mit Ihnen, anzupassen.</p>
+			
+			<!-- HIER KANN BITTE AUCH ETWAS ÜBER DEN KÜNSTLER STEHEN, WENN ER NICHT IM SE-NETZ ISt!!!!! -->
+		</div>
+		
+		<div class="focus-help telefon">
+			<p>Geben Sie Ihre Telefon- oder Handynummer bitte im Format "04551-1234567" oder "0176-1234567" an.</p>
+		</div>
+		
+		<div class="focus-help kooperationspartner">
+			<p>Geben Sie hier, falls vorhanden, eine(n) oder mehrere Kooperations&shy;partner*in(nen) durch Kommas getrennt an.</p>
+		</div>
+		
+		<div class="focus-help barrierefreiheit">
+			<p>Dies können sein: Rampen für Rollstuhlfahrer, breite Türen und Gänge für Rollstühle und Rollatoren,  barrierefreie Treppen, Aufzügen und Toiletten, taktile Leitsysteme als Orientierungshilfen, visuelle Alarme oder die Möglichkeit für Untertitel, u.v.m. Beschreiben Sie auch gerne Ihre grundsätzliche Haltung, z.B. "Wir heißen Menschen mit Behinderungen herzlich willkommen und laden sie dazu ein, sich bei uns zu melden, um ihre speziellen Bedürfnisse zu besprechen."</p>
+		</div>
+		<?php elseif(@$hilfekasten == 'event_add' || @$hilfekasten == 'event_edit'): ?>
+		<div class="focus-help name">
+			<p>Der Name Ihrer Veranstaltung wird an verschiedenen Stellen auf den Seiten des SE-KulturNetz angezeigt.</p><p>Der Name sollte daher möglichst prägnant, aussagekräftig, jedoch nicht zu lang sein.</p>
+		</div>
+		
+		<div class="focus-help eventcomment">
+			<p>Im Kommentarfeld können Sie angeben, ob es sich an diesem Datum um eine spezielle Veranstaltung handelt, z. B. eine "Vernissage", "Finissage", "nur für Kinder", ...</p>
+		</div>
+		
+		<div class="focus-help locationbarrierefreiheit">
+			<p>Dies können sein: Rampen für Rollstuhlfahrer, breite Türen und Gänge für Rollstühle und Rollatoren,  barrierefreie Treppen, Aufzügen und Toiletten, taktile Leitsysteme als Orientierungshilfen, visuelle Alarme oder die Möglichkeit für Untertitel, u.v.m. Beschreiben Sie auch gerne Ihre grundsätzliche Haltung, z.B. "Wir heißen Menschen mit Behinderungen herzlich willkommen und laden sie dazu ein, sich bei uns zu melden, um ihre speziellen Bedürfnisse zu besprechen."</p>
+		</div>
+		
+		<div class="focus-help locationtelefon">
+			<p>Geben Sie die Telefon- oder Handynummer bitte im Format "04551-1234567" oder "0176-1234567" an.</p>
+		</div>
+		
+		<div class="focus-help hosttelefon">
+			<p>Geben Sie die Telefon- oder Handynummer bitte im Format "04551-1234567" oder "0176-1234567" an.</p>
+		</div>
+		
+		<div class="focus-help artists">
+			<p>In diesem Feld können Sie einen oder mehrere Künstler*innen eingeben. Wenn der/die Künstler*in ein Profil im SE-KulturNetz besitzt, wird es in der Liste unterhalb dieses Feldes angezeigt, wenn Sie die ersten Buchstaben des Namens eingeben. Das Profil kann dann durch Anklicken ausgewählt werden.</p><p>Das ausgewählte Profil wird später entsprechend im Event verlinkt. Künstler*innen, die nicht im SE-KulturNetz eingetragen sind, können als Freitext in diesem Feld angegeben werden. Mehrere Künstler*innen sind durch Kommas getrennt anzugeben.</p>
+			<p>Vorschläge mit einem <i class="fa-solid fa-user"></i>-Symbol gehören zu Ihrem Benutzerkonto. Sofern ein Profil noch nicht freigeschaltet wurde, wird es zusätzlich mit dem <i class="fa-solid fa-eye-slash"></i>-Symbol dargestellt.</p>
+		</div>
+		
+		<div class="focus-help hosts">
+			<p>In diesem Feld können Sie einen oder mehrere Veranstalter*innen eingeben. Wenn der/die Veranstalter*in ein Profil im SE-KulturNetz besitzt, wird es in der Liste unterhalb dieses Feldes angezeigt, wenn Sie die ersten Buchstaben des Namens eingeben. Das Profil kann dann durch Anklicken ausgewählt werden.</p><p>Das ausgewählte Profil wird später entsprechend im Event verlinkt. Veranstalter*innen, die nicht im SE-KulturNetz eingetragen sind, können als Freitext in diesem Feld angegeben werden. Mehrere Veranstalter*innen sind durch Kommas getrennt anzugeben.</p>
+			<p>Vorschläge mit einem <i class="fa-solid fa-user"></i>-Symbol gehören zu Ihrem Benutzerkonto. Sofern ein Profil noch nicht freigeschaltet wurde, wird es zusätzlich mit dem <i class="fa-solid fa-eye-slash"></i>-Symbol dargestellt.</p>
+		</div>
+		
+		<div class="focus-help locations">
+			<p>In diesem Feld können Sie eine Location eingeben. Wenn die Location mit einem Profil im SE-KulturNetz vertreten ist, wird es in der Liste unterhalb dieses Feldes angezeigt, wenn Sie die ersten Buchstaben des Namens eingeben. Das Profil kann dann durch Anklicken ausgewählt werden.</p><p>Das ausgewählte Profil wird später entsprechend im Event verlinkt. Locations, die nicht im SE-KulturNetz eingetragen sind, können als Freitext in diesem Feld angegeben werden.</p>
+			<p>Vorschläge mit einem <i class="fa-solid fa-user"></i>-Symbol gehören zu Ihrem Benutzerkonto. Sofern ein Profil noch nicht freigeschaltet wurde, wird es zusätzlich mit dem <i class="fa-solid fa-eye-slash"></i>-Symbol dargestellt.</p>
+		</div>
+		
+		<div class="focus-help themen">
+			<p>Geben Sie hier bitte einen oder mehrere spezifische Themenschwerpunkte durch Kommas getrennt an.</p>
+		</div>
+		
+		<div class="focus-help kurzbeschreibung">
+			<p>Mit der Kurzbeschreibung bewerben Sie Ihr Event im Programmheft und auf der Homepage.</p>
+			<p>Formulieren Sie Ihren Textvorschlag einladend und informativ, er ist ein wichtiges Werbeelement.</p>
+			<p>Vermeiden Sie die "ich/wir-Schreibweise", verzichten Sie auf die Nennung von Datum und Zeit, da diese bereits an anderen Stellen abgefragt und dargestellt werden.</p>
+			<p><strong>Muster: Gute Laune-Tour</strong><br>
+			Mit ihrer von Pop, Jazz und Reggae inspirierten besonderen Musik trifft die Jeanine Vahldiek
+			Band genau ins Herz und in die Seele. Durch ihre erfrischende Art wird sofort klar: Egal wie
+			der Tag war, diese Gute Laune-Tour wirkt.</p>
+		</div>
+		
+		<div class="focus-help beschreibung">
+			<p>Mit der Langbeschreibung bewerben Sie Ihr Event ausschließlich auf der Homepage. </p>			<p>Anders, als in der Event-Kurzbeschreibung mit nur 255 Satzzeichen, dürfen Sie hier ausführlich berichten und die Besonderheiten des Events in den Fokus stellen. </p>
+			<p>Formatieren Sie Ihren Text nach Belieben, verlinken Sie nach Bedarf auf andere Webseiten. Vermeiden Sie die „ich/wir-Schreibweise“. </p>
+			<p>Verzichten Sie auf die Nennung von Datum und Zeit (bereits abgefragt).</p> 
+			<p>Wir behalten uns vor, den Text, in Absprache mit Ihnen, anzupassen.</p>
+			
+			<!-- HIER KANN BITTE AUCH ETWAS ÜBER DEN KÜNSTLER STEHEN, WENN ER NICHT IM SE-NETZ ISt!!!!! -->
+		</div>
+		
+		<div class="focus-help telefon">
+			<p>Geben Sie Ihre Telefon- oder Handynummer bitte im Format "04551-1234567" oder "0176-1234567" an.</p>
+		</div>
+		
+		<div class="focus-help kooperationspartner">
+			<p>Geben Sie hier, falls vorhanden, eine(n) oder mehrere Kooperations&shy;partner*in(nen) durch Kommas getrennt an.</p>
+		</div>
+		
+		<div class="focus-help barrierefreiheit">
+			<p>Dies können sein: Rampen für Rollstuhlfahrer, breite Türen und Gänge für Rollstühle und Rollatoren,  barrierefreie Treppen, Aufzügen und Toiletten, taktile Leitsysteme als Orientierungshilfen, visuelle Alarme oder die Möglichkeit für Untertitel, u.v.m. Beschreiben Sie auch gerne Ihre grundsätzliche Haltung, z.B. "Wir heißen Menschen mit Behinderungen herzlich willkommen und laden sie dazu ein, sich bei uns zu melden, um ihre speziellen Bedürfnisse zu besprechen."</p>
+		</div>
+		<?php endif; ?>
+		
+		<div class="focus-help telefon">
+			<p>Geben Sie Ihre Telefon- oder Handynummer bitte im Format "04551-1234567" oder "0176-1234567" an.</p>
+		</div>
+		
+		<div class="support">
+			<h6>Ihre Ansprechpartnerin</h6>
+			<img src="files/se-kultur.de/img/team/Yolanda_Schroeder.jpg" alt="Kerstin Fähndrich">
+			<p>
+				<strong>Yolanda Schröder</strong><br>
+				<a href="tel:04551959170" aria-label="Antippen und direkt anrufen" role="tooltip"><i class="fa-solid fa-phone-volume"></i> 04551-959170</a><br>
+				<a href="mailto:info@se-kultur.de" aria-label="Klicken, um eine E-Mail schreiben" role="tooltip"><i class="fa-solid fa-envelope"></i> info@se-kultur.de</a>
+			</p>
+		</div>
+	</div>

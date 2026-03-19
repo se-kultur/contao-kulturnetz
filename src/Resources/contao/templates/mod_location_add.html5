@@ -1,0 +1,263 @@
+<?php 
+	$GLOBALS['TL_CSS'][] = 'files/se-kultur.de/vendor/Croppie-master/croppie.css';
+	$GLOBALS['FOOTERJS'][] ='<script src="files/se-kultur.de/vendor/Croppie-master/croppie.js"></script>';  
+	$GLOBALS['FOOTERJS'][] ='<script src="files/se-kultur.de/vendor/jquery.dirty.js"></script>';  
+
+	$GLOBALS['TL_JAVASCRIPT'][] ='files/se-kultur.de/js/locationform.js';  
+	$GLOBALS['FOOTERJS'][] ='<script src="files/se-kultur.de/js/fileuploader.js"></script>';  
+?>
+<form class="artistform" method="post" action="files/se-kultur.de/code/insertLocation.php" data-type="add">
+<div class="flex gap-2 mt-4 wrap">
+<div class="col-8 col-md-12 order-md-2">
+<div class="formbody mod_profiles">
+	
+	<div class="bg-kulturnetz p-4 mb-4">
+		<h3>Locationprofil erstellen</h3>
+		<p>Im nachfolgenden Formular können Sie Ihr Locationprofil für das SE-KulturNetz eingeben. Versuchen Sie, dabei möglichst alle Felder auszufüllen. Aber keine Angst, falls Sie etwas vergessen haben – Sie können Ihr Profil jederzeit bearbeiten.</p>
+		<p class="hide-xs hide-sm hide-md">Rechts, in der blauen Leiste, finden Sie wichtige Hinweise und Tipps zu einzelnen Feldern, sobald Sie das entsprechende Eingabefeld angeklickt haben.</p>
+		<p>Nach erfolgter Prüfung informieren wir Sie über die Freischaltung Ihres Profils per E-Mail.</p>
+	</div>
+	
+	<fieldset>
+		<legend>Allgemeine Daten</legend>
+		
+		<input type="hidden" name="member_id" value="{{user::id|attr}}">
+		
+		<figure class="avatar">
+			<img src="files/se-kultur.de/img/noavatar.jpg">	
+			<div class="actions">
+				<a href="#" class="upload"><i class="fa-solid fa-cloud-arrow-up"></i></a>
+				<a href="#" class="edit"><i class="fa-solid fa-pen-to-square"></i></a>
+				<a href="#" class="delete"><i class="fa-solid fa-trash-can"></i></a>
+			</div>
+		</figure>
+		
+		<input type="hidden" name="avatar">
+		
+		<div style="flex:1; min-width: 240px">
+			<div class="widget widget-text">
+				<label class="mandatory">Name der Location<span class="mandatory">*</span></label>
+				<input type="text" name="name" required="">
+			</div>
+
+			<div class="widget widget-text">
+				<label class="mandatory">Künstlerische Themenschwerpunkte<span class="mandatory">*</span></label>
+				<input type="text" name="themen" required="">
+			</div>
+		</div>
+	</fieldset>
+	
+		
+	<fieldset>
+		<legend>Web & Social Media</legend>
+		
+		<div class="widget widget-url">
+			<label>Internetseite</label>
+			<input type="text" name="website">
+		</div>
+		
+		<div class="widget widget-url">
+			<label>Facebook-Profil</label>
+			<input type="text" name="facebook">
+		</div>
+		
+		<div class="widget widget-url">
+			<label>Instagram-Profil</label>
+			<input type="text" name="instagram">
+		</div>
+		
+		<div class="widget widget-url">
+			<label>TikTok-Profil</label>
+			<input type="text" name="tiktok">
+		</div>
+		
+		<div class="widget widget-url">
+			<label>LinkedIn-Profil</label>
+			<input type="text" name="linkedin">
+		</div>
+		
+		<div class="widget widget-url">
+			<label>Xing-Profil</label>
+			<input type="text" name="xing">
+		</div>
+		
+	</fieldset>
+	
+	<fieldset>
+		<legend>Kontaktdaten</legend>
+		
+		<div class="widget widget-text">
+			<label>E-Mail Adresse</label>
+			<input type="email" name="email">
+		</div>
+		
+		<div class="widget widget-text">
+			<label>Telefon- oder Handynummer</label>
+			<input type="tel" name="telefon">
+		</div>
+		
+		<div class="widget widget-text">
+			<label class="mandatory">Straße und Hausnummer<span class="mandatory">*</span></label>
+			<input type="text" name="adresse">
+		</div>
+		
+		<div class="widget widget-text postal">
+			<label class="mandatory">Postleitzahl<span class="mandatory">*</span></label>
+			<input type="text" name="plz" maxlength="5">
+		</div>
+		
+		<div class="widget widget-text city">
+			<label class="mandatory">Ort<span class="mandatory">*</span></label>
+			<input type="text" name="ort">
+		</div>
+	</fieldset>
+	
+	<fieldset>
+		<legend>Ortspezifische Informationen</legend>
+		
+		<div class="widget widget-text">
+			<label>Barrierefreiheit</label>
+			<input type="text" name="barrierefreiheit">
+		</div>
+		
+		<div class="widget widget-text">
+			<label>Bühnentyp</label>
+			<input type="hidden" name="buehnentyp">
+			<span class="multiselect" data-value=""></span>
+		</div>
+		
+		<div class="widget widget-text">
+			<label>Technische Ausstattung</label>
+			<!--<input type="hidden" name="ausstattung">-->
+			<!--<span class="multiselect"></span>-->
+			<input type="text" name="technik">
+		</div>
+		
+		<div class="widget widget-text col-6">
+			<label>Bühnen-Auftrittsfläche</label>
+			<div class="inputgroup">
+				<input type="number" name="auftrittsflaeche">
+				<span>m²</span>
+			</div>
+		</div>
+		
+		<div class="widget widget-text col-6">
+			<label>Gesamtfläche</label>
+			<div class="inputgroup">
+				<input type="number" name="gesamtflaeche">
+				<span>m²</span>
+			</div>
+		</div>
+		
+		<div class="widget widget-text col-6">
+			<label>Sitzplätze</label>
+			<input type="number" name="sitzplaetze">
+		</div>
+		
+		<div class="widget widget-text col-6">
+			<label>Stehplätze</label>
+			<input type="number" name="stehplaetze">
+		</div>
+		
+	</fieldset>
+	
+	<fieldset>
+		<legend>Informationen</legend>
+		
+		<div class="widget widget-text">
+			<label>Ihr persönliches Kultur-Zitat</label>
+			<input type="text" name="zitat" placeholder="Kultur ist ...">
+		</div>
+		
+		<div class="widget widget-textarea">
+			<label class="mandatory">Kurzbeschreibung<span class="mandatory">*</span></label>
+			<textarea maxlength="255" name="kurzbeschreibung" class="nobreaks" required=""></textarea>
+		</div>
+		
+		<div class="widget widget-textarea">
+			<label class="mandatory">Lange Beschreibung<span class="mandatory">*</span></label>
+			<textarea class="textarea useEditorFrontend" name="beschreibung"></textarea>
+		</div>
+		
+		<p class="info"><i class="fa-solid fa-images"></i> <strong>Bildergalerie</strong><br>Ihre Bildergalerie können Sie direkt in Ihrem Profil ansehen und verwalten. Speichern Sie Ihre Angaben und gehen Sie anschließend auf Ihr Profil, um die Galerie zu bearbeiten.</p>
+	</fieldset>
+	
+</div>
+</div>
+<div class="col-4 col-md-12 bg-primary p-4 mb-2">
+	<?php $hilfekasten = 'location_add'; require_once('hilfekasten.html5'); ?>
+	<!--<div class="fixed-scroll">
+	<h4>Infos & Hilfe</h4>
+		<div class="focus-help nofocus show">
+			<p>Schön, dass Sie ein Locationprofil anlegen und sich am SE-KulturNetz beteiligen möchten!</p>
+			
+			<p>An dieser Stelle zeigen wir Ihnen wichtige Hinweise zur Eingabe im Formular. Klicken Sie dazu einfach in eines der Texteingabefelder im Formular und der Hilfetext in diesem blauen Kasten ändert sich entsprechend.</p>
+			
+			<p><strong>Wichtig:</strong> Alle Felder, die mit einem <strong>roten Kreissymbol <span style="color: Red;"><i class="fa-solid fa-circle-exclamation"></i></span></strong> markiert sind, sind Pflichtfelder und somit unbedingt auszufüllen!</p>
+		</div>
+		
+		<div class="focus-help name">
+			<p>Der Locationname steht sowohl auf Ihrem Profil als auch an verschiedenen Stellen des SE-KulturNetz im Vordergrund. Es kann sich hierbei um Ihren Vollnamen, den Namen Ihrer Band oder Ihres Vereins oder eben um Ihren Künstlernamen handeln.</p>
+		</div>
+		
+		<div class="focus-help themen">
+			<p>Geben Sie hier bitte einen oder mehrere spezifische Themenschwerpunkte durch Kommas getrennt an.</p>
+		</div>
+		
+		<div class="focus-help barrierefreiheit">
+			<p>Dies können sein: Rampen für Rollstuhlfahrer, breite Türen und Gänge für Rollstühle und Rollatoren,  barrierefreie Treppen, Aufzügen und Toiletten, taktile Leitsysteme als Orientierungshilfen, visuelle Alarme oder die Möglichkeit für Untertitel, u.v.m. Beschreiben Sie auch gerne Ihre grundsätzliche Haltung, z.B. "Wir heißen Menschen mit Behinderungen herzlich willkommen und laden sie dazu ein, sich bei uns zu melden, um ihre speziellen Bedürfnisse zu besprechen."</p>
+		</div>
+		
+		<div class="focus-help kurzbeschreibung">
+			<p>Die Kurzbeschreibung wird in Übersichten und Listenansichten angezeigt und sollte kurz und prägnant sein. Sie darf maximal 255 Zeichen haben. Bitte beschreiben Sie sich oder Ihre Gruppe in der dritten Person, z. B.:<br><em>"Anne Muster ist als Tänzerin weit über den Kreis Segeberg hinaus bekannt"</em> <br>anstatt<br><em>"Ich bin als Tänzerin weit ..."</em></p>
+		</div>
+		
+		<div class="focus-help beschreibung">
+			<p>In der Beschreibung haben Sie die Möglichkeit, Ihre Location ausführlich und ohne Textlängenbegrenzung darzustellen. Hier können Sie Ihrer Kreativität freien Lauf lassen - individuell und in Ihrem persönlichen Schreibstil.</p>
+			<p>Bedenken Sie hier bitte folgende Aspekte: technische Ausstattung wie Muskianlage, Lichtanlage, Mikrofone, Beamer u.ä., außerdem: Künstlergarderobe, Parkplatzsituation, Erreichbarkeit über den ÖPNV, Ihr Programm, ambiente, besondere Merkmale.</p>
+		</div>
+		
+		<div class="focus-help zitat">
+			<p>Wenn Sie möchten, kann Ihr persönliches Locationprofil im SE-KulturNetz mit einem Zitat beginnen. Beginnen Sie z.B. mit "Kultur ist" und fahren Sie dann einfach fort und erzählen uns in einem (kurzen) Satz, was Kultur für Sie bedeutet.</p>
+		</div>
+		
+		<div class="focus-help telefon">
+			<p>Geben Sie Ihre Telefon- oder Handynummer bitte im Format "04551-1234567" oder "0176-1234567" an.</p>
+		</div>
+		
+		<div class="support">
+			<h6>Ihre Ansprechpartnerin</h6>
+			<img src="files/se-kultur.de/img/team/Kerstin_Fhndrich.jpg" alt="Kerstin Fähndrich">
+			<p>
+				<strong>Kerstin Fähndrich</strong><br>
+				<a href="tel:04551959170" aria-label="Antippen und direkt anrufen" role="tooltip"><i class="fa-solid fa-phone-volume"></i> 04551-959170</a><br>
+				<a href="mailto:info@se-kultur.de" aria-label="Klicken, um eine E-Mail schreiben" role="tooltip"><i class="fa-solid fa-envelope"></i> info@se-kultur.de</a>
+			</p>
+		</div>
+	</div>-->
+</div>
+</div>
+
+<div class="formbody">
+	<div class="widget widget-checkbox">
+		<input type="checkbox" id="confirmation" required>
+		<label for="confirmation">Mit der Erstellung meines Locationprofils erkläre ich mich damit einverstanden, dass die angegebenen Daten öffentlich im SE-KulturNetz bzw. auf der Webseite www.se-kultur.de einsehbar sind. Ich versichere, alle Urheberrechte beachtet zu haben.</label>
+	</div>
+</div>
+	
+<div>
+	<!--<input type="submit" class="btn-primary" value="Angaben speichern">-->
+	<button class="btn-primary" type="submit"><i class="fa-regular fa-floppy-disk"></i> Angaben speichern</button>
+	<a href="{{link_url::eigene-profile|urlattr}}" class="btn btn-outline">Abbrechen & zurück</a>
+</div>
+</form>
+{{file::se-kultur-de/tinyMCE.html5}}
+{{file::se-kultur-de/fileuploader.php?upload=avatar}}
+
+
+<div id="loader">
+	<div class="inner">
+	<i class="fa-solid fa-spinner"></i>
+	<span>Ihre Angaben werden überprüft</span>
+	</div>
+</div>

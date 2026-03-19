@@ -1,0 +1,40 @@
+<?php 
+$GLOBALS['FOOTERJS'][] ='<script src="files/se-kultur.de/js/posting.js"></script>';  
+?>
+
+	<div class="info mb-4">
+	<strong>NEU: Ihr persönlicher Newsfeed</strong>
+	<p>Ab sofort können Sie Ihre Profile mit anderen Profilen verknüpfen, indem Sie ihnen folgen. Dadurch erhalten Sie auf dieser Seite nur die Beiträge von Profilen, denen Sie folgen und die für Sie relevant sind.</p>
+	<p>Um einem Profil zu folgen, gehen Sie in das <a href="./se-kulturnetz.html">SE-KulturNetz</a> und klicken dort ein Profil an - anschließend können Sie oben rechts auf den Button "Profil folgen" klicken und auswählen, welches Ihrer eigenen Profile Sie mit dem jeweiligen Profil verknüpfen möchten. Die Verknüpfung wird in Ihrem und dem anderen Profil unter dem Reiter "Verknüpft mit" öffentlich angezeigt.</p>
+	</div>
+
+	<?php foreach($this->postings as $post): ?>
+	<?php if($post['profile']->disable == 1 && $this->member_id != $post['member_id']) continue; ?>
+	<?php if($post['profile_type'] == 'tl_artists'): $aliaslink = 'kuenstlerprofil'; elseif($post['profile_type'] == 'tl_hosts'): $aliaslink = 'veranstalterprofil'; elseif($post['profile_type'] == 'tl_locations'): $aliaslink = 'locationprofil'; endif; ?>
+
+	<div class="posting shadow" data-security="<?= sha1($post['id'].$post['member_id']) ?>" data-id="<?= $post['id'] ?>" data-mid="<?= $post['member_id'] ?>" data-pid="<?= $post['profile_id'] ?>" data-ptype="<?= $post['profile_type'] ?>">
+		<div class="posting-head">
+			<a href="detailansicht-<?= $aliaslink ?>/<?= $post['profile']->alias ?>.html">
+				<img src="<?= $post['profile']->avatar_file->path ?: 'files/se-kultur.de/img/noavatar.jpg' ?>" alt="Profilbild von <?= $post['profile']->name ?>">
+			</a>
+			<div>
+				<a href="detailansicht-<?= $aliaslink ?>/<?= $post['profile']->alias ?>.html"><?= $post['profile']->name ?></a> 
+				<br>
+				<small title="Am <?= date('d.m.Y - H:i', $post['tstamp']) ?> Uhr"><?= $post['timeago'] ?></small>
+			</div>
+			
+			<?php if($this->member_id == $post['member_id']): ?>
+			<div class="actions">
+				<?php if($post['profile']->disable == 1): ?>
+					<span class="badge bg-error"><i class="fa-solid fa-eye-slash"></i><span class="hide-xs hide-sm hide-md">  Nicht öffentlich</span></span>
+				<?php endif; ?>
+				<a href="#" class="posting-edit"><i class="fa-solid fa-pen-to-square"></i></a>
+				<a href="#" class="posting-delete"><i class="fa-solid fa-trash-can"></i></a>
+			</div>
+			<?php endif; ?>
+		</div>
+		<div class="posting-content">
+			<p><?= nl2br($post['content']) ?></p>
+		</div>
+	</div>
+	<?php endforeach; ?>

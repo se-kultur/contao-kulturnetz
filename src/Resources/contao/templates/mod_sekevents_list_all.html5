@@ -1,0 +1,212 @@
+<?php 
+global $objPage; 
+$today = strtotime('today midnight'); //time(); //strtotime('2024-09-07'); 
+$tage = [
+	'Monday' => 'Montag',
+	'Tuesday' => 'Dienstag',
+	'Wednesday' => 'Mittwoch',
+	'Thursday' => 'Donnerstag',
+	'Friday' => 'Freitag',
+	'Saturday' => 'Samstag',
+	'Sunday' => 'Sonntag'
+];
+
+$kulturrouten = [
+	83 => 1,
+	65 => 1,
+	82 => 1,
+	33 => 1,
+	84 => 2,
+	48 => 2,
+	97 => 2,
+	6 => 2,
+	11 => 3,
+	67 => 3,
+	80 => 3
+];
+
+//$GLOBALS['TL_CSS'][] = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+//$GLOBALS['TL_JAVASCRIPT'][] = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+$GLOBALS['leaflet'] = true;
+$GLOBALS['FOOTERJS'][] ='<script type="text/javascript" src="files/se-kultur.de/js/autocompleteSekevents.js"></script>';  
+?>
+<style>.hidden {display:none !important;}</style>
+<?php if(isset($this->filter) && @$this->filter == true): ?>
+<form method="get" id="search" class="formbody">
+	<div class="widget widget-text eventdate">
+		<label>Datum</label>
+		<div class="inputgroup">
+			<input type="text" name="datum" value="<?= @$_GET['datum'] ?>" placeholder="z. B. 15.09.">
+			<!--<span><?= date('Y') ?></span>-->
+		</div>
+	</div>
+	
+	<div class="widget widget-select">
+		<label>Kategorie</label>
+		<select name="kategorie">
+			<option value="Alle"<?= (@$_GET['kategorie'] == 'Alle') ? ' selected' : '' ?>>Alle Kategorien</option>
+			<option<?= (@$_GET['kategorie'] == 'Literatur') ? ' selected' : '' ?>>Literatur</option>
+			<option<?= (@$_GET['kategorie'] == 'Musik') ? ' selected' : '' ?>>Musik</option>
+			<option<?= (@$_GET['kategorie'] == 'Theater') ? ' selected' : '' ?>>Theater</option>
+			<option<?= (@$_GET['kategorie'] == 'Tanz') ? ' selected' : '' ?>>Tanz</option>
+			<option<?= (@$_GET['kategorie'] == 'Bildende Kunst') ? ' selected' : '' ?>>Bildende Kunst</option>
+			<option<?= (@$_GET['kategorie'] == 'Film') ? ' selected' : '' ?>>Film</option>
+			<option<?= (@$_GET['kategorie'] == 'Fotografie') ? ' selected' : '' ?>>Fotografie</option>
+			<option<?= (@$_GET['kategorie'] == 'Multimedial') ? ' selected' : '' ?>>Multimedial</option>
+			<option<?= (@$_GET['kategorie'] == 'Performance') ? ' selected' : '' ?>>Performance</option>
+			<option<?= (@$_GET['kategorie'] == 'Sonstiges') ? ' selected' : '' ?>>Sonstiges</option>
+		</select>
+	</div>
+	
+	<div class="widget widget-select">
+		<label>Veranstaltungsformat</label>
+		<select name="format">
+			<option value="Alle"<?= (@$_GET['format'] == 'Alle') ? ' selected' : '' ?>>Alle Formate</option>
+			<option<?= (@$_GET['format'] == 'SE-KulturFenster') ? ' selected' : '' ?>>SE-KulturFenster</option>
+			<option<?= (@$_GET['format'] == 'SE-KulturDorf') ? ' selected' : '' ?>>SE-KulturDorf</option>
+			<option<?= (@$_GET['format'] == 'SE-KulturNacht') ? ' selected' : '' ?>>SE-KulturNacht</option>
+			<option<?= (@$_GET['format'] == 'SE-JungeKunst') ? ' selected' : '' ?>>SE-JungeKunst</option>
+		</select>
+	</div>
+	
+	<div class="widget widget-text">
+		<label>Volltextsuche</label>
+		<input name="text" type="text" placeholder="Namen oder Ort eingeben" value="<?= @$_GET['text'] ?>">
+	</div>
+	
+	
+	<div>
+		<button type="submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i><span class="hide-xs hide-sm hide-md"> Suchen</span></button>
+		<?php if(isset($_GET['text'])): ?>
+		<a href="<?= $objPage->alias ?>.html" class="btn btn-outline"><i class="fa-solid fa-xmark"></i><span class="hide-xs hide-sm hide-md">  Zurücksetzen</span></a>
+		<?php endif; ?>
+	</div>
+	
+	<div style="font-size: 0.8em; flex: 0 0 100%;">
+		<!--Angezeigt werden <?= count($this->events) ?> von insgesamt <?= $this->stats['count'] ?> Veranstaltungen. -->
+		Sie können die Ergebnisse auch nach Orten filtern:<br>
+		<?php foreach($this->stats['location_orte'] as $loc => $vol): ?>
+		<a href="{{page::alias}}.html?text=<?= urlencode($loc) ?>" class="badge" style="color:#fff;"><?= $loc ?></a>
+		<?php endforeach; ?>
+		<a href="https://se-kultur.de/news-detailansicht/kulturelle-vielfalt-im-kreis.html" class="badge" style="background:#00acaf;color:#fff"><i class="fa-solid fa-location-dot"></i> Gebietskarte anzeigen</a>
+		<!--Alternativ können Sie die (gefilterten) Veranstaltungen auch auf einer <a href="#">Karte anzeigen</a> lassen.-->
+	</div>
+</form>
+
+<?php if(1 == 2): ?>
+<div id="sekevents_map"></div>
+<script>
+	<?php 
+	foreach ($this->events as $kdate => $artist): 
+		$mapData[$artist->id] = [
+			'name' => $artist->name,
+			'location' => $artist->location_adresse.', '.$artist->location_plz.' '.$artist->location_ort
+		];
+	endforeach; 
+	echo 'const mapdata = '.json_encode(array_values($mapData)).';';
+	?>
+</script>
+<?php endif; ?>
+<?php endif; ?>
+
+<div class="artists-list">
+	<?php 
+	$date = false; 
+	foreach ($this->events as $kdate => $artist): 
+	
+	if($objFile = \Contao\FilesModel::findByUuid($artist->avatar)) {
+		$imgPath = $objFile->path;
+		$imgMeta = ($objFile->meta != NULL) ? unserialize($objFile->meta)['de'] : false;
+	} else {
+		$imgPath = 'files/se-kultur.de/img/noavatar.jpg';
+	}
+	
+	$kdate = explode('_', $kdate);
+	$kdate = strtotime( date('Y-m-d', $kdate[0]));
+	
+	if($date == false || $date != date('d.m.Y', intval($kdate))):
+	$date = date('d.m.Y', intval($kdate));
+	?>
+	<h4 class="mt-4<?php if($today > $kdate && !isset($_GET['datum'])) echo ' hidden'; ?>"><i class="fa-solid fa-calendar-days"></i> Events am <?= $date ?></h4>
+	<?php endif; ?>
+	
+	<div class="artist<?php if($today > $kdate && !isset($_GET['datum'])) echo ' hidden'; ?>">
+		<a href="detailansicht-sekultur-event/<?= $artist->alias ?>.html">
+			<figure class="avatar">
+				<img src="<?= $imgPath ?>" alt="<?= @$imgMeta['alt'] ?>">	
+			</figure>
+		</a>
+		<div class="infos">
+			<?php if($this->member_id == $artist->member_id): ?>
+			<div class="badges">
+				<?php if($artist->disable == '1'): ?>
+				<span class="badge bg-error"><i class="fa-solid fa-eye-slash"></i><span class="hide-xs hide-sm hide-md"> Nicht öffentlich</span></span>
+				<?php endif; ?>
+				
+				<!--<span class="badge bg-kulturnetz"><i class="fa-solid fa-circle-info"></i> Dein Profil</span>-->
+				<?php if($artist->readonly !== '1'): ?>
+				<a href="sekultur-event-bearbeiten/<?= $artist->alias ?>.html" class="btn btn-primary btn-sm">
+					<i class="fa-solid fa-pen-to-square"></i><span class="hide-sm hide-xs hide-md"> Event bearbeiten</span>
+				</a>
+				<?php else: ?>
+				<button onClick="return false;" class="btn btn-primary btn-sm" disabled aria-label="Bearbeitung durch Admins deaktiviert" role="tooltip">
+					<i class="fa-solid fa-pen-to-square"></i><span class="hide-sm hide-xs hide-md"> Event bearbeiten</span>
+				</button>
+				<?php endif; ?>
+				<a href="detailansicht-sekultur-event/<?= $artist->alias ?>.html#galerie" class="btn btn-outline btn-sm">
+					<i class="fa-solid fa-images"></i><span class="hide-sm hide-xs hide-md"> Galerie</span>
+				</a>
+			</div>
+			<?php endif; ?>
+			
+			<a href="detailansicht-sekultur-event/<?= $artist->alias ?>.html"><h6><?= $artist->name ?></h6></a>
+			<p class="beschreibung">
+				<span style="font-weight: bold;"><i class="fa-regular fa-clock"></i>
+				<?php $f = 0; foreach($artist->dates_formatted as $tstamp => $df): $tstamp = explode('_', $tstamp)[0]; ?>
+					<?php if($tstamp > $kdate && $tstamp < ($kdate+86400)): ?>
+						<?php if($f == 0): ?>
+						<?= $tage[date('l', $tstamp)].', '.date('d.m.Y - H:i', $tstamp) ?> Uhr
+						<?php else: ?>
+						<?= '+ '.date('H:i', $tstamp) ?> Uhr
+						<?php endif; ?>
+					<?php $f++; endif; ?>
+				<?php endforeach; ?>
+				</span><br><br>
+				
+				<?= $artist->kurzbeschreibung ?><br><br>
+				
+				<?php if($artist->eintrittfrei == '1'): ?>
+				<span class="badge">Eintritt frei</span>
+				<?php endif; ?>
+				<?php if($artist->spenden == '1'): ?>
+				<span class="badge">Spenden erbeten</span>
+				<?php endif; ?>
+				<?php if($artist->anmeldung == '1'): ?>
+				<span class="badge">Anmeldung erforderlich</span>
+				<?php endif; ?>
+				<?php if(strlen($artist->zielgruppen) > 0): ?>
+				<?php foreach(explode(',', $artist->zielgruppen) as $z): ?>
+				<span class="badge bg-kulturtage"><?= $z ?></span>
+				<?php endforeach; ?>
+				<?php endif; ?>
+				
+				<span class="badge bg-<?= strtolower(substr($artist->kulturform,3)) ?>"><?= $artist->kulturform ?></span>
+				
+				
+				<?php if(isset($kulturrouten[$artist->id])): ?>
+				<a href="https://se-kultur.de/kulturrouten.html#route<?= $kulturrouten[$artist->id] ?>" target="_blank"><span class="badge" style="background:orange"><i class="fa-solid fa-bicycle"></i> KulturRoute #<?= $kulturrouten[$artist->id] ?></span></a>
+				<?php endif; ?>
+				
+				<!--<strong>Nächster Termin:</strong> <?= date('d.m.y - H:i', $artist->nextdate) ?>-->
+			</p>
+			<div class="footer">
+				<span class="sparten"><?= trim(strtoupper(str_replace(',',' | ',$artist->sparten))) ?></span>
+				<span class="ort"><?= $artist->location_ort ?></span>
+				<div>
+					<a href="detailansicht-sekultur-event/<?= $artist->alias ?>.html"><i class="fa-solid fa-arrow-right-long"></i></a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<?php endforeach; ?>
+</div>

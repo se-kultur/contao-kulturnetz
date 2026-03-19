@@ -1,0 +1,38 @@
+<?php if($this->member_id > 0): ?>
+<div id="mwrapper">
+	<div class="inner">
+		<strong>Mit welchem Ihrer Profile möchten Sie diesem Profil folgen?</strong>
+		<form id="following-data">
+			<input type="hidden" name="member_id" value="<?= $this->member_id ?>">
+			<input type="hidden" name="following_id" value="<?= $artist->id ?>">
+			<input type="hidden" name="following_type" value="<?= $profiletable ?>">
+			
+			<ul class="select-followers">
+				<?php foreach($this->member_profiles as $type => $profiles): ?>
+					<?php foreach($profiles as $profile): ?>
+						<?php if(in_array($type.'-'.$profile->id, $this->following_profiles)): ?>
+							<li>
+								<input type="hidden" name="follower[]" value="<?= $type ?>-<?= $profile->id ?>" disabled> 
+								<input type="checkbox" name="reverse" data-value="<?= $type ?>-<?= $profile->id ?>" id="sfp_<?= $type ?>_<?= $profile->id ?>" checked> 
+								<label for="sfp_<?= $type ?>_<?= $profile->id ?>">
+									<img src="<?= $profile->avatar_file->path ?: 'files/se-kultur.de/img/noavatar.jpg' ?>" alt="Profilbild <?= $profile->name ?>"> <?= $profile->name ?>
+								</label>
+							</li>	
+						<?php else: ?>
+							<li>
+								<input type="checkbox" name="follower[]" value="<?= $type ?>-<?= $profile->id ?>" id="sfp_<?= $type ?>_<?= $profile->id ?>"> 
+								<label for="sfp_<?= $type ?>_<?= $profile->id ?>">
+									<img src="<?= $profile->avatar_file->path ?: 'files/se-kultur.de/img/noavatar.jpg' ?>" alt="Profilbild <?= $profile->name ?>"> <?= $profile->name ?>
+								</label>
+							</li>	
+						<?php endif; ?>
+					<?php endforeach; ?>
+				<?php endforeach; ?>
+			</ul>
+			
+			<button class="btn btn-primary follow-submit" type="submit"><i class="fa-regular fa-floppy-disk"></i> Speichern</button>
+			<a href="#" class="btn btn-outline follow-close">Abbrechen</a>
+		</form>
+	</div>
+</div>
+<?php endif; ?>

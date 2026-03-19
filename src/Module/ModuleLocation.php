@@ -1,0 +1,92 @@
+<?php
+
+namespace SeKultur\ContaoKulturnetzBundle\Module;
+
+use SeKultur\ContaoKulturnetzBundle\Models\ArtistsModel;
+use SeKultur\ContaoKulturnetzBundle\Models\HostsModel;
+use SeKultur\ContaoKulturnetzBundle\Models\LocationsModel;
+use SeKultur\ContaoKulturnetzBundle\Models\FollowersModel;
+use SeKultur\ContaoKulturnetzBundle\Models\EventsModel;
+use SeKultur\ContaoKulturnetzBundle\Models\SekEventsModel;
+use SeKultur\ContaoKulturnetzBundle\Models\PostingsModel;
+
+class ModuleLocation extends \Module
+{
+	/**
+	 * @var string
+	 */
+	protected $strTemplate = 'mod_location';
+
+	/**
+	 * Do not display the module if there are no menu items
+	 *
+	 * @return string
+	 */
+	public function generate()
+	{
+		if (TL_MODE == 'BE')
+		{
+			/** @var \BackendTemplate|object $objTemplate */
+			$objTemplate = new \BackendTemplate('be_wildcard');
+
+			$objTemplate->wildcard = '### Detailansicht Locationprofil ###';
+			$objTemplate->title = $this->headline;
+			$objTemplate->id = $this->id;
+			$objTemplate->link = $this->name;
+			$objTemplate->href = 'contao?do=themes&table=tl_module&act=edit&id=' . $this->id;
+
+			return $objTemplate->parse();
+		}
+
+		return parent::generate();
+	}
+
+	/**
+	 * Generate module
+	 */
+	protected function compile()
+	{
+		$alias = \Input::get('auto_item');
+		$location = LocationsModel::findByIdOrAlias($alias);
+		
+		if($location !== NULL) {
+			$memberId = 0;
+			if (FE_USER_LOGGED_IN === true) {
+				$objUser = \FrontendUser::getInstance();
+				$memberId = $objUser->id;
+				
+				$memberProfiles = [
+					'tl_artists' => ArtistsModel::findByMemberId($memberId),
+					'tl_hosts' => HostsModel::findByMemberId($memberId),
+					'tl_locations' => LocationsModel::findByMemberId($memberId),
+				];
+				
+				$followingProfiles = [];
+				$fpData = FollowersModel::findMembersFollowingsFor($location->id, 'tl_locations', $memberId);
+				foreach($fpData as $fp) {
+					$followingProfiles[] = $fp->follower_type.'-'.$fp->follower_id;
+				}
+			}
+			$this->Template->member_id = $memberId;
+			$this->Template->member_profiles = $memberProfiles;
+			$this->Template->following_profiles = $followingProfiles;
+			
+			$sekevents = SekEventsModel::findByProfileId($location->id, 'locations');
+			$this->Template->sekevents = $sekevents;
+			
+			$events = EventsModel::findByProfileId($location->id, 'locations');
+			$this->Template->events = $events;
+			
+			$followers = FollowersModel::findAllFor($location->id, 'tl_locations');
+			$this->Template->followers = $followers;
+			
+			$postings = PostingsModel::findAllFor($location->id, 'tl_locations');
+			$this->Template->postings = $postings;
+			
+			$this->Template->location = $location;		
+		} else {
+			// TODO: REDIRECT OR ERROR PAGE
+		}
+		
+	}
+}

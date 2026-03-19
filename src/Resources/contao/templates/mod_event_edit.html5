@@ -1,0 +1,350 @@
+<?php 
+$artist = $this->event;
+$noavatar = 'files/se-kultur.de/img/noavatar.jpg';
+
+$GLOBALS['TL_CSS'][] = 'files/se-kultur.de/vendor/Croppie-master/croppie.css';
+$GLOBALS['FOOTERJS'][] ='<script src="files/se-kultur.de/vendor/Croppie-master/croppie.js"></script>';  
+$GLOBALS['FOOTERJS'][] ='<script src="files/se-kultur.de/vendor/jquery.dirty.js"></script>';  
+
+$GLOBALS['TL_JAVASCRIPT'][] ='files/se-kultur.de/js/eventform.js';  
+$GLOBALS['FOOTERJS'][] ='<script src="files/se-kultur.de/js/fileuploader.js"></script>';  
+
+if($objFile = \Contao\FilesModel::findByUuid($artist->avatar)) {
+	$imgPath = $objFile->path;
+	$imgMeta = ($objFile->meta != NULL) ? unserialize($objFile->meta)['de'] : false;
+	
+	$avatar_uuid = preg_replace("/(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})/i", "$1-$2-$3-$4-$5", bin2hex($artist->avatar));
+} else {
+	$imgPath = $noavatar;
+}
+?>
+<form class="artistform" method="post" action="files/se-kultur.de/code/insertEvent.php" data-type="edit">
+<div class="flex gap-2 mt-4 wrap">
+<div class="col-8 col-md-12 order-md-2">
+<div class="formbody mod_profiles">
+	
+	<div class="bg-kulturnetz p-4 mb-1">
+		<h3>Veranstaltung bearbeiten</h3>
+		<a href="detailansicht-event/<?= $artist->alias ?>.html" class="btn btn-primary">Veranstaltung ansehen</a>
+		<a href="detailansicht-event/<?= $artist->alias ?>.html#galerie" class="btn btn-outline">Fotos verwalten</a>
+		<a href="veranstaltungen.html" class="btn btn-outline">Zurück zur Übersicht</a>
+	</div>
+		
+	<fieldset>
+		<legend>Allgemeine Daten</legend>
+		
+		<input type="hidden" name="member_id" value="{{user::id|attr}}">
+		
+		<input type="hidden" name="alias" value="<?= $artist->alias ?>">
+		<input type="hidden" name="id" value="<?= $artist->id ?>">
+		<input type="hidden" name="security" value="<?= sha1($artist->id.$artist->alias) ?>">
+		
+		<figure class="avatar">
+			<img src="<?= $imgPath ?>">	
+			<div class="actions">
+				<a href="#" class="upload"><i class="fa-solid fa-cloud-arrow-up"></i></a>
+				<a href="#" class="edit"><i class="fa-solid fa-pen-to-square"></i></a>
+				<a href="#" class="delete"><i class="fa-solid fa-trash-can"></i></a>
+			</div>
+		</figure>
+		
+		<input type="hidden" name="avatar" value="<?= $avatar_uuid ?>">
+		
+		<div style="flex:1">
+			<div class="info">
+				<strong>Event-Titelbild</strong><br>
+				Das Titelbild Ihrer Veranstaltung wird auf unserer Webseite dargestellt. Wir bitten Sie daher, ein aussagekräftiges Foto mit einer Auflösung von mindestens 1000 x 1000 Pixeln zu verwenden. Außerdem müssen die Bildrechte vorhanden sein - Fotograf*in oder Urheber*in muss angegeben werden.
+			</div>
+		</div>
+		
+		<div class="widget widget-text">
+			<label class="mandatory">Name der Veranstaltung<span class="mandatory">*</span></label>
+			<input type="text" name="name" required  value="<?= $artist->name ?>">
+		</div>
+		
+		<div class="widget widget-text">
+			<label class="mandatory">Kulturform(en)<span class="mandatory">*</span></label>
+			<input type="hidden" name="sparten" value="<?= $artist->sparten ?>">
+			<span class="spartenselector" data-value="<?= $artist->sparten ?>"></span>
+		</div>
+		
+		<div class="widget widget-text">
+			<label class="mandatory">Zielgruppe(n)<span class="mandatory">*</span></label>
+			<input type="hidden" name="zielgruppen" value="<?= $artist->zielgruppen ?>">
+			<span class="zielgruppenselector" data-value="<?= $artist->zielgruppen ?>"></span>
+		</div>
+		
+		<div class="widget widget-text ui-widget">
+			<label class="mandatory">Teilnehmende/r Künstler*in(nen)<span class="mandatory">*</span></label>
+			<input type="text" name="artists" value="<?= $artist->artists ?>">
+			
+			<div class="linked_artists">
+			<?php foreach($artist->linked_artists_data as $linked): ?>
+				<span class="linked-profile"><a href="detailansicht-kuenstlerprofil/<?= $linked->alias ?>.html" target="_blank"><img src="<?= ($linked->avatar_file->path !== NULL) ? $linked->avatar_file->path : $noavatar ?>"> <?= $linked->name ?> </a> <i class="fa-solid fa-xmark" data-id="<?= $linked->id ?>"></i></span>
+			<?php endforeach; ?>
+			</div>
+			<input type="hidden" name="linked_artists" value='<?= $artist->linked_artists ?>'>
+		</div>
+		
+	</fieldset>
+	
+	<fieldset id="price-items">
+		<legend>Eintritt &amp; Anmeldung</legend>
+		
+		<div class="widget widget-checkbox">
+			<input type="checkbox" id="eintrittfrei" name="eintrittfrei" <?= ($artist->eintrittfrei == '1') ? ' checked' : '' ?>>
+			<label for="eintrittfrei">Eintritt frei?</label>
+		</div>
+		
+		<div class="toggleeintritt prices"<?= ($artist->eintrittfrei !== '1') ? ' style="display:block"' : '' ?>>
+			<?php $prices = json_decode($artist->prices,true); if($artist->prices != ''): $i = 1; foreach($prices as $p): ?>
+			<div class="price-item">
+				<div class="widget widget-text pricetag">
+					<label class="mandatory">Titel<span class="mandatory">*</span></label>
+					<input type="text" name="pricetag[]" value="<?= $p['pricetag'] ?>" placeholder="VVK, Abendkasse, Ermäßigung, ...">
+				</div>
+
+				<div class="widget widget-text price">
+					<label class="mandatory">Preis<span class="mandatory">*</span></label>
+					<input type="text" name="price[]" value="<?= $p['price'] ?>">
+				</div>
+
+				<div class="widget priceactions">
+					<button class="btn btn-outline deleteprice"<?php if($i == 1): ?> disabled<?php endif; ?>><i class="fa-solid fa-trash-can"></i></button>
+				</div>
+			</div>
+			<?php $i++; endforeach; else: ?>
+			<div class="price-item">
+				<div class="widget widget-text pricetag">
+					<label class="mandatory">Titel<span class="mandatory">*</span></label>
+					<input type="text" name="pricetag[]" value="Regulärer Eintritt" placeholder="VVK, Abendkasse, Ermäßigung, ...">
+				</div>
+
+				<div class="widget widget-text price">
+					<label class="mandatory">Preis<span class="mandatory">*</span></label>
+					<input type="text" name="price[]">
+				</div>
+
+				<div class="widget priceactions">
+					<button class="btn btn-outline deleteprice" disabled><i class="fa-solid fa-trash-can"></i></button>
+				</div>
+			</div>
+			<?php endif; ?>
+		</div>
+		
+		<div class="toggleeintritt mb-2"<?= ($artist->eintrittfrei !== '1') ? ' style="display:block"' : '' ?>>
+			<a href="#" class="btn btn-outline addprice btn-sm"><i class="fa-solid fa-plus"></i> Eintrittspreis hinzufügen</a>
+		</div>
+		
+		<div class="widget widget-textarea toggleeintritt"<?= ($artist->eintrittfrei !== '1') ? ' style="display:block"' : '' ?>>
+			<label>Kommentar zu Eintrittspreisen / ggf. Vorverkaufsstellen</label>
+			<textarea maxlength="1000" name="pricecomment"><?= $artist->pricecomment ?></textarea>
+		</div>
+		
+		<div class="widget widget-checkbox">
+			<input type="checkbox" id="spenden" name="spenden" <?= ($artist->spenden == 1) ? ' checked' : '' ?>>
+			<label for="spenden">Spenden erbeten?</label>
+		</div>
+		
+		<div class="widget widget-checkbox">
+			<input type="checkbox" id="anmeldung" name="anmeldung"<?= ($artist->anmeldung == 1) ? ' checked' : '' ?>>
+			<label for="anmeldung">Anmeldung erforderlich?</label>
+		</div>
+		
+		<div class="widget widget-text toggleanmeldung"<?= ($artist->anmeldung == '1') ? ' style="display:block"' : '' ?>>
+			<label class="mandatory">Anmeldestelle<span class="mandatory">*</span></label>
+			<input type="text" name="anmeldestelle" value="<?= $artist->anmeldestelle ?>">
+		</div>
+	</fieldset>
+	
+	<fieldset id="events-items">
+		<legend>Termin(e) / Öffnungszeiten</legend>
+		
+		<?php $i = 1; foreach(json_decode($artist->dates,true) as $d): ?>
+		<div class="event-item">
+			<div class="widget widget-text eventdate">
+				<label class="mandatory">Datum<span class="mandatory">*</span></label>
+				<div class="inputgroup">
+					<input type="text" name="eventdate[]" value="<?= $d['date'] ?>" required>
+				</div>
+			</div>
+
+			<div class="widget widget-text eventtime">
+				<label class="mandatory">Beginn<span class="mandatory">*</span></label>
+				<input type="text" name="eventtimestart[]" value="<?= $d['start'] ?>" required>
+			</div>
+
+			<div class="widget widget-text eventtime">
+				<label class="mandatory">Ende<span class="mandatory">*</span></label>
+				<input type="text" name="eventtimeend[]" value="<?= $d['end'] ?>" required>
+			</div>
+			
+			<div class="widget widget-text eventcomment">
+				<label>Kommentar (optional)</label>
+				<input type="text" name="eventcomment[]" value="<?= ($d['comment']) ?>">
+			</div>
+		
+			<div class="widget eventactions">
+				<button class="btn btn-outline sorthandle" role="tooltip" aria-label="Terminzeile verschieben"<?php if($i == 1): ?> disabled<?php endif; ?>><i class="fa-solid fa-sort"></i></button>
+				<button class="btn btn-outline copydate" role="tooltip" aria-label="Terminzeile duplizieren"><i class="fa-solid fa-copy"></i></button>
+				<button class="btn btn-outline deletedate" role="tooltip" aria-label="Terminzeile löschen"<?php if($i == 1): ?> disabled<?php endif; ?>><i class="fa-solid fa-trash-can"></i></button>
+			</div>
+		</div>
+		<?php $i++; endforeach; ?>
+		
+		<div>
+			<a href="#" class="btn btn-outline addeventdate btn-sm"><i class="fa-solid fa-plus"></i> Terminfelder hinzufügen</a>
+		</div>
+	</fieldset>
+	
+	<fieldset>
+		<legend>Veranstaltungsort</legend>
+		
+		<div class="widget widget-text">
+			<label class="mandatory">Name der Location<span class="mandatory">*</span></label>
+			<input type="text" name="locations"<?php if(strlen($artist->linked_locations) > 2): ?> readonly placeholder="Es ist bereits ein Veranstaltungsort ausgewählt"<?php elseif(strlen($artist->locations) > 0): ?> value="<?= $artist->locations ?>" <?php endif; ?>>
+			
+			<div class="linked_locations">
+				<?php foreach($artist->linked_locations_data as $linked): ?>
+					<span class="linked-profile"><a href="detailansicht-locationprofil/<?= $linked->alias ?>.html" target="_blank"><img src="<?= ($linked->avatar_file->path !== NULL) ? $linked->avatar_file->path : $noavatar ?>"> <?= $linked->name ?> </a> <i class="fa-solid fa-xmark" data-id="<?= $linked->id ?>"></i></span>
+				<?php endforeach; ?>
+			</div>
+			<input type="hidden" name="linked_locations" value='<?= $artist->linked_locations ?>'>
+			
+		</div>
+		
+		<div class="widget widget-text">
+			<label class="mandatory">Straße und Hausnummer<span class="mandatory">*</span></label>
+			<input type="text" name="location_adresse" value="<?= $artist->location_adresse ?>">
+		</div>
+		
+		<div class="widget widget-text postal">
+			<label class="mandatory">Postleitzahl<span class="mandatory">*</span></label>
+			<input type="text" name="location_plz" maxlength="5" value="<?= $artist->location_plz ?>">
+		</div>
+		
+		<div class="widget widget-text city">
+			<label class="mandatory">Ort<span class="mandatory">*</span></label>
+			<input type="text" name="location_ort" value="<?= $artist->location_ort ?>">
+		</div>
+		
+		<div class="widget widget-text">
+			<label>Barrierefreiheit</label>
+			<input type="text" name="location_barrierefreiheit" value="<?= $artist->location_barrierefreiheit ?>">
+		</div>
+		
+		<div class="widget widget-text">
+			<label>Telefon- oder Handynummer</label>
+			<input type="tel" name="location_telefon" value="<?= $artist->location_telefon ?>">
+		</div>
+		
+		<div class="widget widget-text">
+			<label>E-Mail-Adresse</label>
+			<input type="email" name="location_email" value="<?= $artist->location_email ?>">
+		</div>
+		
+		<div class="widget widget-url">
+			<label>Internetseite</label>
+			<input type="text" name="location_website" value="<?= $artist->location_website ?>">
+		</div>
+	</fieldset>
+	
+	<fieldset>
+		<legend>Veranstalter*in</legend>
+		
+		<div class="widget widget-text">
+			<label class="mandatory">Veranstalter*in<span class="mandatory">*</span></label>
+			<input type="text" name="hosts" value="<?= $artist->hosts ?>">
+			
+			<div class="linked_hosts">
+				<?php foreach($artist->linked_hosts_data as $linked): ?>
+					<span class="linked-profile"><a href="detailansicht-veranstalterprofil/<?= $linked->alias ?>.html" target="_blank"><img src="<?= ($linked->avatar_file->path !== NULL) ? $linked->avatar_file->path : $noavatar ?>"> <?= $linked->name ?> </a> <i class="fa-solid fa-xmark" data-id="<?= $linked->id ?>"></i></span>
+				<?php endforeach; ?>
+			</div>
+			<input type="hidden" name="linked_hosts" value='<?= $artist->linked_hosts ?>'>
+			
+		</div>
+		
+		<div class="widget widget-text">
+			<label class="mandatory">Straße und Hausnummer<span class="mandatory">*</span></label>
+			<input type="text" name="host_adresse" value="<?= $artist->host_adresse ?>">
+		</div>
+		
+		<div class="widget widget-text postal">
+			<label class="mandatory">Postleitzahl<span class="mandatory">*</span></label>
+			<input type="text" name="host_plz" maxlength="5" value="<?= $artist->host_plz ?>">
+		</div>
+		
+		<div class="widget widget-text city">
+			<label class="mandatory">Ort<span class="mandatory">*</span></label>
+			<input type="text" name="host_ort" value="<?= $artist->host_ort ?>">
+		</div>
+		
+		<div class="widget widget-text">
+			<label>Telefon- oder Handynummer</label>
+			<input type="tel" name="host_telefon" value="<?= $artist->host_telefon ?>">
+		</div>
+		
+		<div class="widget widget-text">
+			<label>E-Mail-Adresse</label>
+			<input type="email" name="host_email" value="<?= $artist->host_email ?>">
+		</div>
+		
+		<div class="widget widget-url">
+			<label>Internetseite</label>
+			<input type="text" name="host_website" value="<?= $artist->host_website ?>">
+		</div>
+	</fieldset>
+	
+	<fieldset>
+		<legend>Informationen</legend>
+		
+		<div class="widget widget-textarea">
+			<label class="mandatory">Event-Kurzbeschreibung<span class="mandatory">*</span></label>
+			<textarea maxlength="255" name="kurzbeschreibung" class="nobreaks" required=""><?= $artist->kurzbeschreibung ?></textarea>
+		</div>
+		
+		<div class="widget widget-textarea">
+			<label class="mandatory">Event-Langbeschreibung<span class="mandatory">*</span></label>
+			<textarea class="textarea useEditorFrontend" name="beschreibung"><?= $artist->beschreibung ?></textarea>
+		</div>
+		
+		<div class="widget widget-textarea">
+			<label>Kooperationspartner*in(nen)</label>
+			<textarea maxlength="255" name="kooperationspartner" class="nobreaks"><?= $artist->kooperationspartner ?></textarea>
+		</div>
+		
+		<p class="info"><i class="fa-solid fa-images"></i> <strong>Bildergalerie</strong><br>Ihre Bildergalerie können Sie direkt in der Detailansicht Ihres Events ansehen und verwalten. Speichern Sie Ihre Angaben und gehen Sie anschließend auf die Detailansicht Ihres Events, um die Galerie zu bearbeiten.</p>
+	</fieldset>
+	
+</div>
+</div>
+<div class="col-4 col-md-12 bg-primary p-4 mb-2">
+	<?php $hilfekasten = 'event_edit'; require_once('hilfekasten.html5'); ?>
+</div>
+</div>
+
+
+<div class="formbody">
+	<div class="widget widget-checkbox">
+		<input type="checkbox" id="confirmation" required>
+		<label for="confirmation">Ich versichere, alle Urheberrechte beachtet zu haben.</label>
+	</div>
+</div>
+
+<div>
+	<!--<input type="submit" class="btn-primary" value="Angaben speichern">-->
+	<button class="btn-primary" type="submit"><i class="fa-regular fa-floppy-disk"></i> Angaben speichern</button>
+	<a href="{{link_url::eigene-profile|urlattr}}" class="btn btn-outline">Abbrechen & zurück</a>
+</div>
+</form>
+{{file::se-kultur-de/tinyMCE.html5}}
+{{file::se-kultur-de/fileuploader.php?upload=event}}
+
+
+<div id="loader">
+	<div class="inner">
+	<i class="fa-solid fa-spinner"></i>
+	<span>Ihre Angaben werden überprüft</span>
+	</div>
+</div>

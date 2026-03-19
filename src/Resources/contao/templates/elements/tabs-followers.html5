@@ -1,0 +1,74 @@
+<?php
+$followingsCount = 0;
+$followersCount = 0;
+?>
+
+<h6>Vernetzt mit</h6>
+<?php if(is_array($this->followers['followings'])): ?>
+<ul class="followers-list">
+	<?php foreach($this->followers['followings'] as $key => $follower): $type = explode('-', $key)[0];  ?>
+	<?php if($follower->profile->disable == 1) continue; ?>
+	<?php if($type == 'tl_artists'): $aliaslink = 'kuenstlerprofil'; elseif($type == 'tl_hosts'): $aliaslink = 'veranstalterprofil'; elseif($type == 'tl_locations'): $aliaslink = 'locationprofil'; endif; ?>
+	<li>
+		<a href="detailansicht-<?= $aliaslink ?>/<?= $follower->profile->alias ?>.html">
+			<img src="<?= $follower->profile->avatar_file->path ?: 'files/se-kultur.de/img/noavatar.jpg' ?>" alt="Profilbild <?= $follower->profile->name ?>">
+		</a>
+		<div>
+			<a href="detailansicht-<?= $aliaslink ?>/<?= $follower->profile->alias ?>.html"><?= $follower->profile->name ?></a><br>
+			<?php if($type == 'tl_artists'): ?>
+			Künstler*in
+			<?php elseif($type == 'tl_hosts'): ?>
+			Veranstalter*in
+			<?php elseif($type == 'tl_locations'): ?>
+			Location
+			<?php endif; ?>
+			<br>
+			<?= trim(strtoupper(str_replace(',',' | ',$follower->profile->sparten))) ?>
+		</div>
+		
+		<a href="detailansicht-<?= $aliaslink ?>/<?= $follower->profile->alias ?>.html" class="arrow"><i class="fa-solid fa-arrow-right-long"></i></a>
+	</li>
+	<?php $followingsCount = $followingsCount+1; endforeach; ?>
+</ul>
+<?php endif; ?>
+
+<?php if($followingsCount == 0): ?>
+Aktuell folgt <?= $artist->name ?> keinem anderen Profil im SE-KulturNetz.
+<?php endif; ?>
+
+
+<h6 class="mt-4">Gefolgt von</h6>
+<?php if(is_array($this->followers['followers'])): ?>
+<ul class="followers-list">
+	<?php foreach($this->followers['followers'] as $key => $follower): $type = explode('-', $key)[0]; ?>
+	<?php if($follower->profile->disable == 1) continue; ?>
+	<?php if($type == 'tl_artists'): $aliaslink = 'kuenstlerprofil'; elseif($type == 'tl_hosts'): $aliaslink = 'veranstalterprofil'; elseif($type == 'tl_locations'): $aliaslink = 'locationprofil'; endif; ?>
+	<li>
+		<a href="detailansicht-<?= $aliaslink ?>/<?= $follower->profile->alias ?>.html">
+			<img src="<?= $follower->profile->avatar_file->path ?: 'files/se-kultur.de/img/noavatar.jpg' ?>" alt="Profilbild <?= $follower->profile->name ?>">
+		</a>
+		<div>
+			<a href="detailansicht-<?= $aliaslink ?>/<?= $follower->profile->alias ?>.html"><?= $follower->profile->name ?></a><br>
+			<?php if($type == 'tl_artists'): ?>
+			Künstler*in
+			<?php elseif($type == 'tl_hosts'): ?>
+			Veranstalter*in
+			<?php elseif($type == 'tl_locations'): ?>
+			Location
+			<?php endif; ?>
+			<br>
+			<?= trim(strtoupper(str_replace(',',' | ',$follower->profile->sparten))) ?>
+		</div>
+		
+		<a href="detailansicht-<?= $aliaslink ?>/<?= $follower->profile->alias ?>.html" class="arrow"><i class="fa-solid fa-arrow-right-long"></i></a>
+	</li>
+	<?php $followersCount = $followersCount+1; endforeach; ?>
+</ul>
+<?php endif; ?>
+
+<?php if($followersCount == 0): ?>
+	Bisher folgt niemand diesem Profil.
+	<?php if($this->member_id > 0 && $this->member_id != $artist->member_id): ?>
+	Seien Sie der/die Erste und <a href="#" class="follow-options">folgen Sie diesem Profil</a>!
+	<?php endif; ?><br><br>
+<?php endif; ?>

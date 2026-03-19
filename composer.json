@@ -1,0 +1,18 @@
+{
+    "name": "se-kultur/contao-kulturnetz",
+    "description": "Contao-Erweiterung zur Vernetzung von Kulturakteur*innen -- Verwaltung von K\u00fcnstler*innen, Veranstalter*innen, Locations und Veranstaltungen.",
+    "license": "GPL-3.0-or-later",
+    "type": "contao-bundle",
+    "require": {
+        "php": "^8.1",
+        "contao/core-bundle": "^4.13"
+    },
+    "autoload": {
+        "psr-4": {
+            "SeKultur\\ContaoKulturnetzBundle\\": "src/"
+        }
+    },
+    "extra": {
+        "contao-manager-plugin": "SeKultur\\ContaoKulturnetzBundle\\ContaoManager\\Plugin"
+    }
+}
