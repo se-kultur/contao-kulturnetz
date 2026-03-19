@@ -210,16 +210,14 @@ class EventsModel extends Model
 		];
 	}
 	
-	public static function findAllEvents($limit = 100, $searchArr = false)
+	public static function findAllEvents($limit = 0, $searchArr = false)
     {
 		$t = static::$strTable;
 
 		$arrOptions = [
 			'column' => array("($t.disable!=?)"),
 			'value'  => array('1'),
-			'order' => 'id DESC', //'(id = 16) DESC, id DESC',
-			'limit' => $limit
-			//'return' => 'Array'
+			'order' => 'id DESC',
 		];
 		
 		if(isset($searchArr['kategorie']) && $searchArr['kategorie'] !== 'Alle') {

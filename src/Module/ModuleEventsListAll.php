@@ -51,7 +51,7 @@ class ModuleEventsListAll extends \Module
         }
 		$this->Template->member_id = $memberId;
 		
-		$events = EventsModel::findAllEvents(100, @$_GET);
+		$events = EventsModel::findAllEvents(0, @$_GET);
 		$this->Template->events = $events;
 		
 		$filter = true;
