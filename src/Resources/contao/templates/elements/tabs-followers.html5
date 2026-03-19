@@ -4,7 +4,7 @@ $followersCount = 0;
 ?>
 
 <h6>Vernetzt mit</h6>
-<?php if(is_array($this->followers['followings'])): ?>
+<?php if(!empty($this->followers['followings']) && is_array($this->followers['followings'])): ?>
 <ul class="followers-list">
 	<?php foreach($this->followers['followings'] as $key => $follower): $type = explode('-', $key)[0];  ?>
 	<?php if($follower->profile->disable == 1) continue; ?>
@@ -39,7 +39,7 @@ Aktuell folgt <?= $artist->name ?> keinem anderen Profil im SE-KulturNetz.
 
 
 <h6 class="mt-4">Gefolgt von</h6>
-<?php if(is_array($this->followers['followers'])): ?>
+<?php if(!empty($this->followers['followers']) && is_array($this->followers['followers'])): ?>
 <ul class="followers-list">
 	<?php foreach($this->followers['followers'] as $key => $follower): $type = explode('-', $key)[0]; ?>
 	<?php if($follower->profile->disable == 1) continue; ?>
