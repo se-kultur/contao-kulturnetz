@@ -80,7 +80,7 @@ if($objFile = \Contao\FilesModel::findByUuid($artist->avatar)) {
 			
 			<div class="linked_artists">
 			<?php foreach($artist->linked_artists_data as $linked): ?>
-				<span class="linked-profile"><a href="detailansicht-kuenstlerprofil/<?= $linked->alias ?>.html" target="_blank"><img src="<?= ($linked->avatar_file->path !== NULL) ? $linked->avatar_file->path : $noavatar ?>"> <?= $linked->name ?> </a> <i class="fa-solid fa-xmark" data-id="<?= $linked->id ?>"></i></span>
+				<span class="linked-profile"><a href="detailansicht-kuenstlerprofil/<?= $linked->alias ?>.html" target="_blank"><img src="<?= \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize(($linked->avatar_file->path !== NULL) ? $linked->avatar_file->path : $noavatar, 120, 120, 'crop') ?: $noavatar ?>"> <?= $linked->name ?> </a> <i class="fa-solid fa-xmark" data-id="<?= $linked->id ?>"></i></span>
 			<?php endforeach; ?>
 			</div>
 			<input type="hidden" name="linked_artists" value='<?= $artist->linked_artists ?>'>
@@ -206,7 +206,7 @@ if($objFile = \Contao\FilesModel::findByUuid($artist->avatar)) {
 			
 			<div class="linked_locations">
 				<?php foreach($artist->linked_locations_data as $linked): ?>
-					<span class="linked-profile"><a href="detailansicht-locationprofil/<?= $linked->alias ?>.html" target="_blank"><img src="<?= ($linked->avatar_file->path !== NULL) ? $linked->avatar_file->path : $noavatar ?>"> <?= $linked->name ?> </a> <i class="fa-solid fa-xmark" data-id="<?= $linked->id ?>"></i></span>
+					<span class="linked-profile"><a href="detailansicht-locationprofil/<?= $linked->alias ?>.html" target="_blank"><img src="<?= \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize(($linked->avatar_file->path !== NULL) ? $linked->avatar_file->path : $noavatar, 120, 120, 'crop') ?: $noavatar ?>"> <?= $linked->name ?> </a> <i class="fa-solid fa-xmark" data-id="<?= $linked->id ?>"></i></span>
 				<?php endforeach; ?>
 			</div>
 			<input type="hidden" name="linked_locations" value='<?= $artist->linked_locations ?>'>
@@ -258,7 +258,7 @@ if($objFile = \Contao\FilesModel::findByUuid($artist->avatar)) {
 			
 			<div class="linked_hosts">
 				<?php foreach($artist->linked_hosts_data as $linked): ?>
-					<span class="linked-profile"><a href="detailansicht-veranstalterprofil/<?= $linked->alias ?>.html" target="_blank"><img src="<?= ($linked->avatar_file->path !== NULL) ? $linked->avatar_file->path : $noavatar ?>"> <?= $linked->name ?> </a> <i class="fa-solid fa-xmark" data-id="<?= $linked->id ?>"></i></span>
+					<span class="linked-profile"><a href="detailansicht-veranstalterprofil/<?= $linked->alias ?>.html" target="_blank"><img src="<?= \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize(($linked->avatar_file->path !== NULL) ? $linked->avatar_file->path : $noavatar, 120, 120, 'crop') ?: $noavatar ?>"> <?= $linked->name ?> </a> <i class="fa-solid fa-xmark" data-id="<?= $linked->id ?>"></i></span>
 				<?php endforeach; ?>
 			</div>
 			<input type="hidden" name="linked_hosts" value='<?= $artist->linked_hosts ?>'>

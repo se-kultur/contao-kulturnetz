@@ -4,9 +4,13 @@ $noavatar = 'files/se-kultur.de/img/noavatar.jpg';
 
 if($objFile = \Contao\FilesModel::findByUuid($artist->avatar)) {
 	$imgPath = $objFile->path;
+	$imgPathDetail = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($imgPath, 700, 700, 'crop') ?: $imgPath;
+	$imgPathLightbox = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($imgPath, 1400, 0, 'proportional') ?: $imgPath;
 	$imgMeta = ($objFile->meta != NULL) ? unserialize($objFile->meta)['de'] : false;
 } else {
 	$imgPath = $noavatar;
+	$imgPathDetail = $imgPath;
+	$imgPathLightbox = $imgPath;
 }
 
 $kulturrouten = [
@@ -59,8 +63,8 @@ $prices = json_decode($artist->prices, true);
 <div class="artist-details flex gap-2 space-between mb-4 wrap">
 	<div class="sidebar col-3 col-md-4 col-sm-12">
 		<figure class="avatar">
-			<a href="<?= $imgPath ?>" data-fslightbox data-caption="<?= @$imgMeta['title'] ?><br><span style='font-size:0.8em;'>© <?= @$imgMeta['caption'] ?></span>">
-				<img src="<?= $imgPath ?>" alt="<?= @$imgMeta['alt'] ?>">
+			<a href="<?= $imgPathLightbox ?>" data-fslightbox data-caption="<?= @$imgMeta['title'] ?><br><span style='font-size:0.8em;'>© <?= @$imgMeta['caption'] ?></span>">
+				<img src="<?= $imgPathDetail ?>" alt="<?= @$imgMeta['alt'] ?>">
 			</a>
 			<figcaption>
 				<span class="title"><?= @$imgMeta['title'] ?></span>
@@ -159,10 +163,12 @@ $prices = json_decode($artist->prices, true);
 		</div>
 		<?php endif; ?>
 		
+		<?php $noavatarSmall = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($noavatar, 120, 120, 'crop') ?: $noavatar; ?>
 		<div class="location mb-4">
 			<h6>Location</h6>
 			<?php if(is_array($artist->linked_locations_data)): foreach($artist->linked_locations_data as $d): ?>
-			<a href="detailansicht-locationprofil/<?= $d->alias ?>.html" class="linked-profile"><img src="<?= ($d->avatar_file->path !== NULL) ? $d->avatar_file->path : $noavatar ?>" alt=""> <?= $d->name ?></a>
+			<?php $linkedAvatar = ($d->avatar_file->path !== NULL) ? (\SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($d->avatar_file->path, 120, 120, 'crop') ?: $d->avatar_file->path) : $noavatarSmall; ?>
+			<a href="detailansicht-locationprofil/<?= $d->alias ?>.html" class="linked-profile"><img src="<?= $linkedAvatar ?>" alt=""> <?= $d->name ?></a>
 			<?php endforeach; endif; ?>
 			<?php if(strlen($artist->locations) > 0): echo '<strong>'.$artist->locations.'</strong>'; endif; ?>
 			<br><br>
@@ -182,7 +188,8 @@ $prices = json_decode($artist->prices, true);
 		<div class="artists mb-4">
 			<h6>Künstler*in(nen)</h6>
 			<?php if(is_array($artist->linked_artists_data)): foreach($artist->linked_artists_data as $d): ?>
-			<a href="detailansicht-kuenstlerprofil/<?= $d->alias ?>.html" class="linked-profile"><img src="<?= ($d->avatar_file->path !== NULL) ? $d->avatar_file->path : $noavatar ?>" alt=""> <?= $d->name ?></a>
+			<?php $linkedAvatar = ($d->avatar_file->path !== NULL) ? (\SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($d->avatar_file->path, 120, 120, 'crop') ?: $d->avatar_file->path) : $noavatarSmall; ?>
+			<a href="detailansicht-kuenstlerprofil/<?= $d->alias ?>.html" class="linked-profile"><img src="<?= $linkedAvatar ?>" alt=""> <?= $d->name ?></a>
 			<?php endforeach; endif; ?>
 			<?php if(strlen($artist->artists) > 0): echo '<strong>'.$artist->artists.'</strong>'; endif; ?>
 		</div>
@@ -190,7 +197,8 @@ $prices = json_decode($artist->prices, true);
 		<div class="hosts mb-4">
 			<h6>Veranstalter*in(nen)</h6>
 			<?php if(is_array($artist->linked_hosts_data)): foreach($artist->linked_hosts_data as $d): ?>
-			<a href="detailansicht-veranstalterprofil/<?= $d->alias ?>.html" class="linked-profile"><img src="<?= ($d->avatar_file->path !== NULL) ? $d->avatar_file->path : $noavatar ?>" alt=""> <?= $d->name ?></a>
+			<?php $linkedAvatar = ($d->avatar_file->path !== NULL) ? (\SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($d->avatar_file->path, 120, 120, 'crop') ?: $d->avatar_file->path) : $noavatarSmall; ?>
+			<a href="detailansicht-veranstalterprofil/<?= $d->alias ?>.html" class="linked-profile"><img src="<?= $linkedAvatar ?>" alt=""> <?= $d->name ?></a>
 			<?php endforeach; endif; ?>
 			<?php if(strlen($artist->hosts) > 0): echo '<strong>'.$artist->hosts.'</strong>'; endif; ?>
 			<br><br>
@@ -235,8 +243,8 @@ $prices = json_decode($artist->prices, true);
 		<div class="swiper-slide">
 			<div class="swiper-carousel-animate-opacity">
 				<figure class="image_container">
-					<a data-fslightbox data-caption="<?= $meta['title'] ?><br><span style='font-size:0.8em;'>&copy; <?= $meta['caption'] ?></span>" href="<?= $img->path ?>" title="<?= $meta['title'] ?>" data-lightbox="lb419">
-						<img src="<?= str_replace('_ori.', '_sm.', $img->path) ?>" alt="">
+					<a data-fslightbox data-caption="<?= $meta['title'] ?><br><span style='font-size:0.8em;'>&copy; <?= $meta['caption'] ?></span>" href="<?= \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($img->path, 1400, 0, 'proportional') ?: $img->path ?>" title="<?= $meta['title'] ?>" data-lightbox="lb419">
+						<img src="<?= \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($img->path, 620, 465, 'proportional') ?: $img->path ?>" alt="">
 					</a>
 					<figcaption>
 						<span class="title"><?= $meta['title'] ?></span>

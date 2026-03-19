@@ -4,9 +4,13 @@ $profiletype = 'locationprofil';
 $profiletable = 'tl_locations';
 if($objFile = \Contao\FilesModel::findByUuid($artist->avatar)) {
 	$imgPath = $objFile->path;
+	$imgPathDetail = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($imgPath, 700, 700, 'crop') ?: $imgPath;
+	$imgPathLightbox = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($imgPath, 1400, 0, 'proportional') ?: $imgPath;
 	$imgMeta = ($objFile->meta != NULL) ? unserialize($objFile->meta)['de'] : false;
 } else {
 	$imgPath = 'files/se-kultur.de/img/noavatar.jpg';
+	$imgPathDetail = $imgPath;
+	$imgPathLightbox = $imgPath;
 }
 
 if($this->member_id == $artist->member_id) {
@@ -40,8 +44,8 @@ if($this->member_id == $artist->member_id) {
 <div class="artist-details flex gap-2 mb-4 space-between wrap">
 	<div class="sidebar col-3 col-md-4 col-sm-12">
 		<figure class="avatar">
-			<a href="<?= $imgPath ?>" data-fslightbox data-caption="<?= @$imgMeta['title'] ?><br><span style='font-size:0.8em;'>© <?= @$imgMeta['caption'] ?></span>">
-				<img src="<?= $imgPath ?>" alt="<?= @$imgMeta['alt'] ?>">
+			<a href="<?= $imgPathLightbox ?>" data-fslightbox data-caption="<?= @$imgMeta['title'] ?><br><span style='font-size:0.8em;'>© <?= @$imgMeta['caption'] ?></span>">
+				<img src="<?= $imgPathDetail ?>" alt="<?= @$imgMeta['alt'] ?>">
 			</a>
 			<figcaption>
 				<span class="title"><?= @$imgMeta['title'] ?></span>
@@ -204,8 +208,8 @@ if($this->member_id == $artist->member_id) {
 		<div class="swiper-slide">
 			<div class="swiper-carousel-animate-opacity">
 				<figure class="image_container">
-					<a data-fslightbox data-caption="<?= $meta['title'] ?><br><span style='font-size:0.8em;'>&copy; <?= $meta['caption'] ?></span>" href="<?= $img->path ?>" title="<?= $meta['title'] ?>" data-lightbox="lb419">
-						<img src="<?= $img->path ?>" alt="">
+					<a data-fslightbox data-caption="<?= $meta['title'] ?><br><span style='font-size:0.8em;'>&copy; <?= $meta['caption'] ?></span>" href="<?= \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($img->path, 1400, 0, 'proportional') ?: $img->path ?>" title="<?= $meta['title'] ?>" data-lightbox="lb419">
+						<img src="<?= \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($img->path, 620, 465, 'proportional') ?: $img->path ?>" alt="">
 					</a>
 					<figcaption>
 						<span class="title"><?= $meta['title'] ?></span>

@@ -11,7 +11,8 @@ $followersCount = 0;
 	<?php if($type == 'tl_artists'): $aliaslink = 'kuenstlerprofil'; elseif($type == 'tl_hosts'): $aliaslink = 'veranstalterprofil'; elseif($type == 'tl_locations'): $aliaslink = 'locationprofil'; endif; ?>
 	<li>
 		<a href="detailansicht-<?= $aliaslink ?>/<?= $follower->profile->alias ?>.html">
-			<img src="<?= $follower->profile->avatar_file->path ?: 'files/se-kultur.de/img/noavatar.jpg' ?>" alt="Profilbild <?= $follower->profile->name ?>">
+			<?php $__fPath = $follower->profile->avatar_file->path ?: 'files/se-kultur.de/img/noavatar.jpg'; ?>
+			<img src="<?= \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($__fPath, 120, 120, 'crop') ?: $__fPath ?>" alt="Profilbild <?= $follower->profile->name ?>">
 		</a>
 		<div>
 			<a href="detailansicht-<?= $aliaslink ?>/<?= $follower->profile->alias ?>.html"><?= $follower->profile->name ?></a><br>
@@ -45,7 +46,8 @@ Aktuell folgt <?= $artist->name ?> keinem anderen Profil im SE-KulturNetz.
 	<?php if($type == 'tl_artists'): $aliaslink = 'kuenstlerprofil'; elseif($type == 'tl_hosts'): $aliaslink = 'veranstalterprofil'; elseif($type == 'tl_locations'): $aliaslink = 'locationprofil'; endif; ?>
 	<li>
 		<a href="detailansicht-<?= $aliaslink ?>/<?= $follower->profile->alias ?>.html">
-			<img src="<?= $follower->profile->avatar_file->path ?: 'files/se-kultur.de/img/noavatar.jpg' ?>" alt="Profilbild <?= $follower->profile->name ?>">
+			<?php $__fPath = $follower->profile->avatar_file->path ?: 'files/se-kultur.de/img/noavatar.jpg'; ?>
+			<img src="<?= \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($__fPath, 120, 120, 'crop') ?: $__fPath ?>" alt="Profilbild <?= $follower->profile->name ?>">
 		</a>
 		<div>
 			<a href="detailansicht-<?= $aliaslink ?>/<?= $follower->profile->alias ?>.html"><?= $follower->profile->name ?></a><br>

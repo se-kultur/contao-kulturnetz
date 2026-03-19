@@ -16,13 +16,14 @@
 <?php endif; ?>
 
 <div class="artists-list">
+	<?php $noavatarList = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize('files/se-kultur.de/img/noavatar.jpg', 272, 272, 'crop') ?: 'files/se-kultur.de/img/noavatar.jpg'; ?>
 	<?php foreach ($this->hosts as $artist): ?>
 	<?php
 	if($objFile = \Contao\FilesModel::findByUuid($artist->avatar)) {
-		$imgPath = $objFile->path;
+		$imgPath = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($objFile->path, 272, 272, 'crop') ?: $objFile->path;
 		$imgMeta = ($objFile->meta != NULL) ? unserialize($objFile->meta)['de'] : false;
 	} else {
-		$imgPath = 'files/se-kultur.de/img/noavatar.jpg';
+		$imgPath = $noavatarList;
 	}
 	?>
 	<div class="artist<?= ($artist->id == 7) ? ' highlight' : '' ?>">

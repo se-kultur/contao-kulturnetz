@@ -85,15 +85,16 @@ $GLOBALS['FOOTERJS'][] ='<script type="text/javascript" src="files/se-kultur.de/
 <?php endif; ?>
 
 <div class="artists-list">
-	<?php 
-	$date = false; 
-	foreach($this->events as $kdate => $artist): 
-	
+	<?php
+	$noavatarList = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize('files/se-kultur.de/img/noavatar.jpg', 272, 272, 'crop') ?: 'files/se-kultur.de/img/noavatar.jpg';
+	$date = false;
+	foreach($this->events as $kdate => $artist):
+
 	if($objFile = \Contao\FilesModel::findByUuid($artist->avatar)) {
-		$imgPath = $objFile->path;
+		$imgPath = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($objFile->path, 272, 272, 'crop') ?: $objFile->path;
 		$imgMeta = ($objFile->meta != NULL) ? unserialize($objFile->meta)['de'] : false;
 	} else {
-		$imgPath = 'files/se-kultur.de/img/noavatar.jpg';
+		$imgPath = $noavatarList;
 	}
 	
 	$kdate = explode('_', $kdate);

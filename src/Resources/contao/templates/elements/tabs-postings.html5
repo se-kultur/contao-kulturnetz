@@ -4,7 +4,7 @@
 	<div class="posting">
 		<div class="posting-head">
 			<a href="detailansicht-<?= $profiletype ?>/<?= $artist->alias ?>.html">
-				<img src="<?= $imgPath ?>" alt="<?= @$imgMeta['alt'] ?>">
+				<img src="<?= \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($imgPath, 120, 120, 'crop') ?: $imgPath ?>" alt="<?= @$imgMeta['alt'] ?>">
 			</a>
 			<div>
 				<a href="#"><?= $artist->name ?></a><br>
@@ -32,7 +32,7 @@
 	<div class="posting" data-security="<?= sha1($post->id.$post->member_id) ?>" data-id="<?= $post->id ?>" data-mid="<?= $post->member_id ?>" data-pid="<?= $post->profile_id ?>" data-ptype="<?= $post->profile_type ?>">
 		<div class="posting-head">
 			<a href="detailansicht-<?= $profiletype ?>/<?= $artist->alias ?>.html">
-				<img src="<?= $imgPath ?>" alt="<?= @$imgMeta['alt'] ?>">
+				<img src="<?= \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($imgPath, 120, 120, 'crop') ?: $imgPath ?>" alt="<?= @$imgMeta['alt'] ?>">
 			</a>
 			<div>
 				<a href="#"><?= $artist->name ?></a><br>

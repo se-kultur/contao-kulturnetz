@@ -12,6 +12,7 @@ $tage = [
 ];
 ?>
 <div class="artists-list mb-4">
+	<?php $noavatarList = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize('files/se-kultur.de/img/noavatar.jpg', 272, 272, 'crop') ?: 'files/se-kultur.de/img/noavatar.jpg'; ?>
 	<?php $oldevents = []; foreach ($this->events as $event): ?>
 	<?php if($event->nextdate == false || $event->nextdate < 1) $oldevents[] = $event; ?>
 	<?php if(
@@ -20,16 +21,16 @@ $tage = [
 	): $eventscount++; ?>
 	<?php
 	if($objFile = \Contao\FilesModel::findByUuid($event->avatar)) {
-		$sekEventimgPath = $objFile->path;
+		$sekEventimgPath = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($objFile->path, 272, 272, 'crop') ?: $objFile->path;
 		$sekEventimgMeta = ($objFile->meta != NULL) ? unserialize($objFile->meta)['de'] : false;
 	} else {
-		$sekEventimgPath = 'files/se-kultur.de/img/noavatar.jpg';
+		$sekEventimgPath = $noavatarList;
 	}
 	?>
 	<div class="artist">
 		<a href="detailansicht-event/<?= $event->alias ?>.html">
 			<figure class="avatar">
-				<img src="<?= $sekEventimgPath ?>" alt="<?= @$sekEventimgMeta['alt'] ?>">	
+				<img src="<?= $sekEventimgPath ?>" alt="<?= @$sekEventimgMeta['alt'] ?>">
 			</figure>
 		</a>
 		<div class="infos">
@@ -101,10 +102,10 @@ $tage = [
 	): $eventscount++; ?>
 	<?php
 	if($objFile = \Contao\FilesModel::findByUuid($event->avatar)) {
-		$sekEventimgPath = $objFile->path;
+		$sekEventimgPath = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($objFile->path, 272, 272, 'crop') ?: $objFile->path;
 		$sekEventimgMeta = ($objFile->meta != NULL) ? unserialize($objFile->meta)['de'] : false;
 	} else {
-		$sekEventimgPath = 'files/se-kultur.de/img/noavatar.jpg';
+		$sekEventimgPath = $noavatarList;
 	}
 	?>
 	<div class="artist" style="opacity: 0.6; filter: grayscale(1);">

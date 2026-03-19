@@ -15,14 +15,14 @@
 								<input type="hidden" name="follower[]" value="<?= $type ?>-<?= $profile->id ?>" disabled> 
 								<input type="checkbox" name="reverse" data-value="<?= $type ?>-<?= $profile->id ?>" id="sfp_<?= $type ?>_<?= $profile->id ?>" checked> 
 								<label for="sfp_<?= $type ?>_<?= $profile->id ?>">
-									<img src="<?= $profile->avatar_file->path ?: 'files/se-kultur.de/img/noavatar.jpg' ?>" alt="Profilbild <?= $profile->name ?>"> <?= $profile->name ?>
+									<?php $__mPath = $profile->avatar_file->path ?: 'files/se-kultur.de/img/noavatar.jpg'; ?><img src="<?= \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($__mPath, 120, 120, 'crop') ?: $__mPath ?>" alt="Profilbild <?= $profile->name ?>"> <?= $profile->name ?>
 								</label>
 							</li>	
 						<?php else: ?>
 							<li>
 								<input type="checkbox" name="follower[]" value="<?= $type ?>-<?= $profile->id ?>" id="sfp_<?= $type ?>_<?= $profile->id ?>"> 
 								<label for="sfp_<?= $type ?>_<?= $profile->id ?>">
-									<img src="<?= $profile->avatar_file->path ?: 'files/se-kultur.de/img/noavatar.jpg' ?>" alt="Profilbild <?= $profile->name ?>"> <?= $profile->name ?>
+									<?php $__mPath = $profile->avatar_file->path ?: 'files/se-kultur.de/img/noavatar.jpg'; ?><img src="<?= \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($__mPath, 120, 120, 'crop') ?: $__mPath ?>" alt="Profilbild <?= $profile->name ?>"> <?= $profile->name ?>
 								</label>
 							</li>	
 						<?php endif; ?>
