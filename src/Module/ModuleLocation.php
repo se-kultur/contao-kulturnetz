@@ -51,17 +51,17 @@ class ModuleLocation extends \Module
 		
 		if($location !== NULL) {
 			$memberId = 0;
+			$memberProfiles = [];
+			$followingProfiles = [];
 			if (FE_USER_LOGGED_IN === true) {
 				$objUser = \FrontendUser::getInstance();
 				$memberId = $objUser->id;
-				
+
 				$memberProfiles = [
 					'tl_artists' => ArtistsModel::findByMemberId($memberId),
 					'tl_hosts' => HostsModel::findByMemberId($memberId),
 					'tl_locations' => LocationsModel::findByMemberId($memberId),
 				];
-				
-				$followingProfiles = [];
 				$fpData = FollowersModel::findMembersFollowingsFor($location->id, 'tl_locations', $memberId);
 				foreach($fpData as $fp) {
 					$followingProfiles[] = $fp->follower_type.'-'.$fp->follower_id;

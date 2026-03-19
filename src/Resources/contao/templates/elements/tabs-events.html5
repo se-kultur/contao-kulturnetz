@@ -1,4 +1,4 @@
-<?php ob_start(); ?>
+<?php ob_start(); $eventscount = 0; ?>
 <h6>Veranstaltungskalender</h6>
 <?php if(is_array($this->events) && count($this->events) > 0): ?>
 <?php require_once(__DIR__.'/../mod_events_list.html5'); ?>

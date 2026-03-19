@@ -52,17 +52,16 @@ class ModuleArtist extends \Module
 		if($artist !== NULL) {
 			$memberId = 0;
 			$memberProfiles = [];
+			$followingProfiles = [];
 			if (FE_USER_LOGGED_IN === true) {
 				$objUser = \FrontendUser::getInstance();
 				$memberId = $objUser->id;
-				
+
 				$memberProfiles = [
 					'tl_artists' => ArtistsModel::findByMemberId($memberId),
 					'tl_hosts' => HostsModel::findByMemberId($memberId),
 					'tl_locations' => LocationsModel::findByMemberId($memberId),
 				];
-				
-				$followingProfiles = [];
 				$fpData = FollowersModel::findMembersFollowingsFor($artist->id, 'tl_artists', $memberId);
 				foreach($fpData as $fp) {
 					$followingProfiles[] = $fp->follower_type.'-'.$fp->follower_id;
