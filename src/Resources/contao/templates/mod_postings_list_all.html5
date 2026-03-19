@@ -9,7 +9,7 @@ $GLOBALS['FOOTERJS'][] ='<script src="files/se-kultur.de/js/posting.js"></script
 	<div class="posting shadow" data-security="<?= sha1($post['id'].$post['member_id']) ?>" data-id="<?= $post['id'] ?>" data-mid="<?= $post['member_id'] ?>" data-pid="<?= $post['profile_id'] ?>" data-ptype="<?= $post['profile_type'] ?>">
 		<div class="posting-head">
 			<a href="detailansicht-<?= $aliaslink ?>/<?= $post['profile']->alias ?>.html">
-				<?php $__avatarPath = $post['profile']->avatar_file->path ?: 'files/se-kultur.de/img/noavatar.jpg'; ?>
+				<?php $__avatarPath = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::avatarPath($post['profile']->avatar_file); ?>
 			<img src="<?= \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($__avatarPath, 120, 120, 'crop') ?: $__avatarPath ?>" alt="Profilbild von <?= $post['profile']->name ?>">
 			</a>
 			<div>

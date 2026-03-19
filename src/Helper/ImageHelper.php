@@ -8,6 +8,18 @@ use Contao\System;
 
 class ImageHelper
 {
+    /**
+     * Extrahiert den Dateipfad aus einem FilesModel oder gibt den Fallback zurück.
+     */
+    public static function avatarPath($avatarFile, string $fallback = 'files/se-kultur.de/img/noavatar.jpg'): string
+    {
+        if (is_object($avatarFile) && isset($avatarFile->path)) {
+            return $avatarFile->path ?: $fallback;
+        }
+
+        return $fallback;
+    }
+
     public static function resize(string $path, int $width, int $height, string $mode = 'crop'): ?string
     {
         if (!$path) {

@@ -5,7 +5,7 @@
 	<div class="posting shadow">
 		<div class="posting-head">
 			<a href="detailansicht-<?= $aliaslink ?>/<?= $post['profile']->alias ?>.html">
-				<?php $__avatarPath = $post['profile']->avatar_file->path ?: 'files/se-kultur.de/img/noavatar.jpg'; ?>
+				<?php $__avatarPath = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::avatarPath($post['profile']->avatar_file); ?>
 			<img src="<?= \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($__avatarPath, 120, 120, 'crop') ?: $__avatarPath ?>" alt="Profilbild von <?= $post['profile']->name ?>">
 			</a>
 			<div>

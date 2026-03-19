@@ -145,7 +145,7 @@ $prices = json_decode($artist->prices, true);
 		<div class="location mb-4">
 			<h6>Location</h6>
 			<?php if(is_array($artist->linked_locations_data)): foreach($artist->linked_locations_data as $d): ?>
-			<?php $linkedAvatar = ($d->avatar_file->path !== NULL) ? (\SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($d->avatar_file->path, 120, 120, 'crop') ?: $d->avatar_file->path) : $noavatarSmall; ?>
+			<?php $linkedAvatar = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize(\SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::avatarPath($d->avatar_file), 120, 120, 'crop') ?: $noavatarSmall; ?>
 			<a href="detailansicht-locationprofil/<?= $d->alias ?>.html" class="linked-profile"><img src="<?= $linkedAvatar ?>" alt=""> <?= $d->name ?></a>
 			<?php endforeach; endif; ?>
 			<?php if(strlen($artist->locations) > 0): echo '<strong>'.$artist->locations.'</strong>'; endif; ?>
@@ -166,7 +166,7 @@ $prices = json_decode($artist->prices, true);
 		<div class="artists mb-4">
 			<h6>Künstler*in(nen)</h6>
 			<?php if(is_array($artist->linked_artists_data)): foreach($artist->linked_artists_data as $d): ?>
-			<?php $linkedAvatar = ($d->avatar_file->path !== NULL) ? (\SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($d->avatar_file->path, 120, 120, 'crop') ?: $d->avatar_file->path) : $noavatarSmall; ?>
+			<?php $linkedAvatar = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize(\SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::avatarPath($d->avatar_file), 120, 120, 'crop') ?: $noavatarSmall; ?>
 			<a href="detailansicht-kuenstlerprofil/<?= $d->alias ?>.html" class="linked-profile"><img src="<?= $linkedAvatar ?>" alt=""> <?= $d->name ?></a>
 			<?php endforeach; endif; ?>
 			<?php if(strlen($artist->artists) > 0): echo '<strong>'.$artist->artists.'</strong>'; endif; ?>
@@ -175,7 +175,7 @@ $prices = json_decode($artist->prices, true);
 		<div class="hosts mb-4">
 			<h6>Veranstalter*in(nen)</h6>
 			<?php if(is_array($artist->linked_hosts_data)): foreach($artist->linked_hosts_data as $d): ?>
-			<?php $linkedAvatar = ($d->avatar_file->path !== NULL) ? (\SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($d->avatar_file->path, 120, 120, 'crop') ?: $d->avatar_file->path) : $noavatarSmall; ?>
+			<?php $linkedAvatar = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize(\SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::avatarPath($d->avatar_file), 120, 120, 'crop') ?: $noavatarSmall; ?>
 			<a href="detailansicht-veranstalterprofil/<?= $d->alias ?>.html" class="linked-profile"><img src="<?= $linkedAvatar ?>" alt=""> <?= $d->name ?></a>
 			<?php endforeach; endif; ?>
 			<?php if(strlen($artist->hosts) > 0): echo '<strong>'.$artist->hosts.'</strong>'; endif; ?>
