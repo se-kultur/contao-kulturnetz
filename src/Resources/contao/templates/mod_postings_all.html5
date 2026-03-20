@@ -6,7 +6,7 @@
 		<div class="posting-head">
 			<a href="detailansicht-<?= $aliaslink ?>/<?= $post['profile']->alias ?>.html">
 				<?php $__avatarPath = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::avatarPath($post['profile']->avatar_file); ?>
-			<img src="<?= \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($__avatarPath, 120, 120, 'crop') ?: $__avatarPath ?>" alt="Profilbild von <?= $post['profile']->name ?>">
+			<img src="<?= \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($__avatarPath, 120, 120, 'crop') ?: $__avatarPath ?>" alt="Profilbild von <?= $post['profile']->name ?>" loading="lazy">
 			</a>
 			<div>
 				<a href="detailansicht-<?= $aliaslink ?>/<?= $post['profile']->alias ?>.html"><?= $post['profile']->name ?></a><br>

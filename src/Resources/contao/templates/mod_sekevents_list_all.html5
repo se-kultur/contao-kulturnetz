@@ -134,7 +134,7 @@ $GLOBALS['FOOTERJS'][] ='<script type="text/javascript" src="files/se-kultur.de/
 	<div class="artist<?php if($today > $kdate && !isset($_GET['datum'])) echo ' hidden'; ?>">
 		<a href="detailansicht-sekultur-event/<?= $artist->alias ?>.html">
 			<figure class="avatar">
-				<img src="<?= $imgPath ?>" alt="<?= @$imgMeta['alt'] ?>">	
+				<img src="<?= $imgPath ?>" alt="<?= @$imgMeta['alt'] ?>" loading="lazy">
 			</figure>
 		</a>
 		<div class="infos">

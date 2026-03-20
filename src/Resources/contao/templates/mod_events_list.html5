@@ -30,7 +30,7 @@ $tage = [
 	<div class="artist">
 		<a href="detailansicht-event/<?= $event->alias ?>.html">
 			<figure class="avatar">
-				<img src="<?= $sekEventimgPath ?>" alt="<?= @$sekEventimgMeta['alt'] ?>">
+				<img src="<?= $sekEventimgPath ?>" alt="<?= @$sekEventimgMeta['alt'] ?>" loading="lazy">
 			</figure>
 		</a>
 		<div class="infos">
@@ -39,7 +39,7 @@ $tage = [
 				<?php if($event->disable == '1'): ?>
 				<span class="badge bg-error"><i class="fa-solid fa-eye-slash"></i><span class="hide-xs hide-sm hide-md"> Nicht öffentlich</span></span>
 				<?php endif; ?>
-				
+
 				<!--<span class="badge bg-kulturnetz"><i class="fa-solid fa-circle-info"></i> Dein Profil</span>-->
 				<?php if($event->readonly !== '1'): ?>
 				<a href="event-bearbeiten/<?= $event->alias ?>.html" class="btn btn-primary btn-sm">
@@ -55,7 +55,7 @@ $tage = [
 				</a>
 			</div>
 			<?php endif; ?>
-			
+
 			<a href="detailansicht-event/<?= $event->alias ?>.html"><h6><?= $event->name ?></h6></a>
 			<p class="beschreibung">
 				<span style="font-weight: bold;"><i class="fa-regular fa-clock"></i>
@@ -111,7 +111,7 @@ $tage = [
 	<div class="artist" style="opacity: 0.6; filter: grayscale(1);">
 		<a href="detailansicht-event/<?= $event->alias ?>.html">
 			<figure class="avatar">
-				<img src="<?= $sekEventimgPath ?>" alt="<?= @$sekEventimgMeta['alt'] ?>">	
+				<img src="<?= $sekEventimgPath ?>" alt="<?= @$sekEventimgMeta['alt'] ?>" loading="lazy">
 			</figure>
 		</a>
 		<div class="infos">
@@ -120,7 +120,7 @@ $tage = [
 				<?php if($event->disable == '1'): ?>
 				<span class="badge bg-error"><i class="fa-solid fa-eye-slash"></i><span class="hide-xs hide-sm hide-md"> Nicht öffentlich</span></span>
 				<?php endif; ?>
-				
+
 				<!--<span class="badge bg-kulturnetz"><i class="fa-solid fa-circle-info"></i> Dein Profil</span>-->
 				<?php if($event->readonly !== '1'): ?>
 				<a href="event-bearbeiten/<?= $event->alias ?>.html" class="btn btn-primary btn-sm">
@@ -136,10 +136,10 @@ $tage = [
 				</a>
 			</div>
 			<?php endif; ?>
-			
+
 			<a href="detailansicht-event/<?= $event->alias ?>.html"><h6><?= $event->name ?></h6></a>
 			<p class="beschreibung">
-				
+
 				<?= $event->kurzbeschreibung ?><br><br>
 				
 				<?php if($event->eintrittfrei == '1'): ?>

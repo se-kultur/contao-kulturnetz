@@ -45,7 +45,7 @@
 	<div class="artist<?= ($artist->id == 17) ? ' highlight' : '' ?>">
 		<a href="detailansicht-kuenstlerprofil/<?= $artist->alias ?>.html">
 			<figure class="avatar">
-				<img src="<?= $imgPath ?>" alt="<?= @$imgMeta['alt'] ?>">	
+				<img src="<?= $imgPath ?>" alt="<?= @$imgMeta['alt'] ?>" loading="lazy">
 			</figure>
 		</a>
 		<div class="infos">

@@ -31,7 +31,7 @@ $tage = [
 	<div class="artist">
 		<a href="detailansicht-event/<?= $event->alias ?>.html">
 			<figure class="avatar">
-				<img src="<?= $sekEventimgPath ?>" alt="<?= @$sekEventimgMeta['alt'] ?>">	
+				<img src="<?= $sekEventimgPath ?>" alt="<?= @$sekEventimgMeta['alt'] ?>" loading="lazy">
 			</figure>
 		</a>
 		<div class="infos">
@@ -112,7 +112,7 @@ $tage = [
 	<div class="artist" style="opacity: 0.6; filter: grayscale(1);">
 		<a href="detailansicht-event/<?= $event->alias ?>.html">
 			<figure class="avatar">
-				<img src="<?= $sekEventimgPath ?>" alt="<?= @$sekEventimgMeta['alt'] ?>">	
+				<img src="<?= $sekEventimgPath ?>" alt="<?= @$sekEventimgMeta['alt'] ?>" loading="lazy">
 			</figure>
 		</a>
 		<div class="infos">

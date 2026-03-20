@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace SeKultur\ContaoKulturnetzBundle\Helper;
 
+use Contao\Image\ResizeConfiguration;
+use Contao\Image\ResizeOptions;
 use Contao\System;
 
 class ImageHelper
@@ -26,11 +28,35 @@ class ImageHelper
             return null;
         }
 
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+        if (\in_array($ext, ['svg', 'svgz'], true)) {
+            return $path;
+        }
+
         try {
             $container = System::getContainer();
             $rootDir = $container->getParameter('kernel.project_dir');
             $imageFactory = $container->get('contao.image.image_factory');
-            $image = $imageFactory->create($rootDir . '/' . $path, [$width, $height, $mode]);
+
+            // ResizeConfiguration statt Array, damit ImageFactory die
+            // ResizeOptions nicht überschreibt (siehe ImageFactory Zeile 120)
+            $resizeConfig = (new ResizeConfiguration())
+                ->setWidth($width)
+                ->setHeight($height)
+                ->setMode('proportional' === $mode ? ResizeConfiguration::MODE_BOX : $mode);
+
+            $resizeOptions = (new ResizeOptions())
+                ->setImagineOptions([
+                    'format' => 'webp',
+                    'webp_quality' => 80,
+                ]);
+
+            $image = $imageFactory->create(
+                $rootDir . '/' . $path,
+                $resizeConfig,
+                $resizeOptions
+            );
 
             return $image->getUrl($rootDir);
         } catch (\Exception $e) {
