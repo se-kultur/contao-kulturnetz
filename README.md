@@ -25,7 +25,7 @@ composer require se-kultur/contao-kulturnetz
 
 ## Gefördert vom Land Schleswig-Holstein
 
-Die Entwicklung wurde vom Ministerium für Allgemeine und Berufliche Bildung, Wissenschaft, Forschung und Kultur des Landes Schleswig-Holstein finanziell gefördert. Die Erweiterung steht unter der GNU General Public License v3.0 als Open Source zur freien Verfügung.
+Die Entwicklung wurde vom Land Schleswig-Holstein finanziell gefördert. Die Erweiterung steht unter der GNU General Public License v3.0 als Open Source zur freien Verfügung.
 
 ## Lizenz
 
