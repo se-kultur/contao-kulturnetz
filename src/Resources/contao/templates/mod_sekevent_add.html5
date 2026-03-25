@@ -358,7 +358,7 @@
 <div class="formbody">
 	<div class="widget widget-checkbox">
 		<input type="checkbox" id="confirmation" required>
-		<label for="confirmation">Mit der Erstellung meines Events erkläre ich mich damit einverstanden, dass die angegebenen Daten öffentlich in den SE-KulturTagen bzw. auf der Webseite www.se-kultur.de einsehbar sind. Ich versichere, alle Urheberrechte beachtet zu haben und akzeptiere die <a href="teilnahmebedingungen.html" style="text-decoration: underline" target="_blank">Teilnahmebedingungen</a>.</label>
+		<label for="confirmation">Mit der Erstellung meines Events erkläre ich mich damit einverstanden, dass die angegebenen Daten öffentlich in den SE-KulturTagen bzw. auf der Webseite www.se-kultur.de einsehbar sind. Ich versichere, alle Urheberrechte beachtet zu haben und akzeptiere die <a href="teilnahmebedingungen.html" style="text-decoration: underline" target="_blank">Teilnahmebedingungen</a> und den <a href="teilnahmebedingungen.html#awareness-konsens" style="text-decoration: underline" target="_blank">Awareness-Konsens</a>.</label>
 	</div>
 </div>
 

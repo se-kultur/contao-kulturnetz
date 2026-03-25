@@ -10,6 +10,7 @@
 			<p>Schön, dass Sie ein Künstler*innenprofil anlegen und sich am SE-KulturNetz beteiligen möchten!</p>
 			<?php elseif(@$hilfekasten == 'sekevent_add'): ?>
 			<p>Schön, dass Sie ein Event für die SE-KulturTage anlegen möchten!</p>
+			<p>Bitte beachten Sie unsere <a href="teilnahmebedingungen.html" target="_blank" style="text-decoration: underline">Teilnahmebedingungen</a> und den <a href="teilnahmebedingungen.html#awareness-konsens" target="_blank" style="text-decoration: underline">Awareness-Konsens</a>.</p>
 			<?php endif; ?>
 			
 			<p class="hide-xs hide-sm hide-md">An dieser Stelle zeigen wir Ihnen wichtige Hinweise zur Eingabe im Formular. Klicken Sie dazu einfach in eines der Texteingabefelder im Formular und der Hilfetext in diesem blauen Kasten ändert sich entsprechend.</p>

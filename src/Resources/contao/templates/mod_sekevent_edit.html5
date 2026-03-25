@@ -390,7 +390,7 @@ if($objFile = \Contao\FilesModel::findByUuid($artist->avatar)) {
 <div class="formbody">
 	<div class="widget widget-checkbox">
 		<input type="checkbox" id="confirmation" required>
-		<label for="confirmation">Ich versichere, alle Urheberrechte beachtet zu haben und akzeptiere die <a href="teilnahmebedingungen.html" target="_blank" style="text-decoration: underline">Teilnahmebedingungen</a>.</label>
+		<label for="confirmation">Ich versichere, alle Urheberrechte beachtet zu haben und akzeptiere die <a href="teilnahmebedingungen.html" target="_blank" style="text-decoration: underline">Teilnahmebedingungen</a> und den <a href="teilnahmebedingungen.html#awareness-konsens" target="_blank" style="text-decoration: underline">Awareness-Konsens</a>.</label>
 	</div>
 </div>
 
