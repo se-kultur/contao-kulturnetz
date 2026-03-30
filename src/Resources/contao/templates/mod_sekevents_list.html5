@@ -175,24 +175,28 @@ $tage = [
 	<?php endif; ?>
 	
 	
-	<?php if($this->member_id > 0): ?>
+	<?php
+	$sekEventPage = \Contao\PageModel::findByAlias('sekultur-event-anlegen');
+	$sekAnmeldungOffen = $sekEventPage && $sekEventPage->published && (!$sekEventPage->start || $sekEventPage->start <= time()) && (!$sekEventPage->stop || $sekEventPage->stop > time());
+	if($this->member_id > 0 && $sekAnmeldungOffen):
+	?>
 	<div class="artist highlight">
-		<a href="event-anlegen.html">
+		<a href="sekultur-event-anlegen.html">
 			<figure class="avatar">
 				<img src="files/se-kultur.de/img/addavatar.jpg" alt="Neue Veranstaltung erstellen">
 			</figure>
 		</a>
-		
+
 		<div class="infos">
 			<div class="badges">
-				<a href="event-anlegen.html" class="btn btn-primary btn-sm">
+				<a href="sekultur-event-anlegen.html" class="btn btn-primary btn-sm">
 					<i class="fa-solid fa-plus"></i><span class="hide-sm hide-xs hide-md"> Veranstaltung erstellen</span>
 				</a>
 			</div>
-			
-			<a href="event-anlegen.html"><h6>Neue Veranstaltung erstellen</h6></a>
+
+			<a href="sekultur-event-anlegen.html"><h6>Neue Veranstaltung erstellen</h6></a>
 			<p class="beschreibung">
-				Erstellen Sie jetzt kostenlos Ihre eigene Veranstaltung für das SE-KulturNetz!	
+				Erstellen Sie jetzt kostenlos Ihre eigene Veranstaltung für die SE-KulturTage!
 			</p>
 		</div>
 	</div>
