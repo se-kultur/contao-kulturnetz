@@ -47,14 +47,11 @@ class ModuleSekEventEdit extends \Module
 			
 			$alias = \Input::get('auto_item');
 			$event = SekEventsModel::findByAlias($alias);
-			
-			//var_dump($event);
-			//exit;
-			
-			if($event->member_id == $memberId) {
-				$this->Template->event = $event;	
+
+			if ($event !== null && $event->member_id == $memberId) {
+				$this->Template->event = $event;
 			} else {
-				// REDIRECT 
+				// REDIRECT
 			}
         } else {
 			// REDIRECT LOGIN

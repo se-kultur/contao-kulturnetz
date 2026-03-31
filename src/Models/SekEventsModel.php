@@ -172,12 +172,16 @@ class SekEventsModel extends Model
 		return $data;
 	}
 	
-	public static function findByAlias($alias) 
+	public static function findByAlias($alias)
 	{
 		$data = static::findByIdOrAlias($alias);
-		
+
+		if ($data === null) {
+			return null;
+		}
+
 		static::formatData($data);
-		
+
 		return $data;
 	}
 	

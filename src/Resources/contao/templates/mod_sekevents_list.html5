@@ -43,7 +43,7 @@ $tage = [
 				
 				<!--<span class="badge bg-kulturnetz"><i class="fa-solid fa-circle-info"></i> Dein Profil</span>-->
 				<?php if($event->readonly !== '1'): ?>
-				<a href="event-bearbeiten/<?= $event->alias ?>.html" class="btn btn-primary btn-sm">
+				<a href="sekultur-event-bearbeiten/<?= $event->alias ?>.html" class="btn btn-primary btn-sm">
 					<i class="fa-solid fa-pen-to-square"></i><span class="hide-sm hide-xs hide-md"> Veranstaltung bearbeiten</span>
 				</a>
 				<?php else: ?>
@@ -124,7 +124,7 @@ $tage = [
 				
 				<!--<span class="badge bg-kulturnetz"><i class="fa-solid fa-circle-info"></i> Dein Profil</span>-->
 				<?php if($event->readonly !== '1'): ?>
-				<a href="event-bearbeiten/<?= $event->alias ?>.html" class="btn btn-primary btn-sm">
+				<a href="sekultur-event-bearbeiten/<?= $event->alias ?>.html" class="btn btn-primary btn-sm">
 					<i class="fa-solid fa-pen-to-square"></i><span class="hide-sm hide-xs hide-md"> Veranstaltung bearbeiten</span>
 				</a>
 				<?php else: ?>
