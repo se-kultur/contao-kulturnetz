@@ -29,7 +29,7 @@ $tage = [
 	}
 	?>
 	<div class="artist">
-		<a href="detailansicht-event/<?= $event->alias ?>.html">
+		<a href="detailansicht-sekultur-event/<?= $event->alias ?>.html">
 			<figure class="avatar">
 				<img src="<?= $sekEventimgPath ?>" alt="<?= @$sekEventimgMeta['alt'] ?>" loading="lazy">
 			</figure>
@@ -51,13 +51,13 @@ $tage = [
 					<i class="fa-solid fa-pen-to-square"></i><span class="hide-sm hide-xs hide-md"> Veranstaltung bearbeiten</span>
 				</button>
 				<?php endif; ?>
-				<a href="detailansicht-event/<?= $event->alias ?>.html#galerie" class="btn btn-outline btn-sm">
+				<a href="detailansicht-sekultur-event/<?= $event->alias ?>.html#galerie" class="btn btn-outline btn-sm">
 					<i class="fa-solid fa-images"></i><span class="hide-sm hide-xs hide-md"> Galerie</span>
 				</a>
 			</div>
 			<?php endif; ?>
 			
-			<a href="detailansicht-event/<?= $event->alias ?>.html"><h6><?= $event->name ?></h6></a>
+			<a href="detailansicht-sekultur-event/<?= $event->alias ?>.html"><h6><?= $event->name ?></h6></a>
 			<p class="beschreibung">
 				<span style="font-weight: bold;"><i class="fa-regular fa-clock"></i>
 				Nächster Termin am <?= $tage[date('l', $event->nextdate)].', '.date('d.m.Y - H:i', $event->nextdate) ?> Uhr
@@ -87,7 +87,7 @@ $tage = [
 				<span class="sparten"><?= trim(strtoupper(str_replace(',',' | ',$event->sparten))) ?></span>
 				<span class="ort"><?= $event->ort ?></span>
 				<div>
-					<a href="detailansicht-event/<?= $event->alias ?>.html"><i class="fa-solid fa-arrow-right-long"></i></a>
+					<a href="detailansicht-sekultur-event/<?= $event->alias ?>.html"><i class="fa-solid fa-arrow-right-long"></i></a>
 				</div>
 			</div>
 		</div>
@@ -110,7 +110,7 @@ $tage = [
 	}
 	?>
 	<div class="artist" style="opacity: 0.6; filter: grayscale(1);">
-		<a href="detailansicht-event/<?= $event->alias ?>.html">
+		<a href="detailansicht-sekultur-event/<?= $event->alias ?>.html">
 			<figure class="avatar">
 				<img src="<?= $sekEventimgPath ?>" alt="<?= @$sekEventimgMeta['alt'] ?>" loading="lazy">
 			</figure>
@@ -132,13 +132,13 @@ $tage = [
 					<i class="fa-solid fa-pen-to-square"></i><span class="hide-sm hide-xs hide-md"> Veranstaltung bearbeiten</span>
 				</button>
 				<?php endif; ?>
-				<a href="detailansicht-event/<?= $event->alias ?>.html#galerie" class="btn btn-outline btn-sm">
+				<a href="detailansicht-sekultur-event/<?= $event->alias ?>.html#galerie" class="btn btn-outline btn-sm">
 					<i class="fa-solid fa-images"></i><span class="hide-sm hide-xs hide-md"> Galerie</span>
 				</a>
 			</div>
 			<?php endif; ?>
 			
-			<a href="detailansicht-event/<?= $event->alias ?>.html"><h6><?= $event->name ?></h6></a>
+			<a href="detailansicht-sekultur-event/<?= $event->alias ?>.html"><h6><?= $event->name ?></h6></a>
 			<p class="beschreibung">
 				
 				<?= $event->kurzbeschreibung ?><br><br>
@@ -165,7 +165,7 @@ $tage = [
 				<span class="sparten"><?= trim(strtoupper(str_replace(',',' | ',$event->sparten))) ?></span>
 				<span class="ort"><?= $event->ort ?></span>
 				<div>
-					<a href="detailansicht-event/<?= $event->alias ?>.html"><i class="fa-solid fa-arrow-right-long"></i></a>
+					<a href="detailansicht-sekultur-event/<?= $event->alias ?>.html"><i class="fa-solid fa-arrow-right-long"></i></a>
 				</div>
 			</div>
 		</div>
