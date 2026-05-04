@@ -2,6 +2,7 @@
 
 namespace SeKultur\ContaoKulturnetzBundle\Module;
 
+use Contao\CoreBundle\Exception\PageNotFoundException;
 use SeKultur\ContaoKulturnetzBundle\Models\ArtistsModel;
 use SeKultur\ContaoKulturnetzBundle\Models\HostsModel;
 use SeKultur\ContaoKulturnetzBundle\Models\LocationsModel;
@@ -48,47 +49,38 @@ class ModuleHost extends \Module
 	{
 		$alias = \Input::get('auto_item');
 		$host = HostsModel::findByIdOrAlias($alias);
-		
-		if($host !== NULL) {
-			$memberId = 0;
-			$memberProfiles = [];
-			$followingProfiles = [];
-			
-			if (FE_USER_LOGGED_IN === true) {
-				$objUser = \FrontendUser::getInstance();
-				$memberId = $objUser->id;
-				
-				$memberProfiles = [
-					'tl_artists' => ArtistsModel::findByMemberId($memberId),
-					'tl_hosts' => HostsModel::findByMemberId($memberId),
-					'tl_locations' => LocationsModel::findByMemberId($memberId),
-				];
-				
-				$fpData = FollowersModel::findMembersFollowingsFor($host->id, 'tl_hosts', $memberId);
-				foreach($fpData as $fp) {
-					$followingProfiles[] = $fp->follower_type.'-'.$fp->follower_id;
-				}
-			}
-			$this->Template->member_id = $memberId;
-			$this->Template->member_profiles = $memberProfiles;
-			$this->Template->following_profiles = $followingProfiles;
-			
-			$sekevents = SekEventsModel::findByProfileId($host->id, 'hosts');
-			$this->Template->sekevents = $sekevents;
-			
-			$events = EventsModel::findByProfileId($host->id, 'hosts');
-			$this->Template->events = $events;
-			
-			$followers = FollowersModel::findAllFor($host->id, 'tl_hosts');
-			$this->Template->followers = $followers;
-			
-			$postings = PostingsModel::findAllFor($host->id, 'tl_hosts');
-			$this->Template->postings = $postings;
-			
-			$this->Template->host = $host;		
-		} else {
-			// TODO: REDIRECT OR ERROR PAGE
+
+		if ($host === null) {
+			throw new PageNotFoundException('Veranstalter:innenprofil nicht gefunden: ' . $alias);
 		}
-		
+
+		$memberId = 0;
+		$memberProfiles = [];
+		$followingProfiles = [];
+
+		if (FE_USER_LOGGED_IN === true) {
+			$objUser = \FrontendUser::getInstance();
+			$memberId = $objUser->id;
+
+			$memberProfiles = [
+				'tl_artists' => ArtistsModel::findByMemberId($memberId),
+				'tl_hosts' => HostsModel::findByMemberId($memberId),
+				'tl_locations' => LocationsModel::findByMemberId($memberId),
+			];
+
+			$fpData = FollowersModel::findMembersFollowingsFor($host->id, 'tl_hosts', $memberId);
+			foreach($fpData as $fp) {
+				$followingProfiles[] = $fp->follower_type.'-'.$fp->follower_id;
+			}
+		}
+		$this->Template->member_id = $memberId;
+		$this->Template->member_profiles = $memberProfiles;
+		$this->Template->following_profiles = $followingProfiles;
+
+		$this->Template->sekevents = SekEventsModel::findByProfileId($host->id, 'hosts');
+		$this->Template->events = EventsModel::findByProfileId($host->id, 'hosts');
+		$this->Template->followers = FollowersModel::findAllFor($host->id, 'tl_hosts');
+		$this->Template->postings = PostingsModel::findAllFor($host->id, 'tl_hosts');
+		$this->Template->host = $host;
 	}
 }

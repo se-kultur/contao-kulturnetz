@@ -2,6 +2,7 @@
 
 namespace SeKultur\ContaoKulturnetzBundle\Module;
 
+use Contao\CoreBundle\Exception\PageNotFoundException;
 use SeKultur\ContaoKulturnetzBundle\Models\EventsModel;
 
 class ModuleEvent extends \Module
@@ -41,21 +42,18 @@ class ModuleEvent extends \Module
 	protected function compile()
 	{
 		$alias = \Input::get('auto_item');
-		//$event = SekEventsModel::findByIdOrAlias($alias);
 		$event = EventsModel::findByAlias($alias);
-		
-		if($event !== NULL) {
-			$memberId = 0;
-			if (FE_USER_LOGGED_IN === true) {
-				$objUser = \FrontendUser::getInstance();
-				$memberId = $objUser->id;
-			}
-			$this->Template->member_id = $memberId;
-			
-			$this->Template->event = $event;		
-		} else {
-			// TODO: REDIRECT OR ERROR PAGE
+
+		if ($event === null) {
+			throw new PageNotFoundException('Veranstaltung nicht gefunden: ' . $alias);
 		}
-		
+
+		$memberId = 0;
+		if (FE_USER_LOGGED_IN === true) {
+			$objUser = \FrontendUser::getInstance();
+			$memberId = $objUser->id;
+		}
+		$this->Template->member_id = $memberId;
+		$this->Template->event = $event;
 	}
 }
