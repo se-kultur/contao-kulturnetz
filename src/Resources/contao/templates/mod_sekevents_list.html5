@@ -176,9 +176,8 @@ $tage = [
 	
 	
 	<?php
-	$sekEventPage = \Contao\PageModel::findByAlias('sekultur-event-anlegen');
-	$sekAnmeldungOffen = $sekEventPage && $sekEventPage->published && (!$sekEventPage->start || $sekEventPage->start <= time()) && (!$sekEventPage->stop || $sekEventPage->stop > time());
-	if($this->member_id > 0 && $sekAnmeldungOffen):
+	// Sichtbarkeit der Anmeldelinks: zentrale Logik im Bundle (eine Wahrheit für alle Anzeigeorte).
+	if($this->member_id > 0 && \SeKultur\ContaoKulturnetzBundle\Helper\AnmeldungHelper::linksOffen()):
 	?>
 	<div class="artist highlight">
 		<a href="sekultur-event-anlegen.html">
