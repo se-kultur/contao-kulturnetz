@@ -140,7 +140,7 @@ class SekEventsModel extends Model
 		
 		$dates = [];
 		$i = 0;
-		$json_dates = json_decode($data->dates,true);
+		$json_dates = json_decode($data->dates,true) ?: [];
 		$weekdays = [
 			'Sonntag',
 			'Montag',
@@ -152,16 +152,23 @@ class SekEventsModel extends Model
 		];
 		foreach($json_dates as $d) {
 			$tstamp = strtotime($d['date'].date('Y').' '.$d['start'].':00');
+			// Ungültige bzw. leere Datumsangaben überspringen. Sonst liefert
+			// strtotime() false, das als Array-Schlüssel "_i" landet und später
+			// in date() einen leeren String erzeugt -> TypeError unter PHP 8.
+			if($tstamp === false) {
+				$i++;
+				continue;
+			}
 			$d['text'] = $weekdays[date('w', $tstamp)].', '.date('d.m.Y', $tstamp);
 			$dates[$tstamp.'_'.$i] = $d;
 			$i++;
 		}
 		ksort($dates);
 		$data->dates_formatted = $dates;
-		
+
 		$nextdate = false;
 		foreach($dates as $tstamp => $x) {
-			$tstamp = explode('_', $tstamp)[0];
+			$tstamp = (int) explode('_', $tstamp)[0];
 			if($nextdate == false && $tstamp > time()) {
 				$nextdate = $tstamp;
 				break;
@@ -256,8 +263,11 @@ class SekEventsModel extends Model
 			//	$data[$format->nextdate.$format->id] = $format;
 			//} else { 		// VARIANTE 2: Ein Event wird zu jedem angegebenen Datum angezeigt 
 			foreach($format->dates_formatted as $tstamp => $x) {
-				$tstamp = explode('_', $tstamp)[0];
-				
+				$tstamp = (int) explode('_', $tstamp)[0];
+				if($tstamp <= 0) {
+					continue;
+				}
+
 				if(isset($searchArr['datum']) && $searchArr['datum'] !== '') {
 					$searchdate = explode('.', $searchArr['datum']);
 					$searchday = $searchdate[0];
