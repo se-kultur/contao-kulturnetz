@@ -34,7 +34,7 @@ $followersCount = 0;
 <?php endif; ?>
 
 <?php if($followingsCount == 0): ?>
-Aktuell folgt <?= $artist->name ?> keinem anderen Profil im SE-KulturNetz.
+Aktuell folgt <?= $artist->name ?> keinem anderen Profil im KulturNetz.
 <?php endif; ?>
 
 

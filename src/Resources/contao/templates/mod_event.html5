@@ -43,7 +43,7 @@ $prices = json_decode($artist->prices, true);
 	<?php endif; ?>
 </div>
 <?php endif; ?>
-<h2><a href="javascript:history.back()" aria-label="Zurück zur vorigen Seite" role="tooltip"><i class="fa-solid fa-arrow-left-long"></i></a> SE-KulturNetz Veranstaltung</h2>
+<h2><a href="javascript:history.back()" aria-label="Zurück zur vorigen Seite" role="tooltip"><i class="fa-solid fa-arrow-left-long"></i></a></h2>
 </div>
 
 <div class="artist-details flex gap-2 space-between mb-4 wrap">

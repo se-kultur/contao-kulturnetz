@@ -30,16 +30,18 @@ class FollowersModel extends Model
 		
 		$profile = false;
 		$data = static::findAll($arrOptions);
-		foreach($data as &$d) {
-			if($d->follower_type == 'tl_artists') {
-				$profile = ArtistsModel::findById($d->follower_id);
-			} elseif($d->follower_type == 'tl_hosts') {
-				$profile = HostsModel::findById($d->follower_id);
-			} elseif($d->follower_type == 'tl_locations') {
-				$profile = LocationsModel::findById($d->follower_id);
+		if($data != null) {
+			foreach($data as &$d) {
+				if($d->follower_type == 'tl_artists') {
+					$profile = ArtistsModel::findById($d->follower_id);
+				} elseif($d->follower_type == 'tl_hosts') {
+					$profile = HostsModel::findById($d->follower_id);
+				} elseif($d->follower_type == 'tl_locations') {
+					$profile = LocationsModel::findById($d->follower_id);
+				}
+
+				$d->profile = $profile;
 			}
-			
-			$d->profile = $profile;
 		}
 		return $data;
     }
@@ -94,16 +96,18 @@ class FollowersModel extends Model
 		
 		$profile = false;
 		$data = static::findAll($arrOptions);
-		foreach($data as &$d) {
-			if($d->following_type == 'tl_artists') {
-				$profile = ArtistsModel::findById($d->following_id);
-			} elseif($d->following_type == 'tl_hosts') {
-				$profile = HostsModel::findById($d->following_id);
-			} elseif($d->following_type == 'tl_locations') {
-				$profile = LocationsModel::findById($d->following_id);
+		if($data != null) {
+			foreach($data as &$d) {
+				if($d->following_type == 'tl_artists') {
+					$profile = ArtistsModel::findById($d->following_id);
+				} elseif($d->following_type == 'tl_hosts') {
+					$profile = HostsModel::findById($d->following_id);
+				} elseif($d->following_type == 'tl_locations') {
+					$profile = LocationsModel::findById($d->following_id);
+				}
+
+				$d->profile = $profile;
 			}
-			
-			$d->profile = $profile;
 		}
 		return $data;
     }
