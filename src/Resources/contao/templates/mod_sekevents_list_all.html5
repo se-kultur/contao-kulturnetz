@@ -88,7 +88,6 @@ $GLOBALS['FOOTERJS'][] ='<script type="text/javascript" src="files/se-kultur.de/
 		<?php foreach($this->stats['location_orte'] as $loc => $vol): ?>
 		<a href="{{page::alias}}.html?text=<?= urlencode($loc) ?>" class="badge" style="color:#fff;"><?= $loc ?></a>
 		<?php endforeach; ?>
-		<a href="https://se-kultur.de/news-detailansicht/kulturelle-vielfalt-im-kreis.html" class="badge" style="background:#00acaf;color:#fff"><i class="fa-solid fa-location-dot"></i> Gebietskarte anzeigen</a>
 		<!--Alternativ können Sie die (gefilterten) Veranstaltungen auch auf einer <a href="#">Karte anzeigen</a> lassen.-->
 	</div>
 </form>
