@@ -66,6 +66,13 @@ class ModuleSekEventsListAll extends \Module
 		}
 
 		$events = SekEventsModel::findAllSekEvents(200, $searchArr);
+
+		// Innerhalb eines Tages täglich wechselnde Reihenfolge, damit nicht immer
+		// dieselben Veranstaltungen oben stehen. Die Tage bleiben chronologisch.
+		// Gilt bewusst nur für die angezeigte Liste - die Facettenmenge unten
+		// zählt lediglich Orte, deren Reihenfolge dafür ohne Bedeutung ist.
+		$events = SekEventsModel::mischeInnerhalbDerTage($events);
+
 		$this->Template->events = $events;
 
 		// Bereits normalisiertes $searchArr (garantiert skalare Strings, nur

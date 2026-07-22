@@ -459,5 +459,62 @@ class SekEventsModel extends Model
 		ksort($data);
 		return $data;
     }
-	
+
+	/**
+	 * Mischt die Veranstaltungen innerhalb eines Tages, ohne die Reihenfolge der
+	 * Tage selbst zu verändern - das Programm bleibt also nach Tagen chronologisch,
+	 * nur innerhalb eines Tages wechselt die Reihenfolge. Damit stehen nicht immer
+	 * dieselben Veranstaltungen oben.
+	 *
+	 * Der Zufall ist über den laufenden Kalendertag geseedet: Die Reihenfolge ist
+	 * für alle Aufrufe desselben Tages identisch (auch beim Filtern, Neuladen oder
+	 * Klick auf ein Orts-Badge) und wechselt erst am Folgetag. Ohne diese Bindung
+	 * würde die Liste bei jedem Seitenaufruf neu springen.
+	 *
+	 * Bewusst ohne shuffle()/mt_srand(): Beides würde den globalen Zufallszustand
+	 * des Prozesses verändern und damit andere Programmteile beeinflussen.
+	 *
+	 * @param array       $data      Chronologisch sortierte Liste, Schlüssel "<tstamp>_<id>"
+	 * @param string|null $tagesSeed Abweichender Seed (nur für Tests), sonst der heutige Tag
+	 *
+	 * @return array
+	 */
+	public static function mischeInnerhalbDerTage(array $data, $tagesSeed = null)
+	{
+		if (count($data) < 2) {
+			return $data;
+		}
+
+		$tagesSeed = $tagesSeed ?? date('Y-m-d');
+
+		// Nach Kalendertag gruppieren. Die Eingabe ist bereits chronologisch
+		// sortiert, dadurch bleibt die Reihenfolge der Tage automatisch erhalten.
+		$nachTag = [];
+		foreach ($data as $key => $event) {
+			$tstamp = (int) explode('_', (string) $key)[0];
+			$nachTag[date('Y-m-d', $tstamp)][$key] = $event;
+		}
+
+		$ergebnis = [];
+
+		foreach ($nachTag as $eventsDesTages) {
+			$schluessel = array_keys($eventsDesTages);
+
+			usort($schluessel, static function ($a, $b) use ($tagesSeed) {
+				$hashA = crc32($tagesSeed.'|'.$a);
+				$hashB = crc32($tagesSeed.'|'.$b);
+
+				// Bei identischem Hash nach Schlüssel entscheiden, damit die
+				// Reihenfolge auch in diesem Fall eindeutig und stabil bleibt.
+				return $hashA === $hashB ? strcmp((string) $a, (string) $b) : ($hashA <=> $hashB);
+			});
+
+			foreach ($schluessel as $key) {
+				$ergebnis[$key] = $eventsDesTages[$key];
+			}
+		}
+
+		return $ergebnis;
+	}
+
 }
