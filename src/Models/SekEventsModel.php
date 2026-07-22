@@ -109,7 +109,12 @@ class SekEventsModel extends Model
 		//exit;
 		
 		$artists = [];
-		$linked_artists = json_decode($data->linked_artists,true);
+		// Die Spalte kann laut DCA NULL sein. json_decode(null,...) löst unter
+		// PHP 8.1 eine Deprecation aus ("Passing null to parameter #1 ($json)
+		// of type string is deprecated"), das "?: []" fängt außerdem ein
+		// ungültiges/leeres JSON ab, damit der foreach darunter nicht über
+		// null läuft.
+		$linked_artists = json_decode((string) $data->linked_artists, true) ?: [];
 		foreach($linked_artists as $id) {
 			if($a = ArtistsModel::findById($id)) {
 				$a->avatar_file = \Contao\FilesModel::findByUuid($a->avatar);
@@ -119,7 +124,8 @@ class SekEventsModel extends Model
 		$data->linked_artists_data = $artists;
 		
 		$locations = [];
-		$linked_locations = json_decode($data->linked_locations,true);
+		// Siehe Kommentar bei $linked_artists weiter oben: NULL-sicher decodieren.
+		$linked_locations = json_decode((string) $data->linked_locations, true) ?: [];
 		foreach($linked_locations as $id) {
 			if($l = LocationsModel::findById($id)) {
 				$l->avatar_file = \Contao\FilesModel::findByUuid($l->avatar);
@@ -129,7 +135,8 @@ class SekEventsModel extends Model
 		$data->linked_locations_data = $locations;
 		
 		$hosts = [];
-		$linked_hosts = json_decode($data->linked_hosts,true);
+		// Siehe Kommentar bei $linked_artists weiter oben: NULL-sicher decodieren.
+		$linked_hosts = json_decode((string) $data->linked_hosts, true) ?: [];
 		foreach($linked_hosts as $id) {
 			if($h = HostsModel::findById($id)) {
 				$h->avatar_file = \Contao\FilesModel::findByUuid($h->avatar);
@@ -140,7 +147,8 @@ class SekEventsModel extends Model
 		
 		$dates = [];
 		$i = 0;
-		$json_dates = json_decode($data->dates,true) ?: [];
+		// NULL-sicher decodieren, siehe Kommentar bei $linked_artists weiter oben.
+		$json_dates = json_decode((string) $data->dates, true) ?: [];
 		$weekdays = [
 			'Sonntag',
 			'Montag',
@@ -151,7 +159,15 @@ class SekEventsModel extends Model
 			'Samstag',
 		];
 		foreach($json_dates as $d) {
-			$tstamp = strtotime($d['date'].date('Y').' '.$d['start'].':00');
+			// 'start' ist ein ungeprüftes Freitextfeld. Fehlt die Uhrzeit oder
+			// ist sie ungültig, wird auf Mitternacht zurückgefallen statt den
+			// Termin stillschweigend zu verwerfen: strtotime() lieferte bei
+			// z. B. "15.09.2026 :00" (leeres 'start') false, wodurch der
+			// Termin hier übersprungen wurde, aber in getStatsAndDateRange()
+			// (die bewusst ohne Uhrzeit rechnet) trotzdem als wählbarer Tag im
+			// Datepicker auftauchte - die Liste blieb an diesem Tag dann leer.
+			$start = preg_match('/^\d{1,2}:\d{2}$/', (string) ($d['start'] ?? '')) ? $d['start'] : '00:00';
+			$tstamp = strtotime($d['date'].date('Y').' '.$start.':00');
 			// Ungültige bzw. leere Datumsangaben überspringen. Sonst liefert
 			// strtotime() false, das als Array-Schlüssel "_i" landet und später
 			// in date() einen leeren String erzeugt -> TypeError unter PHP 8.
@@ -192,34 +208,130 @@ class SekEventsModel extends Model
 		return $data;
 	}
 	
-	public static function getStats()
+	/**
+	 * Ermittelt in einem einzigen Tabellendurchlauf sowohl die Orts-Statistik
+	 * (für die Filter-Badges) als auch den frühesten/spätesten Termin (für die
+	 * Begrenzung des Datepickers auf den tatsächlichen Festival-Zeitraum).
+	 * Beide Werte basieren auf denselben aktiven Datensätzen. Zuvor gab es allein
+	 * getStats(); diese Methode lief über findAllSekEvents() und rutschte dabei in
+	 * dessen Default-Limit von 100 Datensätzen. Der Datumsbereich kommt neu hinzu
+	 * und wird bewusst im selben Durchlauf ermittelt, statt dafür eine zweite
+	 * Abfrage aufzusetzen. Arbeitet bewusst unabhängig von Suchfiltern (immer
+	 * alle aktiven Termine) und ohne formatData(), da für Statistik und
+	 * Zeitraum nur location_ort/-adresse/-plz sowie dates benötigt werden -
+	 * die in formatData() zusätzlich aufgelösten Artists/Locations/Hosts pro
+	 * Event wären hier unnötiger Aufwand.
+	 *
+	 * @return array{
+	 *     stats: array{count:int, location_orte:array<string,int>, locations:string[]},
+	 *     dateRange: array{min: ?string, max: ?string}
+	 * }
+	 */
+	public static function getStatsAndDateRange()
 	{
 		$t = static::$strTable;
 
 		$arrOptions = [
 			'column' => array("($t.disable!=?)"),
 			'value'  => array('1'),
-			//'group' => 'location_ort'
-			//'return' => 'Array'
+			'order'  => 'id ASC',
 		];
-		
-		$data = [];
+
+		$rawdata = static::findAll($arrOptions);
+
+		$count = 0;
 		$location_orte = [];
-		
-		//$rawdata = static::findAll($arrOptions);
-		$rawdata = static::findAllSekEvents();
-		
-		foreach($rawdata as $r) {
-			$location_orte[trim($r->location_ort)]++;
-			$data[] = $r->location_adresse.', '.$r->location_plz.' '.$r->location_ort;
+		$locations = [];
+		$min = null;
+		$max = null;
+
+		// Grenze wie in findAllSekEvents(): Statistik, Orts-Badges und Datumsbereich
+		// müssen auf derselben Datenbasis stehen wie die Trefferliste. Sonst bietet
+		// die Oberfläche Orte und Datumsgrenzen an, die garantiert zu null Treffern
+		// führen - etwa einen Ort, der nur noch vergangene Veranstaltungen hat.
+		$heuteMitternacht = strtotime('today midnight');
+
+		if ($rawdata !== null) {
+			foreach ($rawdata as $r) {
+				// NULL-sicher decodieren, siehe Kommentar bei $linked_artists in formatData().
+				$json_dates = json_decode((string) $r->dates, true) ?: [];
+				$hatKuenftigenTermin = false;
+
+				foreach ($json_dates as $d) {
+					if (empty($d['date'])) {
+						continue;
+					}
+
+					// Termine werden ohne Jahr gespeichert, das aktuelle Jahr wird
+					// wie in formatData() zur Laufzeit ergänzt. Die Uhrzeit ist für
+					// eine reine Datumsrange irrelevant und wird bewusst nicht mehr
+					// einbezogen: 'start' ist ein ungeprüftes Freitextfeld (JSON-
+					// Textfeld im Backend), ein leerer String hätte zuvor zu
+					// "15.09.2026 :00" geführt, wofür strtotime() false liefert -
+					// der Termin wäre dann stillschweigend aus der Min/Max-
+					// Ermittlung herausgefallen.
+					$tstamp = strtotime($d['date'].date('Y'));
+
+					if ($tstamp === false) {
+						continue;
+					}
+
+					if ($tstamp < $heuteMitternacht) {
+						continue;
+					}
+
+					$hatKuenftigenTermin = true;
+
+					if ($min === null || $tstamp < $min) {
+						$min = $tstamp;
+					}
+
+					if ($max === null || $tstamp > $max) {
+						$max = $tstamp;
+					}
+				}
+
+				// Veranstaltungen ohne heutigen oder künftigen Termin erscheinen nicht
+				// in der Liste und dürfen deshalb auch nicht in Zähler und Orts-Badges
+				// auftauchen.
+				if (!$hatKuenftigenTermin) {
+					continue;
+				}
+
+				$count++;
+
+				$ort = trim($r->location_ort);
+				$location_orte[$ort] = ($location_orte[$ort] ?? 0) + 1;
+				$locations[] = $r->location_adresse.', '.$r->location_plz.' '.$r->location_ort;
+			}
 		}
+
 		return [
-			'count' => count($rawdata),
-			'location_orte' => $location_orte,
-			'locations' => $data
+			'stats' => [
+				'count' => $count,
+				'location_orte' => $location_orte,
+				'locations' => $locations,
+			],
+			'dateRange' => [
+				'min' => $min !== null ? date('d.m.Y', $min) : null,
+				'max' => $max !== null ? date('d.m.Y', $max) : null,
+			],
 		];
 	}
-	
+
+	/**
+	 * Liefert ausschließlich die Orts-Statistik.
+	 *
+	 * @deprecated Ersetzt durch getStatsAndDateRange(), das zusätzlich den
+	 *             Datumsbereich zurückgibt. Diese Methode bleibt erhalten, damit
+	 *             fremde Installationen des öffentlichen Bundles, die weiterhin
+	 *             getStats() aufrufen, nicht mit einem Fatal Error brechen.
+	 */
+	public static function getStats()
+	{
+		return static::getStatsAndDateRange()['stats'];
+	}
+
 	public static function findAllSekEvents($limit = 100, $searchArr = false)
     {
 		$t = static::$strTable;
@@ -248,14 +360,66 @@ class SekEventsModel extends Model
 			$arrOptions['value'][] = '%'.$searchArr['text'].'%';
 		}
 		
+		// Der Filterwert wird hier EINMAL strikt geparst und für die spätere
+		// PHP-seitige Nachfilterung weiter unten wiederverwendet (statt ihn
+		// dort ein zweites Mal separat per explode() zu zerlegen). Akzeptiert
+		// werden Tag und Monat mit je 1-2 Ziffern, optional gefolgt von einem
+		// Punkt und/oder einer vierstelligen Jahreszahl (Formulare aus dem
+		// Datepicker liefern z. B. "15.09.2026", gespeichert ist "15.09.").
+		// Ein nicht zum Muster passender Wert (z. B. LIKE-Wildcards wie "%"
+		// oder "_", die sonst ungeprüft ins SQL-Muster liefen, oder Werte, die
+		// weiter unten mktime() mit einem nicht-numerischen Tag/Monat gefüttert
+		// hätten) wird als ungültig behandelt.
+		$datumFilterActive = false;
+		$datumFilterDay = null;
+		$datumFilterMonth = null;
+
 		if(isset($searchArr['datum']) && $searchArr['datum'] !== '') {
-			$arrOptions['column'][] = "(dates LIKE ?)";
-			$arrOptions['value'][] = '%"date":"'.str_replace('2025','', $searchArr['datum']).'"%';
+			if (preg_match('/^(\d{1,2})\.(\d{1,2})\.?(\d{4})?$/', $searchArr['datum'], $matches)) {
+				$datumFilterDay = (int) $matches[1];
+				$datumFilterMonth = (int) $matches[2];
+				$datumFilterYear = (isset($matches[3]) && $matches[3] !== '') ? (int) $matches[3] : null;
+
+				// Termine werden ohne Jahr gespeichert, das laufende Jahr wird
+				// zur Laufzeit ergänzt (siehe formatData()/Nachfilter unten).
+				// Enthält der Filterwert eine davon abweichende Jahreszahl,
+				// stünde im Formularfeld ein anderes Jahr als das der
+				// zurückgelieferten Treffer - der Filter liefert in diesem
+				// Fall bewusst keine Treffer statt inkonsistenter.
+				if ($datumFilterYear === null || $datumFilterYear === (int) date('Y')) {
+					$datumFilterActive = true;
+				}
+			}
+
+			if ($datumFilterActive) {
+				$arrOptions['column'][] = "(dates LIKE ?)";
+				$arrOptions['value'][] = sprintf('%%"date":"%02d.%02d."%%', $datumFilterDay, $datumFilterMonth);
+			} else {
+				// Ungültiger oder jahresfremder Filterwert: bewusst keine
+				// Treffer statt eines Serverfehlers oder einer irreführenden
+				// Teilmenge zurückgeben.
+				$arrOptions['column'][] = '(1 = 0)';
+			}
 		}
 
 		$rawdata = static::findAll($arrOptions);
 		$data = [];
-		
+
+		// Model::find() liefert bei null Treffern null zurück, keine leere
+		// Collection. Ohne diese Absicherung erzeugt der foreach darunter unter
+		// PHP 8 eine Warning ("foreach() argument must be of type array|object,
+		// null given"), z. B. wenn der Datumsfilter einen Tag ohne Termine trifft.
+		if ($rawdata === null) {
+			return $data;
+		}
+
+		// Vergangene Termine gehören nicht in Liste und Suche - ausgegeben werden nur
+		// heutige und künftige Veranstaltungen. Die Grenze ist Mitternacht, damit ein
+		// Termin am laufenden Tag sichtbar bleibt, auch wenn seine Uhrzeit bereits
+		// vorbei ist. Vergangene Veranstaltungen bleiben über den Direktlink auf ihre
+		// Detailseite erreichbar, nur eben nicht mehr über die Übersicht.
+		$heuteMitternacht = strtotime('today midnight');
+
 		foreach($rawdata as $d) {
 			$format = static::formatData($d);
 			
@@ -268,15 +432,19 @@ class SekEventsModel extends Model
 					continue;
 				}
 
-				if(isset($searchArr['datum']) && $searchArr['datum'] !== '') {
-					$searchdate = explode('.', $searchArr['datum']);
-					$searchday = $searchdate[0];
-					$searchmonth = $searchdate[1];
+				if($tstamp < $heuteMitternacht) {
+					continue;
+				}
 
-					$searchstart = mktime(0,0,0,$searchmonth,$searchday,date('Y'));
-					$searchend = mktime(23,59,59,$searchmonth,$searchday,date('Y'));
+				if($datumFilterActive) {
+					$searchstart = mktime(0,0,0,$datumFilterMonth,$datumFilterDay,(int) date('Y'));
+					$searchend = mktime(23,59,59,$datumFilterMonth,$datumFilterDay,(int) date('Y'));
 
-					if($tstamp > $searchstart && $tstamp < $searchend) {
+					// Grenzen bewusst inklusiv: Ein Termin exakt um 00:00 Uhr entspricht genau
+					// $searchstart und fiele bei striktem Vergleich aus dem Datumsfilter
+					// heraus - das betrifft sowohl den Fallback für fehlende Uhrzeiten als
+					// auch legitim auf 00:00 gesetzte Termine.
+					if($tstamp >= $searchstart && $tstamp <= $searchend) {
 						$date = strtotime(date('Y-m-d-His',$tstamp));
 						$data[$date.'_'.$format->id] = $format;
 					}

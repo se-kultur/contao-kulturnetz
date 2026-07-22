@@ -254,7 +254,22 @@ class EventsModel extends Model
 
 		$rawdata = static::findAll($arrOptions);
 		$data = [];
-		
+
+		// findAll() liefert bei null Treffern null statt einer leeren Collection.
+		// Ohne diese Absicherung läuft der folgende foreach unter PHP 8 in eine
+		// Warning - etwa bei einer Volltextsuche ohne Ergebnis. Die übrigen
+		// Methoden dieser Klasse prüfen bereits auf null.
+		if($rawdata === null) {
+			return $data;
+		}
+
+		// Vergangene Termine gehören nicht in Liste und Suche - ausgegeben werden nur
+		// heutige und künftige Veranstaltungen. Die Grenze ist Mitternacht, damit ein
+		// Termin am laufenden Tag sichtbar bleibt, auch wenn seine Uhrzeit bereits
+		// vorbei ist. Vergangene Veranstaltungen bleiben über den Direktlink auf ihre
+		// Detailseite erreichbar, nur eben nicht mehr über die Übersicht.
+		$heuteMitternacht = strtotime('today midnight');
+
 		foreach($rawdata as $d) {
 			$format = static::formatData($d);
 			
@@ -267,6 +282,10 @@ class EventsModel extends Model
 					continue;
 				}
 
+				if($tstamp < $heuteMitternacht) {
+					continue;
+				}
+
 				if(isset($searchArr['datum']) && $searchArr['datum'] !== '') {
 					$searchdate = explode('.', $searchArr['datum']);
 					$searchday = $searchdate[0];
@@ -276,7 +295,9 @@ class EventsModel extends Model
 					$searchstart = mktime(0,0,0,$searchmonth,$searchday,$searchyear);
 					$searchend = mktime(23,59,59,$searchmonth,$searchday,$searchyear);
 
-					if($tstamp > $searchstart && $tstamp < $searchend) {
+					// Grenzen inklusiv, damit Termine exakt um 00:00 Uhr nicht aus dem
+					// Datumsfilter fallen (analog zu SekEventsModel).
+					if($tstamp >= $searchstart && $tstamp <= $searchend) {
 						$date = strtotime(date('Y-m-d',$tstamp));
 						$data[$date.'_'.$format->id] = $format;
 					}
