@@ -67,12 +67,17 @@ class ModuleSekEventsListAll extends \Module
 
 		$events = SekEventsModel::findAllSekEvents(200, $searchArr);
 
-		// Innerhalb eines Tages bei jedem Seitenaufruf neu mischen, damit nicht
-		// immer dieselben Veranstaltungen oben stehen. Die Tage bleiben
-		// chronologisch. Gilt bewusst nur für die angezeigte Liste - die
-		// Facettenmenge unten zählt lediglich Orte, deren Reihenfolge dafür
-		// ohne Bedeutung ist.
-		$events = SekEventsModel::mischeInnerhalbDerTage($events);
+		// Innerhalb eines Tages nach Uhrzeit sortieren; nur langlaufende
+		// Veranstaltungen (Ausstellungen über mehrere Festivaltage) werden an
+		// wechselnder Position eingestreut, damit sie nicht an jedem Tag ganz
+		// oben stehen. Die Reihenfolge ist tagesstabil, wechselt also einmal
+		// täglich und nicht bei jedem Seitenaufruf; ein Filterwechsel ändert
+		// die Zahl der Einfügeplätze eines Tages und verschiebt dadurch die
+		// Position der Langläufer, nicht aber die Zeitreihenfolge der übrigen
+		// Veranstaltungen. Die Tage bleiben chronologisch. Gilt bewusst nur
+		// für die angezeigte Liste - die Facettenmenge unten zählt lediglich
+		// Orte, deren Reihenfolge dafür ohne Bedeutung ist.
+		$events = SekEventsModel::sortiereInnerhalbDerTage($events);
 
 		$this->Template->events = $events;
 
