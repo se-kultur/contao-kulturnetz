@@ -67,16 +67,20 @@ class ModuleSekEventsListAll extends \Module
 
 		$events = SekEventsModel::findAllSekEvents(200, $searchArr);
 
-		// Innerhalb eines Tages nach Uhrzeit sortieren; nur langlaufende
-		// Veranstaltungen (Ausstellungen über mehrere Festivaltage) werden an
-		// wechselnder Position eingestreut, damit sie nicht an jedem Tag ganz
-		// oben stehen. Die Reihenfolge ist tagesstabil, wechselt also einmal
-		// täglich und nicht bei jedem Seitenaufruf; ein Filterwechsel ändert
-		// die Zahl der Einfügeplätze eines Tages und verschiebt dadurch die
-		// Position der Langläufer, nicht aber die Zeitreihenfolge der übrigen
-		// Veranstaltungen. Die Tage bleiben chronologisch. Gilt bewusst nur
-		// für die angezeigte Liste - die Facettenmenge unten zählt lediglich
-		// Orte, deren Reihenfolge dafür ohne Bedeutung ist.
+		// Innerhalb eines Tages nach Uhrzeit sortieren; langlaufende
+		// Veranstaltungen (Ausstellungen über mehrere Festivaltage) stehen als
+		// Block am Ende des Tages, damit sie nicht an jedem Tag ganz oben
+		// stehen und die Zeitreihenfolge der übrigen Veranstaltungen nicht
+		// zerreißen. Im Block gilt dieselbe Regel, die Uhrzeiten laufen also
+		// auch dort aufsteigend; wechseln kann die Reihenfolge nur unter
+		// Veranstaltungen, die zur selben Uhrzeit beginnen. Sie ist tagesstabil,
+		// wechselt also höchstens einmal täglich und nicht bei jedem
+		// Seitenaufruf; ein Filterwechsel entfernt nur Einträge und ändert die
+		// Reihenfolge der verbleibenden nicht. Die Tage bleiben chronologisch.
+		// Soll ohne jede tägliche Bewegung rein nach Uhrzeit sortiert werden,
+		// genügt es, ProgrammSortierer::LANGLAEUFER_SCHWELLE auf 0 zu setzen.
+		// Gilt bewusst nur für die angezeigte Liste - die Facettenmenge unten
+		// zählt lediglich Orte, deren Reihenfolge dafür ohne Bedeutung ist.
 		$events = SekEventsModel::sortiereInnerhalbDerTage($events);
 
 		$this->Template->events = $events;

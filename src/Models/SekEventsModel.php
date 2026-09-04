@@ -464,27 +464,33 @@ class SekEventsModel extends Model
 	/**
 	 * Sortiert die Veranstaltungen innerhalb eines Tages, ohne die Reihenfolge der
 	 * Tage selbst zu verändern: Die Tage bleiben chronologisch, innerhalb eines
-	 * Tages stehen die Veranstaltungen nach Uhrzeit aufsteigend. Nur langlaufende
-	 * Veranstaltungen werden an einer aus einem Hash abgeleiteten Position
-	 * eingestreut, damit sie nicht an jedem Festivaltag ganz oben stehen.
+	 * Tages stehen zuerst die normalen Veranstaltungen nach Uhrzeit aufsteigend.
+	 * Langlaufende Veranstaltungen folgen als geschlossener Block am Ende des
+	 * Tages, damit sie nicht an jedem Festivaltag ganz oben stehen und die
+	 * Zeitreihenfolge nicht zerreißen. Innerhalb des Blocks gilt dieselbe Regel,
+	 * die Uhrzeiten laufen also auch dort aufsteigend.
 	 *
 	 * Die Reihenfolge ist tagesstabil: Innerhalb eines Kalendertags liefert jeder
-	 * Aufruf bei unveränderter Filterung dieselbe Reihenfolge, am Folgetag eine
-	 * andere. Ändert ein Filter die Menge eines Tages, verschiebt sich die
-	 * Einfügeposition der Langläufer; die Zeitreihenfolge der übrigen
-	 * Veranstaltungen bleibt davon unberührt.
+	 * Aufruf dieselbe Reihenfolge, am Folgetag wechselt sie dort, wo mehrere
+	 * Veranstaltungen zur selben Uhrzeit beginnen. Ein Filter entfernt lediglich
+	 * Einträge, er ändert die Reihenfolge der verbleibenden nicht.
 	 *
 	 * Die Sortierlogik selbst liegt in ProgrammSortierer, damit sie ohne
-	 * Contao-Kernel prüfbar bleibt.
+	 * Contao-Kernel prüfbar bleibt. Von dort stammt auch der Default der
+	 * Schwelle: ProgrammSortierer::LANGLAEUFER_SCHWELLE auf 0 zu setzen schaltet
+	 * die Sonderbehandlung für alle Aufrufe ab. Sortiert wird dann ausschließlich
+	 * nach Uhrzeit, bei gleicher Uhrzeit nach dem Schlüssel des Termins, die
+	 * Ausgabe wechselt also auch nicht mehr täglich.
 	 *
 	 * @param array       $data                Chronologisch sortierte Liste, Schlüssel "<tstamp>_<id>"
 	 * @param string|null $seed                Seed für die Hash-Bildung. Null bedeutet: heutiger Kalendertag.
 	 * @param int         $langlaeuferSchwelle Ab wie vielen distinkten künftigen Kalendertagen eine
-	 *                                         Veranstaltung als langlaufend gilt
+	 *                                         Veranstaltung als langlaufend gilt. 0 schaltet die
+	 *                                         Sonderbehandlung ab.
 	 *
 	 * @return array
 	 */
-	public static function sortiereInnerhalbDerTage(array $data, ?string $seed = null, int $langlaeuferSchwelle = 3): array
+	public static function sortiereInnerhalbDerTage(array $data, ?string $seed = null, int $langlaeuferSchwelle = ProgrammSortierer::LANGLAEUFER_SCHWELLE): array
 	{
 		return ProgrammSortierer::sortiereTage($data, $seed, $langlaeuferSchwelle);
 	}
@@ -499,8 +505,9 @@ class SekEventsModel extends Model
 	 * auch beim Neuladen oder Filtern.
 	 *
 	 * @deprecated Ersetzt durch sortiereInnerhalbDerTage(). Die Redaktion wünscht
-	 *             innerhalb eines Tages die Zeitreihenfolge; gemischt werden nur
-	 *             noch langlaufende Veranstaltungen. Diese Methode bleibt erhalten,
+	 *             innerhalb eines Tages die Zeitreihenfolge; gemischt wird gar
+	 *             nichts mehr, langlaufende Veranstaltungen rücken lediglich als
+	 *             Block an das Ende ihres Tages. Diese Methode bleibt erhalten,
 	 *             damit fremde Installationen des öffentlichen Bundles, die sie
 	 *             weiterhin aufrufen, nicht mit einem Fatal Error brechen.
 	 *

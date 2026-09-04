@@ -8,23 +8,38 @@ namespace SeKultur\ContaoKulturnetzBundle\Helper;
  * Sortiert das SE-KulturTage-Programm innerhalb der einzelnen Tage.
  *
  * Die Tage selbst bleiben chronologisch und zusammenhängend, das Programm liest
- * sich also weiterhin von vorne nach hinten. Innerhalb eines Tages stehen die
- * Veranstaltungen nach Uhrzeit aufsteigend.
+ * sich also weiterhin von vorne nach hinten. Innerhalb eines Tages stehen
+ * zuerst die normalen Veranstaltungen nach Uhrzeit aufsteigend.
  *
- * Ausnahme sind langlaufende Veranstaltungen (typischerweise Ausstellungen, die
- * sich über viele Festivaltage ziehen). Sie beginnen meist früh am Vormittag und
- * stünden bei reiner Zeitsortierung an jedem einzelnen Tag ganz oben. Damit die
- * Aufmerksamkeit nicht dauerhaft bei denselben Einträgen landet, werden nur
- * diese an einer aus einem Hash abgeleiteten Position in den Tag eingestreut.
- * Die übrigen Veranstaltungen behalten untereinander strikt die Zeitreihenfolge.
+ * Danach folgt als Block am Ende des Tages die Gruppe der langlaufenden
+ * Veranstaltungen (typischerweise Ausstellungen, die sich über viele
+ * Festivaltage ziehen). Sie beginnen meist früh am Vormittag und stünden bei
+ * reiner Zeitsortierung an jedem einzelnen Tag ganz oben. Weil sie im aktuellen
+ * Programm rund jede dritte Karte stellen, wirkte auch ein Einstreuen an
+ * wechselnden Positionen wie eine Zufallsmischung; deshalb stehen sie jetzt
+ * geschlossen hinten.
+ *
+ * Innerhalb des Blocks gilt dieselbe Sortierregel wie bei den normalen
+ * Veranstaltungen: aufsteigend nach Uhrzeit. Ein Block, der zeitlich rückwärts
+ * läuft, liest sich für die Redaktion erneut wie eine kaputte Sortierung.
+ * Erst bei identischer Uhrzeit entscheidet ein tagesstabiler Hash: Beginnen
+ * zwei Ausstellungen zur selben Uhrzeit, wechseln sie täglich die Reihenfolge,
+ * sonst entscheidet allein die Uhrzeit. Im aktuellen Programm betrifft das fünf
+ * der siebzehn Festivaltage; an den übrigen liegt der Block fest.
  *
  * Die Reihenfolge ist tagesstabil: Aus dem Seed (Default: der heutige
- * Kalendertag) wird per crc32 ein Hash gebildet, wodurch jeder Aufruf innerhalb
- * desselben Kalendertags bei unveränderter Filterung dieselbe Reihenfolge
- * liefert. Am Folgetag ergibt sich eine andere Reihenfolge. Die Zeitreihenfolge
- * der normalen Veranstaltungen ist filterunabhängig; die Einfügeposition der
- * Langläufer hängt an der Zahl der Einfügeplätze und verschiebt sich deshalb,
- * wenn ein Filter die Menge eines Tages ändert.
+ * Kalendertag) wird ein Hash gebildet, wodurch jeder Aufruf innerhalb desselben
+ * Kalendertags dieselbe Reihenfolge liefert. Am Folgetag ergibt sich an den
+ * Gleichständen eine andere Reihenfolge. Der Hash hängt nur am Seed, am
+ * Kalendertag und am Schlüssel des Termins, nicht an der Größe der
+ * Trefferliste. Ein Filter ändert die Reihenfolge damit nicht mehr, er entfernt
+ * lediglich Einträge.
+ *
+ * Die Sonderbehandlung lässt sich abschalten: Schwelle 0 bedeutet, dass keine
+ * Veranstaltung als Langläufer gilt und der Tag ausschließlich nach Uhrzeit
+ * sortiert wird. Der Hash bleibt dann vollständig außen vor, bei identischer
+ * Uhrzeit entscheidet der Schlüssel des Termins. Die Ausgabe ist damit über
+ * alle Kalendertage hinweg dieselbe (siehe self::LANGLAEUFER_SCHWELLE).
  *
  * Die Klasse arbeitet bewusst ohne Contao-Abhängigkeiten und ohne globale
  * Zufallsquelle, damit sie isoliert prüfbar bleibt und keine Nebenwirkungen auf
@@ -33,6 +48,20 @@ namespace SeKultur\ContaoKulturnetzBundle\Helper;
 class ProgrammSortierer
 {
     /**
+     * Ab wie vielen distinkten künftigen Kalendertagen eine Veranstaltung als
+     * langlaufend gilt und deshalb an das Ende ihres Tages rückt.
+     *
+     * Das ist der zentrale Schalter der Sonderbehandlung: Der Wert 0 schaltet
+     * sie vollständig ab, dann gilt an jedem Tag ausschließlich die Uhrzeit und
+     * bei identischer Uhrzeit der Schlüssel des Termins. Die Ausgabe steht damit
+     * fest und wechselt insbesondere nicht mehr täglich. Alle Aufrufe, die keine
+     * eigene Schwelle übergeben (auch der Weg über
+     * SekEventsModel::sortiereInnerhalbDerTage() und das Frontend-Modul), lesen
+     * diesen Wert.
+     */
+    public const LANGLAEUFER_SCHWELLE = 3;
+
+    /**
      * Sortiert die Trefferliste tagweise um.
      *
      * @param array       $data                 Chronologisch sortierte Liste, Schlüssel "<tstamp>_<id>",
@@ -40,13 +69,14 @@ class ProgrammSortierer
      * @param string|null $seed                 Seed für die Hash-Bildung. Null bedeutet: heutiger Kalendertag,
      *                                          die Reihenfolge wechselt also täglich einmal.
      * @param int         $langlaeuferSchwelle  Ab wie vielen distinkten künftigen Kalendertagen eine
-     *                                          Veranstaltung als langlaufend gilt
+     *                                          Veranstaltung als langlaufend gilt. 0 (oder kleiner)
+     *                                          schaltet die Sonderbehandlung ab.
      * @param int|null    $abZeitpunkt          Untergrenze für die Tageszählung. Null bedeutet: heute Mitternacht,
      *                                          dieselbe Grenze wie in SekEventsModel::findAllSekEvents().
      *
      * @return array Dieselben Schlüssel wie die Eingabe, lediglich in anderer Reihenfolge
      */
-    public static function sortiereTage(array $data, ?string $seed = null, int $langlaeuferSchwelle = 3, ?int $abZeitpunkt = null): array
+    public static function sortiereTage(array $data, ?string $seed = null, int $langlaeuferSchwelle = self::LANGLAEUFER_SCHWELLE, ?int $abZeitpunkt = null): array
     {
         if (count($data) < 2) {
             return $data;
@@ -59,6 +89,11 @@ class ProgrammSortierer
         if (null === $abZeitpunkt) {
             $abZeitpunkt = strtotime('today midnight');
         }
+
+        // Schwelle 0 (oder kleiner) heißt: keine Sonderbehandlung. Die Prüfung
+        // muss explizit erfolgen, denn ein Vergleich "Tageszahl >= 0" träfe auf
+        // jede Veranstaltung zu und würde das Gegenteil bewirken.
+        $sonderbehandlung = $langlaeuferSchwelle > 0;
 
         // Nach Kalendertag gruppieren. Die Eingabe ist bereits chronologisch
         // sortiert, dadurch bleibt die Reihenfolge der Tage automatisch erhalten
@@ -79,9 +114,14 @@ class ProgrammSortierer
 
         foreach ($nachTag as $tag => $termine) {
             $normale = [];
-            $langlaeuferSchluessel = [];
+            $langlaeufer = [];
 
             foreach ($termine as $key => $tstamp) {
+                if (!$sonderbehandlung) {
+                    $normale[$key] = $tstamp;
+                    continue;
+                }
+
                 $event = $data[$key];
                 $cacheSchluessel = self::cacheSchluessel($event);
 
@@ -90,39 +130,33 @@ class ProgrammSortierer
                 }
 
                 if ($tageCache[$cacheSchluessel] >= $langlaeuferSchwelle) {
-                    $langlaeuferSchluessel[] = $key;
+                    $langlaeufer[$key] = $tstamp;
                 } else {
                     $normale[$key] = $tstamp;
                 }
             }
 
-            // Normale Veranstaltungen: strikt nach Startzeit. Bei identischer
-            // Startzeit entscheidet der Hash, damit auch hier nicht dauerhaft
-            // dieselbe Veranstaltung vorne steht (zuvor entschied die ID).
+            // Normale Veranstaltungen: strikt nach Startzeit.
             $tagesliste = array_keys($normale);
-            usort($tagesliste, static function ($a, $b) use ($normale, $seed, $tag) {
-                if ($normale[$a] !== $normale[$b]) {
-                    return $normale[$a] <=> $normale[$b];
-                }
-
-                return self::vergleicheHash($seed, (string) $tag, 'gleichzeitig', (string) $a, (string) $b);
+            usort($tagesliste, static function ($a, $b) use ($normale, $seed, $tag, $sonderbehandlung) {
+                return self::vergleicheTermine($normale, (string) $a, (string) $b, $seed, (string) $tag, $sonderbehandlung);
             });
 
-            // Langläufer in einer eigenen, ebenfalls hash-basierten Reihenfolge
-            // abarbeiten. Sonst hinge die Einfügereihenfolge an der Startzeit und
-            // der früheste Langläufer säße systematisch weit vorne.
-            usort($langlaeuferSchluessel, static function ($a, $b) use ($seed, $tag) {
-                return self::vergleicheHash($seed, (string) $tag, 'reihenfolge', (string) $a, (string) $b);
+            // Langläufer als geschlossener Block hinter den normalen
+            // Veranstaltungen, im Block nach derselben Regel sortiert. Ein
+            // Block, der zeitlich rückwärts läuft, wirkt auf die Redaktion
+            // erneut wie eine kaputte Sortierung; die Rotation der Ausstellungen
+            // untereinander bleibt über den Gleichstands-Tiebreak erhalten, denn
+            // die meisten öffnen ohnehin zur selben Stunde. Besteht der Tag nur
+            // aus Langläufern, ist die Liste der normalen Veranstaltungen leer
+            // und der Block stellt den ganzen Tag.
+            $blockliste = array_keys($langlaeufer);
+            usort($blockliste, static function ($a, $b) use ($langlaeufer, $seed, $tag, $sonderbehandlung) {
+                return self::vergleicheTermine($langlaeufer, (string) $a, (string) $b, $seed, (string) $tag, $sonderbehandlung);
             });
 
-            foreach ($langlaeuferSchluessel as $key) {
-                // Die Position wird gegen die bereits gewachsene Liste gerechnet,
-                // sie reicht also von ganz vorne bis ganz hinten. Besteht der Tag
-                // nur aus Langläufern, ist die Liste anfangs leer: Der erste
-                // Eintrag landet zwangsläufig auf Position 0, alle weiteren
-                // verschieben ihn und es entsteht trotzdem eine Permutation.
-                $position = self::hash($seed, (string) $tag, 'position', (string) $key) % (count($tagesliste) + 1);
-                array_splice($tagesliste, $position, 0, [$key]);
+            foreach ($blockliste as $key) {
+                $tagesliste[] = $key;
             }
 
             foreach ($tagesliste as $key) {
@@ -179,19 +213,53 @@ class ProgrammSortierer
     }
 
     /**
+     * Vergleicht zwei Termine desselben Tages: zuerst die Startzeit, bei
+     * identischer Startzeit der Tiebreak.
+     *
+     * Der Tiebreak hängt am Schalter. Mit Sonderbehandlung entscheidet der
+     * tagesstabile Hash, damit unter gleichzeitig beginnenden Veranstaltungen
+     * nicht dauerhaft dieselbe vorne steht (zuvor entschied die ID). Ohne
+     * Sonderbehandlung (Schwelle 0) entscheidet der Schlüssel: Der Wert 0 ist
+     * der Rückfallschalter auf eine Reihenfolge, die sich nie ändert, und ein
+     * Hash-Tiebreak würde die Ausgabe an jedem Gleichstand weiterhin täglich
+     * umstellen.
+     *
+     * @param array<string, int> $stamps Startzeitpunkte je Schlüssel
+     */
+    private static function vergleicheTermine(array $stamps, string $a, string $b, string $seed, string $tag, bool $hashTiebreak): int
+    {
+        if ($stamps[$a] !== $stamps[$b]) {
+            return $stamps[$a] <=> $stamps[$b];
+        }
+
+        if (!$hashTiebreak) {
+            return strcmp($a, $b);
+        }
+
+        return self::vergleicheHash($seed, $tag, 'gleichzeitig', $a, $b);
+    }
+
+    /**
      * Bildet den Hash für einen Termin. Seed, Kalendertag und Schlüssel gehen
-     * gemeinsam ein: Ohne den Kalendertag bekäme derselbe Langläufer an jedem
-     * Festivaltag dieselbe Position, ohne den Schlüssel wären alle Termine eines
-     * Tages gleichwertig. Der Zweck trennt die Verwendungen voneinander, damit
-     * Einfügereihenfolge und Einfügeposition nicht miteinander korrelieren.
+     * gemeinsam ein: Ohne den Kalendertag stünden dieselben zwei gleichzeitig
+     * beginnenden Veranstaltungen an jedem Festivaltag in derselben Reihenfolge,
+     * ohne den Schlüssel wären alle Termine eines Tages gleichwertig. Der Zweck
+     * trennt Verwendungen voneinander, damit voneinander unabhängige
+     * Entscheidungen nicht korrelieren.
      */
     private static function hash(string $seed, string $tag, string $zweck, string $key): int
     {
-        // Maskierung auf 31 Bit: crc32() liefert nur auf 64-Bit-PHP durchgehend
-        // nicht-negative Werte, auf 32-Bit-Systemen dagegen auch negative. Ein
-        // negativer Rest ergäbe bei array_splice() einen vom Ende her gezählten
-        // Offset und damit eine schiefe Verteilung der Einfügepositionen.
-        return crc32($seed.'|'.$tag.'|'.$zweck.'|'.$key) & 0x7FFFFFFF;
+        // sha1 statt crc32: crc32 ist über GF(2) affin, Seed und Schlüssel gehen
+        // in denselben String ein und die Schlüssel eines Tages sind gleich
+        // lang. Dadurch entscheidet über jedes Schlüsselpaar praktisch ein
+        // einzelnes Bit des Seed-Anteils, die Menge der erreichbaren
+        // Reihenfolgen kollabiert (bei vier Terminen 8 von 24) und einzelne
+        // Veranstaltungen stünden doppelt so oft vorne wie andere. Die ersten
+        // 28 Bit eines sha1-Digests streuen dagegen gleichmäßig; sie passen
+        // zugleich auf 32-Bit-PHP in einen nicht-negativen int, eine Maskierung
+        // wie bei crc32 ist deshalb nicht nötig. Kryptografisch ist hier nichts
+        // gefordert, allein die Streuung zählt.
+        return (int) hexdec(substr(sha1($seed.'|'.$tag.'|'.$zweck.'|'.$key), 0, 7));
     }
 
     /**
