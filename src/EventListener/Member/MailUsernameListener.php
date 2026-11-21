@@ -10,7 +10,6 @@ use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\MemberModel;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -30,26 +29,18 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * nicht Pflicht, Regel E-Mail) und die Beschriftung "E-Mail-Adresse" für den
  * Benutzernamen gehören in die DCA- bzw. Sprachdatei des Bundles.
  *
- * Solange terminal42/contao-mailusername installiert ist, übernimmt dessen
- * Listener die Arbeit und dieser bleibt untätig; so entstehen keine doppelten
- * Fehlermeldungen (das Formular "Persönliche Daten" zeigt jede Exception eines
- * save-Callbacks einzeln an). Nach dem Entfernen des Pakets ist dieser Listener
- * allein zuständig.
+ * Das Paket terminal42/contao-mailusername ist nicht mehr installiert; dieser
+ * Listener ist allein zuständig. Die Beschriftung "E-Mail-Adresse" für den
+ * Benutzernamen steht statisch in contao/languages/{de,en}/default.php
+ * (MSC.username), ein loadLanguageFile-Hook ist deshalb nicht nötig.
  */
 final class MailUsernameListener
 {
-    private const VENDOR_BUNDLE = 'Terminal42MailusernameBundle';
-
-    /**
-     * @param array<string, class-string> $kernelBundles
-     */
     public function __construct(
         private readonly Connection $connection,
         private readonly TranslatorInterface $translator,
         private readonly RequestStack $requestStack,
         private readonly ContaoFramework $framework,
-        #[Autowire(param: 'kernel.bundles')]
-        private readonly array $kernelBundles,
     ) {
     }
 
@@ -61,7 +52,7 @@ final class MailUsernameListener
     #[AsHook('createNewUser', priority: 100)]
     public function onCreateNewUser(int|string $id, array &$data): void
     {
-        if ($this->isDelegated() || !empty($data['username'])) {
+        if (!empty($data['username'])) {
             return;
         }
 
@@ -86,10 +77,6 @@ final class MailUsernameListener
     #[AsCallback('tl_member', 'fields.email.save')]
     public function onSaveEmail(string|null $value, object|null $dc): string|null
     {
-        if ($this->isDelegated()) {
-            return $value;
-        }
-
         if (null === $dc) {
             $exists = $this->connection->fetchOne('SELECT TRUE FROM tl_member WHERE username = ?', [$value]);
 
@@ -113,7 +100,7 @@ final class MailUsernameListener
     #[AsCallback('tl_member', 'config.onload')]
     public function onLoad(mixed ...$arguments): void
     {
-        if ([] !== $arguments || $this->isDelegated()) {
+        if ([] !== $arguments) {
             return;
         }
 
@@ -193,14 +180,5 @@ final class MailUsernameListener
         }
 
         $request->request->set($key, $value);
-    }
-
-    /**
-     * True, solange terminal42/contao-mailusername installiert ist (dessen
-     * Listener erledigt dann dieselbe Arbeit).
-     */
-    private function isDelegated(): bool
-    {
-        return isset($this->kernelBundles[self::VENDOR_BUNDLE]);
     }
 }
