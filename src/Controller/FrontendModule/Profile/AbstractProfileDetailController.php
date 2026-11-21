@@ -22,7 +22,9 @@ use Symfony\Component\HttpFoundation\Response;
  * Das Profil kommt über Alias oder ID aus der URL (auto_item). Fehlt der
  * Parameter oder gibt es das Profil nicht, antwortet die Seite mit 404. Gesperrte
  * Profile (disable = 1) sind wie bisher per Direktlink sichtbar; nur der Besitzer
- * sieht dazu den Hinweis "Nicht öffentlich" (Entscheidung E39).
+ * sieht dazu den Hinweis "Nicht öffentlich" (Entscheidung E39). Die Seite trägt dann
+ * "noindex,nofollow" im Meta-Tag robots (HtmlHeadBag der Antwort), wodurch weder
+ * Suchmaschinen noch die Contao-Suche (SearchIndexListener) sie aufnehmen.
  *
  * Template-Variablen:
  *  - profile_type ("artists"), profile_label ("Künstler*innenprofil"), profile
@@ -54,6 +56,10 @@ abstract class AbstractProfileDetailController extends AbstractProfileController
 
         if (null === $profile) {
             throw new PageNotFoundException(\sprintf('%s nicht gefunden: %s', $type->label(), $alias ?? '(ohne Alias)'));
+        }
+
+        if ((int) ($profile['disable'] ?? 0) > 0) {
+            $this->getHtmlHeadBag()?->setMetaRobots('noindex,nofollow');
         }
 
         $social = $this->socialViewFactory->createProfileContext($type, $profile, $this->memberProvider->getMemberId());
