@@ -2,10 +2,14 @@
 
 namespace SeKultur\ContaoKulturnetzBundle\Module;
 
+use Contao\BackendTemplate;
 use Contao\CoreBundle\Exception\PageNotFoundException;
+use Contao\Input;
+use Contao\Module;
+use SeKultur\ContaoKulturnetzBundle\Helper\RequestContext;
 use SeKultur\ContaoKulturnetzBundle\Models\SekEventsModel;
 
-class ModuleSekEvent extends \Module
+class ModuleSekEvent extends Module
 {
 	/**
 	 * @var string
@@ -19,10 +23,10 @@ class ModuleSekEvent extends \Module
 	 */
 	public function generate()
 	{
-		if (TL_MODE == 'BE')
+		if (RequestContext::isBackendRequest())
 		{
-			/** @var \BackendTemplate|object $objTemplate */
-			$objTemplate = new \BackendTemplate('be_wildcard');
+			/** @var BackendTemplate|object $objTemplate */
+			$objTemplate = new BackendTemplate('be_wildcard');
 
 			$objTemplate->wildcard = '### Detailansicht SE-KulturTage Event ###';
 			$objTemplate->title = $this->headline;
@@ -41,18 +45,14 @@ class ModuleSekEvent extends \Module
 	 */
 	protected function compile()
 	{
-		$alias = \Input::get('auto_item');
+		$alias = (string) Input::get('auto_item');
 		$event = SekEventsModel::findByAlias($alias);
 
 		if ($event === null) {
 			throw new PageNotFoundException('SE-Kultur-Event nicht gefunden: ' . $alias);
 		}
 
-		$memberId = 0;
-		if (FE_USER_LOGGED_IN === true) {
-			$objUser = \FrontendUser::getInstance();
-			$memberId = $objUser->id;
-		}
+		$memberId = RequestContext::getMemberId();
 		$this->Template->member_id = $memberId;
 		$this->Template->event = $event;
 	}

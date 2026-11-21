@@ -2,9 +2,13 @@
 
 namespace SeKultur\ContaoKulturnetzBundle\Module;
 
+use Contao\BackendTemplate;
+use Contao\Module;
+use SeKultur\ContaoKulturnetzBundle\Helper\RequestContext;
 use SeKultur\ContaoKulturnetzBundle\Models\EventsModel;
+
  
-class ModuleEventsListAll extends \Module
+class ModuleEventsListAll extends Module
 {
 	/**
 	 * @var string
@@ -18,10 +22,10 @@ class ModuleEventsListAll extends \Module
 	 */
 	public function generate()
 	{
-		if (TL_MODE == 'BE')
+		if (RequestContext::isBackendRequest())
 		{
-			/** @var \BackendTemplate|object $objTemplate */
-			$objTemplate = new \BackendTemplate('be_wildcard');
+			/** @var BackendTemplate|object $objTemplate */
+			$objTemplate = new BackendTemplate('be_wildcard');
 
 			$objTemplate->wildcard = '### Alle Veranstaltungen ###';
 			$objTemplate->title = $this->headline;
@@ -44,11 +48,7 @@ class ModuleEventsListAll extends \Module
 		
 		$filter = false;
 		
-		$memberId = 0;
-		if (FE_USER_LOGGED_IN === true) {
-            $objUser = \FrontendUser::getInstance();
-            $memberId = $objUser->id;
-        }
+		$memberId = RequestContext::getMemberId();
 		$this->Template->member_id = $memberId;
 		
 		// $_GET wird ungeprüft vom Frontend befüllt. Nur die bekannten

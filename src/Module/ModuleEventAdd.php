@@ -2,7 +2,11 @@
 
 namespace SeKultur\ContaoKulturnetzBundle\Module;
 
-class ModuleEventAdd extends \Module
+use Contao\BackendTemplate;
+use Contao\Module;
+use SeKultur\ContaoKulturnetzBundle\Helper\RequestContext;
+
+class ModuleEventAdd extends Module
 {
 	/**
 	 * @var string
@@ -16,10 +20,10 @@ class ModuleEventAdd extends \Module
 	 */
 	public function generate()
 	{
-		if (TL_MODE == 'BE')
+		if (RequestContext::isBackendRequest())
 		{
-			/** @var \BackendTemplate|object $objTemplate */
-			$objTemplate = new \BackendTemplate('be_wildcard');
+			/** @var BackendTemplate|object $objTemplate */
+			$objTemplate = new BackendTemplate('be_wildcard');
 
 			$objTemplate->wildcard = '### Veranstaltung anlegen ###';
 			$objTemplate->title = $this->headline;
@@ -38,7 +42,7 @@ class ModuleEventAdd extends \Module
 	 */
 	protected function compile()
 	{
-		if (FE_USER_LOGGED_IN === true) {
+		if (RequestContext::hasFrontendUser()) {
             
         } else {
 			// REDIRECT LOGIN

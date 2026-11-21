@@ -2,9 +2,13 @@
 
 namespace SeKultur\ContaoKulturnetzBundle\Module;
 
+use Contao\BackendTemplate;
+use Contao\Input;
+use Contao\Module;
+use SeKultur\ContaoKulturnetzBundle\Helper\RequestContext;
 use SeKultur\ContaoKulturnetzBundle\Models\SekEventsModel;
 
-class ModuleSekEventEdit extends \Module
+class ModuleSekEventEdit extends Module
 {
 	/**
 	 * @var string
@@ -18,10 +22,10 @@ class ModuleSekEventEdit extends \Module
 	 */
 	public function generate()
 	{
-		if (TL_MODE == 'BE')
+		if (RequestContext::isBackendRequest())
 		{
-			/** @var \BackendTemplate|object $objTemplate */
-			$objTemplate = new \BackendTemplate('be_wildcard');
+			/** @var BackendTemplate|object $objTemplate */
+			$objTemplate = new BackendTemplate('be_wildcard');
 
 			$objTemplate->wildcard = '### SE-KulturTage Event bearbeiten ###';
 			$objTemplate->title = $this->headline;
@@ -40,12 +44,10 @@ class ModuleSekEventEdit extends \Module
 	 */
 	protected function compile()
 	{
-		$memberId = 0;
-		if (FE_USER_LOGGED_IN === true) {
-            $objUser = \FrontendUser::getInstance();
-            $memberId = $objUser->id;
+		$memberId = RequestContext::getMemberId();
+		if ($memberId > 0) {
 			
-			$alias = \Input::get('auto_item');
+			$alias = (string) Input::get('auto_item');
 			$event = SekEventsModel::findByAlias($alias);
 
 			if ($event !== null && $event->member_id == $memberId) {
