@@ -5,8 +5,9 @@
 #}
 {% extends '@Contao/kulturnetz/profile/_form.html.twig' %}
 
+{# Bezeichnung in den Meldungen nach dem Speichern (Schreibweise wie bisher) #}
+{% set profile_message_label = 'Künstler:innenprofil' %}
+
 {% block profile_fields %}
 	{% include '@Contao/kulturnetz/profile/_form_artist.html.twig' %}
-
-	{% add 'kulturnetz_artistform_js' to body %}<script src="{{ asset('js/artistform.js', 'se_kultur_theme') }}" defer></script>{% endadd %}
 {% endblock %}

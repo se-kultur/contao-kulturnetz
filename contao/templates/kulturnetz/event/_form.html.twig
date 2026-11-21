@@ -90,7 +90,7 @@
 		<div class="widget widget-text">
 			<label class="mandatory">Kulturform(en)<span class="mandatory">*</span></label>
 			<input type="hidden" name="sparten" value="{{ values.sparten }}">
-			<span class="spartenselector" data-value="{{ values.sparten }}" data-options="{{ kulturnetz_profile_categories()|filter((label, value) => 'Alle' != value)|keys|json_encode }}"></span>
+			<span class="spartenselector" data-multiselect="sparten" data-required-message="Geben Sie bitte mindestens eine Sparte an." data-value="{{ values.sparten }}" data-options="{{ kulturnetz_profile_categories()|filter((label, value) => 'Alle' != value)|keys|json_encode }}"></span>
 		</div>
 
 		{% block format_field %}{% endblock %}
@@ -98,7 +98,7 @@
 		<div class="widget widget-text">
 			<label class="mandatory">Zielgruppe(n)<span class="mandatory">*</span></label>
 			<input type="hidden" name="zielgruppen" value="{{ values.zielgruppen }}">
-			<span class="zielgruppenselector" data-value="{{ values.zielgruppen }}" data-options="{{ ['für Erwachsene', 'für Jugendliche', 'für Kinder', 'für Familien']|json_encode }}"></span>
+			<span class="zielgruppenselector" data-multiselect="zielgruppen" data-value="{{ values.zielgruppen }}" data-options="{{ ['für Erwachsene', 'für Jugendliche', 'für Kinder', 'für Familien']|json_encode }}"></span>
 		</div>
 
 		<div class="widget widget-text ui-widget">
@@ -290,5 +290,6 @@
 {% block after_form %}
 {% include '@Contao/kulturnetz/form/_editor.html.twig' %}
 {% include '@Contao/kulturnetz/media/_uploader.html.twig' with {upload: 'event'} only %}
-{% add 'kulturnetz_eventform_js' to body %}<script src="{{ asset('js/eventform.js', 'se_kultur_theme') }}" defer></script>{% endadd %}
+{% add 'kulturnetz_multiselect_js' to body %}<script src="{{ kulturnetz_asset('js/multiselect.js') }}" defer></script>{% endadd %}
+{% add 'kulturnetz_eventform_js' to body %}<script src="{{ kulturnetz_asset('js/eventform.js') }}" defer></script>{% endadd %}
 {% endblock %}

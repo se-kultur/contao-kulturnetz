@@ -21,10 +21,12 @@
 
     Optionen von textarea(): field, maxlength, required, class (Klassen des Feldes).
 
-    multiselect(name, label, record, choices, options): Mehrfachauswahl (Select Pure,
-    files/se-kultur.de/js/<art>form.js). Die Auswahlmöglichkeiten stehen als JSON in
-    data-options, die gewählten Werte (kommagetrennt) im versteckten Feld und in
-    data-value. Option "marked": Pflichtmarke im Label.
+    multiselect(name, label, record, choices, options): Mehrfachauswahl
+    (files/se-kultur.de/js/multiselect.js, das Template mit dem Makro bindet das Skript
+    ein). Die Auswahlmöglichkeiten stehen als JSON in data-options, die gewählten Werte
+    (kommagetrennt) im versteckten Feld und in data-value. Optionen: "marked"
+    (Pflichtmarke im Label), "required_message" (Meldung, wenn beim Absenden nichts
+    gewählt ist).
 #}
 {% macro text(name, label, record, options = {}) %}
 	{%- set required = options.required|default(false) -%}
@@ -49,6 +51,6 @@
 	<div class="widget widget-text">
 		<label{% if marked %} class="mandatory"{% endif %}>{{ label }}{% if marked %}<span class="mandatory">*</span>{% endif %}</label>
 		<input type="hidden" name="{{ name }}" value="{{ record[name]|default('') }}">
-		<span class="multiselect" data-value="{{ record[name]|default('') }}" data-options="{{ choices|json_encode }}"></span>
+		<span class="multiselect" data-multiselect="{{ name }}" data-value="{{ record[name]|default('') }}" data-options="{{ choices|json_encode }}"{% if options.required_message is defined %} data-required-message="{{ options.required_message }}"{% endif %}></span>
 	</div>
 {% endmacro %}

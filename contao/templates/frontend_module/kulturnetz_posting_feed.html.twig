@@ -35,6 +35,6 @@
 {# posting.js nur, wenn Beiträge des Mitglieds Aktionen tragen #}
 {% if member_id > 0 and postings|filter(post => post.member_id == member_id) is not empty %}
 	{% add 'kulturnetz_posting_js' to body %}
-		<script src="{{ asset('js/posting.js', 'se_kultur_theme') }}" defer></script>
+		<script src="{{ kulturnetz_asset('js/posting.js') }}" defer></script>
 	{% endadd %}
 {% endif %}

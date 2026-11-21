@@ -4,6 +4,7 @@
     Variablen: mode, record, avatar, categories (Sparten zur Auswahl)
 #}
 {% import '@Contao/kulturnetz/profile/_widgets.html.twig' as w %}
+{% add 'kulturnetz_multiselect_js' to body %}<script src="{{ kulturnetz_asset('js/multiselect.js') }}" defer></script>{% endadd %}
 	<fieldset>
 		<legend>Allgemeine Daten</legend>
 
@@ -16,7 +17,7 @@
 		<div class="profile-form-main">
 			{{ w.text('kuenstlername', 'Künstler*innenname', record, {field: 'name', required: true}) }}
 
-			{{ w.multiselect('sparten', 'Sparte(n)', record, categories, {marked: true}) }}
+			{{ w.multiselect('sparten', 'Sparte(n)', record, categories, {marked: true, required_message: 'Geben Sie bitte mindestens eine Sparte an.'}) }}
 		</div>
 
 		{{ w.text('themen', 'Künstlerische Themenschwerpunkte', record, {required: true}) }}

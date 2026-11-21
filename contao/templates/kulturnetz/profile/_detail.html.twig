@@ -144,8 +144,8 @@
 {% include '@Contao/kulturnetz/social/_following_dialog.html.twig' with social only %}
 
 {% if is_owner %}
-	{% add 'kulturnetz_posting_js' to body %}<script src="{{ asset('js/posting.js', 'se_kultur_theme') }}" defer></script>{% endadd %}
+	{% add 'kulturnetz_posting_js' to body %}<script src="{{ kulturnetz_asset('js/posting.js') }}" defer></script>{% endadd %}
 {% elseif member_id > 0 %}
-	{% add 'kulturnetz_follow_js' to body %}<script src="{{ asset('js/follow.js', 'se_kultur_theme') }}" defer></script>{% endadd %}
+	{% add 'kulturnetz_follow_js' to body %}<script src="{{ kulturnetz_asset('js/follow.js') }}" defer></script>{% endadd %}
 {% endif %}
-{% add 'kulturnetz_history_back_js' to body %}<script src="{{ asset('js/history-back.js', 'se_kultur_theme') }}" defer></script>{% endadd %}
+{% add 'kulturnetz_history_back_js' to body %}<script src="{{ kulturnetz_asset('js/history-back.js') }}" defer></script>{% endadd %}

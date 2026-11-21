@@ -5,6 +5,7 @@
     Variablen: mode, record, avatar
 #}
 {% import '@Contao/kulturnetz/profile/_widgets.html.twig' as w %}
+{% add 'kulturnetz_multiselect_js' to body %}<script src="{{ kulturnetz_asset('js/multiselect.js') }}" defer></script>{% endadd %}
 {% set stage_types = ['keine Bühne vorhanden', 'Bühne fest eingebaut', 'flexible Podeste', 'Zuschauerplätze als Tribühne', 'ebenerdig', 'Guckkastenbühne', 'flexible Position', 'sonstiges'] %}
 	<fieldset>
 		<legend>Allgemeine Daten</legend>

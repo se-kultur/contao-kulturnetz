@@ -15,11 +15,14 @@
       record         Profilzeile, beim Anlegen und bei fremdem Profil leer
       avatar         Titelbild: src (Vorschau), uuid (Feld "avatar")
       categories     Sparten zur Auswahl (nur Künstler*innen) oder null
+      profile_message_label  Bezeichnung in den Meldungen nach dem Speichern
+                     (gesetzt von den Modul-Templates, z. B. "Künstler:innenprofil")
 
     Das Formular sendet an die Routen kulturnetz_profil_anlegen bzw.
     kulturnetz_profil_aendern. Die Ziele nach dem Speichern (Profilübersicht, bei
-    Änderungen die Detailseite) stehen als data-Attribute in .profile-form-data für
-    das Formular-JS (files/se-kultur.de/js/<art>form.js).
+    Änderungen die Detailseite) und die Meldungen nach dem Speichern stehen als
+    data-Attribute in .profile-form-data für das gemeinsame Formular-JS
+    (files/se-kultur.de/js/profileform.js).
 #}
 {% extends '@Contao/kulturnetz/form/_shell.html.twig' %}
 
@@ -48,7 +51,7 @@
 {% endblock %}
 
 {% block fields %}
-	<span class="profile-form-data" hidden data-url-overview="{{ own_profiles_url }}"{% if detail_url %} data-url-detail="{{ detail_url }}"{% endif %}></span>
+	<span class="profile-form-data" hidden data-url-overview="{{ own_profiles_url }}"{% if detail_url %} data-url-detail="{{ detail_url }}"{% endif %} data-text-created="Ihr {{ profile_message_label }} wurde erstellt und wird von uns überprüft!" data-text-updated="Ihr {{ profile_message_label }} wurde aktualisiert!"></span>
 
 	{% block profile_fields %}{% endblock %}
 {% endblock %}
@@ -62,6 +65,7 @@
 {% endblock %}
 
 {% block after_form %}
+	{% add 'kulturnetz_profileform_js' to body %}<script src="{{ kulturnetz_asset('js/profileform.js') }}" defer></script>{% endadd %}
 	{% include '@Contao/kulturnetz/form/_editor.html.twig' only %}
 	{% if is_edit and record.id|default %}
 		{% include '@Contao/kulturnetz/media/_uploader.html.twig' with {upload: 'avatar', type: profile_type, id: record.id} only %}
