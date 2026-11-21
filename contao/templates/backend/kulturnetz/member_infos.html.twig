@@ -1,0 +1,45 @@
+{#
+    Feld "Informationen zum Mitglied" in den Masken der KulturNetz-Module
+    (MemberInfoFieldListener). Aufbau wie eine Zeile der Mitgliederliste.
+
+    Variablen: member (id, firstname, lastname, email, dateAdded) oder null,
+    edit_url, show_url, preview_url, counter_field (ID der Kurzbeschreibung),
+    counter_limit.
+#}
+{% trans_default_domain 'contao_tl_member' %}
+<div class="kulturnetz-member-infos">
+    <table class="tl_listing showColumns">
+        <tbody>
+            <tr>
+                <th class="tl_folder_tlist col_"></th>
+                <th class="tl_folder_tlist col_firstname">{{ 'tl_member.firstname.0'|trans }}</th>
+                <th class="tl_folder_tlist col_lastname">{{ 'tl_member.lastname.0'|trans }}</th>
+                <th class="tl_folder_tlist col_username">{{ 'tl_member.username.0'|trans }}</th>
+                <th class="tl_folder_tlist col_dateAdded ordered_by">{{ 'MSC.dateAdded.0'|trans([], 'contao_default') }}</th>
+                <th class="tl_folder_tlist tl_right_nowrap"></th>
+            </tr>
+            <tr class="even hover-row">
+                <td class="tl_file_list col_">{{ backend_icon('member.svg') }}</td>
+                {% if member %}
+                    <td class="tl_file_list col_firstname">{{ member.firstname }}</td>
+                    <td class="tl_file_list col_lastname">{{ member.lastname }}</td>
+                    <td class="tl_file_list col_username">{{ member.email }}</td>
+                    <td class="tl_file_list col_dateAdded ordered_by">{{ member.dateAdded|date('Y-m-d H:i') }}</td>
+                    <td class="tl_file_list tl_right_nowrap">
+                        <a href="{{ edit_url }}" class="edit">{{ backend_icon('edit.svg', 'tl_member.edit.1'|trans([member.id])) }}</a>
+                        <a href="{{ show_url }}" class="show" data-kulturnetz-modal-title="{{ 'tl_member.show.1'|trans([member.id]) }}" data-kulturnetz-modal-url="{{ show_url ~ '&popup=1' }}">{{ backend_icon('show.svg', 'tl_member.show.1'|trans([member.id])) }}</a>
+                        <a href="{{ preview_url }}" target="_blank">{{ backend_icon('su.svg', 'tl_member.su.1'|trans([member.id])) }}</a>
+                    </td>
+                {% else %}
+                    <td class="tl_file_list col_firstname"></td>
+                    <td class="tl_file_list col_lastname"></td>
+                    <td class="tl_file_list col_username"></td>
+                    <td class="tl_file_list col_dateAdded ordered_by"></td>
+                    <td class="tl_file_list tl_right_nowrap"></td>
+                {% endif %}
+            </tr>
+        </tbody>
+    </table>
+    <span hidden data-kulturnetz-char-counter="{{ counter_field }}" data-kulturnetz-char-limit="{{ counter_limit }}"></span>
+</div>
+<script src="{{ asset('js/member-infos.js', 'contao_kulturnetz') }}" defer></script>

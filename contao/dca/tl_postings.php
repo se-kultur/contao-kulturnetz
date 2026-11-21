@@ -1,8 +1,12 @@
 <?php
 
-use Contao\Backend;
 use Contao\DataContainer;
 use Contao\DC_Table;
+
+/*
+ * Die Listenbeschriftung kommt aus dem Service
+ * src/EventListener/DataContainer/PostingLabelListener.php (#[AsCallback]).
+ */
 
 $GLOBALS['TL_DCA']['tl_postings'] = [
     'config' => [        
@@ -28,46 +32,18 @@ $GLOBALS['TL_DCA']['tl_postings'] = [
 		(
 			'fields'                  => array('content', 'member_id'),
 			'showColumns'             => true,
-			'label_callback'          => array('tl_postings', 'addLabelData')
 		),
 		'global_operations' => array
 		(
-			/*'all' => array
-			(
-				'href'                => 'act=select',
-				'class'               => 'header_edit_all',
-				'attributes'          => 'onclick="Backend.getScrollOffset()" accesskey="e"'
-			)*/
 		),
 		'operations' => array
 		(
-			/*'edit' => array
-			(
-				'href'                => 'act=edit',
-				'icon'                => 'edit.svg'
-			),
-			'copy' => array
-			(
-				'href'                => 'act=copy',
-				'icon'                => 'copy.svg'
-			),*/
 			'delete' => array
 			(
 				'href'                => 'act=delete',
 				'icon'                => 'delete.svg',
-				'attributes'          => 'onclick="if(!confirm(\'' . ($GLOBALS['TL_LANG']['MSC']['deleteConfirm'] ?? null) . '\'))return false;Backend.getScrollOffset()"'
-			),
-			/*'show' => array
-			(
-				'href'                => 'act=show',
-				'icon'                => 'show.svg'
-			),
-			'su' => array
-			(
-				'href'                => 'key=su',
-				'icon'                => 'su.svg',
-				'button_callback'     => array('tl_member', 'switchUser')
-			)*/
+				'attributes'          => 'data-action="contao--scroll-offset#store" onclick="if(!confirm(\'' . ($GLOBALS['TL_LANG']['MSC']['deleteConfirm'] ?? null) . '\'))return false"'
+			)
 		)
 	),
     
@@ -111,41 +87,3 @@ $GLOBALS['TL_DCA']['tl_postings'] = [
         ],
     ],
 ];
-
-
-class tl_postings extends Backend {
-	public function __construct()
-	{
-		parent::__construct();
-		//$this->import(BackendUser::class, 'User');
-		
-		//$GLOBALS['TL_DCA']['tl_events']['list']['label']['fields'] = array('name', 'member_id', 'email', 'created', 'tstamp');
-	}
-		
-	public function addLabelData($row, $label, DataContainer $dc, $args) 
-	{
-		// Contao 5 übergibt in $args bereits formatierte Werte (Datum, Optionen).
-		// Die Spalten werden wie unter Contao 4.13 aus den Rohwerten in $row gebildet.
-		// Label MEMBER_ID
-		$fieldName = 'member_id';
-        $fields = $GLOBALS['TL_DCA'][$dc->table]['list']['label']['fields'];
-        $key = array_search($fieldName, $fields, true);
-		$oldVar = $row[$fieldName];
-		
-		$objMember = $this->Database->prepare("SELECT * FROM tl_member WHERE id = ?")
-				->execute($oldVar);
-
-        $args[$key] = '<nobr>'.$objMember->firstname.' '.$objMember->lastname.' <a href="/contao/preview?page=40&amp;user='.$objMember->email.'" title="" target="_blank"><img src="system/themes/flexible/icons/su.svg" width="16" height="16" alt="Frontend-Vorschau als Mitglied ID '.$objMember->id.'"></a></nobr>';
-		
-		// Label TSTAMP
-		$fieldName = 'tstamp';
-        $fields = $GLOBALS['TL_DCA'][$dc->table]['list']['label']['fields'];
-        if($key = array_search($fieldName, $fields, true)) {
-			$oldVar = $row[$fieldName];
-
-			$args[$key] = '<span style="white-space: nowrap;">'.date('d.m.y - H:i', (int) $oldVar).'</span>';
-		}
-		
-		return $args;
-	}
-}

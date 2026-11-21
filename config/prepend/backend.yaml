@@ -1,0 +1,10 @@
+# Backend-Einstellungen des KulturNetz-Bundles (geladen von
+# ContaoKulturnetzBundle::prependExtension()).
+#
+# custom_css bindet die Stile der KulturNetz-Listen und -Masken ein
+# (public/css/backend.css, über assets:install unter bundles/contaokulturnetz/).
+# Die Liste wird mit Einträgen der Projektkonfiguration zusammengeführt.
+contao:
+    backend:
+        custom_css:
+            - 'bundles/contaokulturnetz/css/backend.css'

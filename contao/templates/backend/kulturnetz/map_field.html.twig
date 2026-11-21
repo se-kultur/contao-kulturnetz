@@ -1,0 +1,17 @@
+{#
+    Feld "Position auf Karte" in den Masken der KulturNetz-Module (MapFieldListener).
+
+    Variablen: suffix (leer oder "_<id>" bei "Mehrere bearbeiten"), leaflet_css,
+    config (JSON-Konfiguration für public/js/backend-map.js).
+
+    Die Schaltfläche hat bewusst keinen type: Wie bisher ist sie der erste
+    Absende-Button des Formulars, die Eingabetaste in einem Textfeld löst also
+    die Adresssuche aus und speichert nicht.
+#}
+<div class="widget kulturnetz-map-widget">
+    <button class="tl_submit kulturnetz-map-locate" id="getLocationData{{ suffix }}">Adresse auf Karte bestimmen</button>
+    <h3 class="kulturnetz-map-heading">Position auf Karte</h3>
+    <div id="map{{ suffix }}" class="kulturnetz-map" data-kulturnetz-map="{{ config|json_encode }}"></div>
+</div>
+<link rel="stylesheet" href="{{ leaflet_css }}">
+<script src="{{ asset('js/backend-map.js', 'contao_kulturnetz') }}" defer></script>

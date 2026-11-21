@@ -1,0 +1,36 @@
+/*
+ * Backend-Stile des KulturNetz-Bundles (eingebunden über contao.backend.custom_css,
+ * config/prepend/backend.yaml). Ersetzen die bisherigen Inline-Styles der DCA-Callbacks.
+ */
+
+/* Listen: Datumsspalten und Mitglied ohne Zeilenumbruch */
+.kulturnetz-nowrap {
+    white-space: nowrap;
+}
+
+/* Maske: Informationen zum Mitglied */
+.kulturnetz-member-infos {
+    padding: 14px;
+}
+
+/* Maske: Zeichenzähler unter der Kurzbeschreibung */
+.kulturnetz-char-counter {
+    font-size: 12px;
+    text-align: right;
+}
+
+/* Maske: Position auf Karte */
+.kulturnetz-map-locate {
+    float: right;
+    margin-top: 10px;
+}
+
+.kulturnetz-map-heading {
+    clear: both;
+}
+
+.kulturnetz-map {
+    width: 100%;
+    height: 350px;
+    background: #eee;
+}
