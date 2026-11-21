@@ -1,0 +1,75 @@
+{#
+ # Kachel einer Veranstaltung im Reiter "Veranstaltungen", Markup wie bisher
+ # mod_events_list.html5 bzw. mod_sekevents_list.html5.
+ #
+ # Variablen:
+ #   event       formatierte Veranstaltung (Service\Event\EventFormatter) mit image {src, alt}
+ #   event_type  "events" oder "sekevents"
+ #   member_id   angemeldetes Mitglied oder 0
+ #   past        vergangene Veranstaltung (blass, ohne nächsten Termin)
+ #}
+{% set weekdays = {Monday: 'Montag', Tuesday: 'Dienstag', Wednesday: 'Mittwoch', Thursday: 'Donnerstag', Friday: 'Freitag', Saturday: 'Samstag', Sunday: 'Sonntag'} %}
+{% set detail_href = kulturnetz_page_url(event_type ~ '.detail', event.alias) %}
+<div class="artist"{% if past %} style="opacity: 0.6; filter: grayscale(1);"{% endif %}>
+	<a href="{{ detail_href }}">
+		<figure class="avatar">
+			<img src="{{ event.image.src }}" alt="{{ event.image.alt }}" loading="lazy">
+		</figure>
+	</a>
+	<div class="infos">
+		{% if member_id > 0 and member_id == event.member_id %}
+		<div class="badges">
+			{% if '1' == event.disable %}
+			<span class="badge bg-error"><i class="fa-solid fa-eye-slash"></i><span class="hide-xs hide-sm hide-md"> Nicht öffentlich</span></span>
+			{% endif %}
+
+			{% if '1' != event.readonly|default('') %}
+			<a href="{{ kulturnetz_page_url(event_type ~ '.edit', event.alias) }}" class="btn btn-primary btn-sm">
+				<i class="fa-solid fa-pen-to-square"></i><span class="hide-sm hide-xs hide-md"> Veranstaltung bearbeiten</span>
+			</a>
+			{% else %}
+			<button type="button" class="btn btn-primary btn-sm" disabled aria-label="Bearbeitung durch Admins deaktiviert" role="tooltip">
+				<i class="fa-solid fa-pen-to-square"></i><span class="hide-sm hide-xs hide-md"> Veranstaltung bearbeiten</span>
+			</button>
+			{% endif %}
+			<a href="{{ detail_href }}#galerie" class="btn btn-outline btn-sm">
+				<i class="fa-solid fa-images"></i><span class="hide-sm hide-xs hide-md"> Galerie</span>
+			</a>
+		</div>
+		{% endif %}
+
+		<a href="{{ detail_href }}"><h6>{{ event.name }}</h6></a>
+		<p class="beschreibung">
+			{% if not past %}
+			<span style="font-weight: bold;"><i class="fa-regular fa-clock"></i>
+			Nächster Termin am {{ weekdays[event.nextdate|date('l')] }}, {{ event.nextdate|date('d.m.Y - H:i') }} Uhr
+			</span><br><br>
+			{% endif %}
+
+			{{ event.kurzbeschreibung }}<br><br>
+
+			{% if '1' == event.eintrittfrei|default('') %}
+			<span class="badge">Eintritt frei</span>
+			{% endif %}
+			{% if '1' == event.spenden|default('') %}
+			<span class="badge">Spenden erbeten</span>
+			{% endif %}
+			{% if '1' == event.anmeldung|default('') %}
+			<span class="badge">Anmeldung erforderlich</span>
+			{% endif %}
+			{% if event.zielgruppen|default('') is not same as('') %}
+			{% for group in event.zielgruppen|split(',') %}
+			<span class="badge bg-kulturtage">{{ group }}</span>
+			{% endfor %}
+			{% endif %}
+		</p>
+
+		<div class="footer">
+			<span class="sparten">{{ event.sparten|default('')|kulturnetz_sparten }}</span>
+			<span class="ort">{{ event.ort|default('') }}</span>
+			<div>
+				<a href="{{ detail_href }}"><i class="fa-solid fa-arrow-right-long"></i></a>
+			</div>
+		</div>
+	</div>
+</div>

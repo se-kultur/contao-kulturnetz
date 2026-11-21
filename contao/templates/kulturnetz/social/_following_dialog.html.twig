@@ -1,0 +1,42 @@
+{#
+ # Dialog "Profil folgen" (bisher elements/modal-followings.html5), nur für
+ # angemeldete Mitglieder. Für Profile, denen das Mitglied schon folgt, sendet das
+ # Formular den Eintrag nur, wenn der Haken entfernt wird (Umschalten, js/follow.js).
+ #
+ # Variablen (Service\Social\SocialViewFactory::createProfileContext()):
+ #   profile, profile_table, member_id, member_profiles
+ #
+ # Endpunkt und Request-Token stehen als data-Attribute am Formular; das
+ # einbindende Template lädt js/follow.js.
+ #}
+{% if member_id > 0 %}
+<div id="mwrapper">
+	<div class="inner">
+		<strong>Mit welchem Ihrer Profile möchten Sie diesem Profil folgen?</strong>
+		<form id="following-data" data-endpoint-folgen="{{ path('kulturnetz_folgen') }}" data-request-token="{{ contao.request_token }}">
+			<input type="hidden" name="following_id" value="{{ profile.id }}">
+			<input type="hidden" name="following_type" value="{{ profile_table }}">
+
+			<ul class="select-followers">
+				{% for entry in member_profiles %}
+					{% set field_id = 'sfp_' ~ entry.type.table ~ '_' ~ entry.profile.id %}
+					<li>
+						{% if entry.following %}
+						<input type="hidden" name="follower[]" value="{{ entry.key }}" disabled>
+						<input type="checkbox" name="reverse" data-value="{{ entry.key }}" id="{{ field_id }}" checked>
+						{% else %}
+						<input type="checkbox" name="follower[]" value="{{ entry.key }}" id="{{ field_id }}">
+						{% endif %}
+						<label for="{{ field_id }}">
+							<img src="{{ entry.image.src }}" alt="Profilbild {{ entry.profile.name }}"> {{ entry.profile.name }}
+						</label>
+					</li>
+				{% endfor %}
+			</ul>
+
+			<button class="btn btn-primary follow-submit" type="submit"><i class="fa-regular fa-floppy-disk"></i> Speichern</button>
+			<a href="#" class="btn btn-outline follow-close">Abbrechen</a>
+		</form>
+	</div>
+</div>
+{% endif %}

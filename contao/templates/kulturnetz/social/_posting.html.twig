@@ -1,0 +1,43 @@
+{#
+ # Ein Beitrag (Feed und Reiter "Beiträge" eines Profils), Markup wie bisher in
+ # mod_postings_list*.html5 bzw. elements/tabs-postings.html5.
+ #
+ # Variablen:
+ #   post            Beitrag (id, content, tstamp, member_id)
+ #   profile_name    Name des Profils
+ #   profile_href    Link der Detailansicht des Profils
+ #   name_href       Link des Namens (Feed: Detailansicht, Reiter: "#")
+ #   image           Titelbild des Profils ({src, alt})
+ #   image_alt       Alternativtext des Bildes
+ #   can_edit        Aktionen "Bearbeiten" und "Löschen" anzeigen
+ #   disabled_badge  Hinweis "Nicht öffentlich" vor den Aktionen
+ #   feed            Feed-Darstellung (Klasse "shadow", Bild mit loading="lazy")
+ #
+ # Der Beitragstext liegt im Contao-Format vor; der Contao-Escaper kodiert
+ # vorhandene Entities nicht doppelt, nl2br setzt die Zeilenumbrüche.
+ # Mit can_edit trägt der Beitrag Endpunkt und Request-Token für posting.js.
+ #}
+<div class="posting{{ feed|default(false) ? ' shadow' }}" data-id="{{ post.id }}"{% if can_edit|default(false) %} data-endpoint-beitrag="{{ path('kulturnetz_beitrag') }}" data-request-token="{{ contao.request_token }}"{% endif %}>
+	<div class="posting-head">
+		<a href="{{ profile_href }}">
+			<img src="{{ image.src }}" alt="{{ image_alt }}"{% if feed|default(false) %} loading="lazy"{% endif %}>
+		</a>
+		<div>
+			<a href="{{ name_href }}">{{ profile_name }}</a><br>
+			<small title="Am {{ post.tstamp|date('d.m.Y - H:i') }} Uhr">{{ post.tstamp|kulturnetz_time_ago }}</small>
+		</div>
+		{% if can_edit|default(false) %}
+
+		<div class="actions">
+			{% if disabled_badge|default(false) %}
+				<span class="badge bg-error"><i class="fa-solid fa-eye-slash"></i><span class="hide-xs hide-sm hide-md">  Nicht öffentlich</span></span>
+			{% endif %}
+			<a href="#" class="posting-edit"><i class="fa-solid fa-pen-to-square"></i></a>
+			<a href="#" class="posting-delete"><i class="fa-solid fa-trash-can"></i></a>
+		</div>
+		{% endif %}
+	</div>
+	<div class="posting-content">
+		<p>{{ post.content|nl2br }}</p>
+	</div>
+</div>

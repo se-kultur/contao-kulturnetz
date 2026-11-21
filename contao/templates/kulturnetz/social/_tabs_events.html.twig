@@ -1,0 +1,37 @@
+{#
+ # Reiter "Veranstaltungen" eines Profils (bisher elements/tabs-events.html5 mit
+ # mod_events_list.html5 und mod_sekevents_list.html5).
+ #
+ # Variablen (Service\Social\SocialViewFactory::createProfileContext()):
+ #   profile, member_id, events, sekevents (je has_any, upcoming, past, visible_count)
+ #
+ # Reihenfolge wie bisher: zuerst die SE-KulturTage (nur wenn verknüpft), danach
+ # der Veranstaltungskalender. Die Kachel "Neue Veranstaltung erstellen" erscheint
+ # für angemeldete Mitglieder unter einer vorhandenen Liste; bei den SE-KulturTagen
+ # nur, solange die Anmeldung offen ist.
+ #}
+{% if sekevents.has_any %}
+<h6>SE-KulturTage</h6>
+{{ include('@Contao/kulturnetz/social/_tabs_event_list.html.twig', {
+	group: sekevents,
+	event_type: 'sekevents',
+	member_id: member_id,
+	add_tile: member_id > 0 and kulturnetz_signup_open(),
+	add_text: 'Erstellen Sie jetzt kostenlos Ihre eigene Veranstaltung für die SE-KulturTage!',
+}, with_context: false) }}
+{% endif %}
+
+<h6>Veranstaltungskalender</h6>
+{% if events.has_any %}
+{{ include('@Contao/kulturnetz/social/_tabs_event_list.html.twig', {
+	group: events,
+	event_type: 'events',
+	member_id: member_id,
+	add_tile: member_id > 0,
+	add_text: 'Erstellen Sie jetzt kostenlos Ihre eigene Veranstaltung für das KulturNetz!',
+}, with_context: false) }}
+{% endif %}
+
+{% if events.visible_count == 0 %}
+Es stehen momentan keine Veranstaltungen von {{ profile.name }} bevor.
+{% endif %}

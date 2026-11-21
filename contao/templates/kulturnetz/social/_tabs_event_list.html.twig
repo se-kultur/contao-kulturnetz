@@ -1,0 +1,47 @@
+{#
+ # Veranstaltungsliste im Reiter "Veranstaltungen" (_tabs_events.html.twig),
+ # Markup wie bisher mod_events_list.html5 bzw. mod_sekevents_list.html5.
+ #
+ # Variablen:
+ #   group       {has_past, upcoming, past} aus SocialViewFactory
+ #   event_type  "events" oder "sekevents" (Seitenschlüssel der Links)
+ #   member_id   angemeldetes Mitglied oder 0
+ #   add_tile    Kachel "Neue Veranstaltung erstellen" anzeigen
+ #   add_text    Text der Kachel
+ #}
+<div class="artists-list mb-4">
+	{% for event in group.upcoming %}
+		{{ include('@Contao/kulturnetz/social/_tabs_event_card.html.twig', {event: event, event_type: event_type, member_id: member_id, past: false}, with_context: false) }}
+	{% endfor %}
+
+	{% if group.has_past %}
+	<h6 class="mt-4">Vergangene Veranstaltungen</h6>
+	{% for event in group.past %}
+		{{ include('@Contao/kulturnetz/social/_tabs_event_card.html.twig', {event: event, event_type: event_type, member_id: member_id, past: true}, with_context: false) }}
+	{% endfor %}
+	{% endif %}
+
+	{% if add_tile %}
+	{% set add_href = kulturnetz_page_url(event_type ~ '.add') %}
+	<div class="artist highlight">
+		<a href="{{ add_href }}">
+			<figure class="avatar">
+				<img src="{{ asset('files/se-kultur.de/img/addavatar.jpg') }}" alt="Neue Veranstaltung erstellen">
+			</figure>
+		</a>
+
+		<div class="infos">
+			<div class="badges">
+				<a href="{{ add_href }}" class="btn btn-primary btn-sm">
+					<i class="fa-solid fa-plus"></i><span class="hide-sm hide-xs hide-md"> Veranstaltung erstellen</span>
+				</a>
+			</div>
+
+			<a href="{{ add_href }}"><h6>Neue Veranstaltung erstellen</h6></a>
+			<p class="beschreibung">
+				{{ add_text }}
+			</p>
+		</div>
+	</div>
+	{% endif %}
+</div>

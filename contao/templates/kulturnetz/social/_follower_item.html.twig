@@ -1,0 +1,19 @@
+{#
+ # Eintrag der Listen "Vernetzt mit" und "Gefolgt von" (_tabs_followers.html.twig).
+ #
+ # Variablen: entry (key, type, profile, image)
+ #}
+{% set href = kulturnetz_page_url(entry.type.value ~ '.detail', entry.profile.alias) %}
+<li>
+	<a href="{{ href }}">
+		<img src="{{ entry.image.src }}" alt="Profilbild {{ entry.profile.name }}">
+	</a>
+	<div>
+		<a href="{{ href }}">{{ entry.profile.name }}</a><br>
+		{{ {artists: 'Künstler*in', hosts: 'Veranstalter*in', locations: 'Location'}[entry.type.value] }}
+		<br>
+		{{ entry.profile.sparten|default('')|kulturnetz_sparten }}
+	</div>
+
+	<a href="{{ href }}" class="arrow"><i class="fa-solid fa-arrow-right-long"></i></a>
+</li>

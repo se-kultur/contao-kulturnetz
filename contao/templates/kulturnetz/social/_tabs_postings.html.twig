@@ -1,0 +1,52 @@
+{#
+ # Reiter "Beiträge" eines Profils (bisher elements/tabs-postings.html5).
+ #
+ # Variablen (Service\Social\SocialViewFactory::createProfileContext()):
+ #   profile, profile_type, profile_table, profile_image, is_owner, postings
+ #
+ # Für die Besitzerin bzw. den Besitzer erscheint das Formular für neue Beiträge
+ # mit Endpunkt und Request-Token als data-Attribute; das einbindende Template lädt
+ # dann js/posting.js.
+ #}
+{% set profile_href = kulturnetz_page_url(profile_type ~ '.detail', profile.alias) %}
+
+	<h6>Neuigkeiten &amp; Wissenswertes</h6>
+	{% if is_owner %}
+	<div class="posting">
+		<div class="posting-head">
+			<a href="{{ profile_href }}">
+				<img src="{{ profile_image.src }}" alt="{{ profile_image.alt }}">
+			</a>
+			<div>
+				<a href="#">{{ profile.name }}</a><br>
+				<small>Jetzt</small>
+			</div>
+		</div>
+		<div class="posting-content">
+			<form class="formbody mt-2" id="posting-data" data-endpoint-beitrag="{{ path('kulturnetz_beitrag') }}" data-request-token="{{ contao.request_token }}">
+				<div class="widget">
+					<input type="hidden" name="posting_type" value="posting">
+					<input type="hidden" name="profile_id" value="{{ profile.id }}">
+					<input type="hidden" name="profile_type" value="{{ profile_table }}">
+
+					<textarea name="content" required maxlength="500" placeholder="Was gibt es Neues? Erzählen Sie dem SE-KulturNetz interessante Neuigkeiten über Ihr Profil und Ihre Tätigkeiten ..."></textarea>
+				</div>
+				<button type="submit" class="btn btn-primary posting-submit"><i class="fa-solid fa-paper-plane"></i> Beitrag veröffentlichen</button>
+			</form>
+		</div>
+	</div>
+	{% endif %}
+
+	{% for post in postings %}
+		{% include '@Contao/kulturnetz/social/_posting.html.twig' with {
+			post: post,
+			profile_name: profile.name,
+			profile_href: profile_href,
+			name_href: '#',
+			image: profile_image,
+			image_alt: profile_image.alt,
+			can_edit: is_owner,
+		} only %}
+	{% else %}
+	Bisher hat {{ profile.name }} noch keinen Beitrag verfasst.
+	{% endfor %}

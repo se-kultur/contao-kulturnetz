@@ -1,18 +1,22 @@
-<?php ob_start(); $eventscount = 0; ?>
-<h6>Veranstaltungskalender</h6>
-<?php if(is_array($this->events) && count($this->events) > 0): ?>
-<?php require_once(__DIR__.'/../mod_events_list.html5'); ?>
-<?php endif; ?>
+<?php
+/*
+ * BEFRISTETE ÜBERGANGSBRÜCKE (Plan E34) für den Reiter Veranstaltungen, bis die
+ * Profil-Detailmodule (Paket b-module-profile) die Partials selbst einbinden.
+ * Das Paket "abschluss" löscht diese Datei; danach entfällt auch "public: true"
+ * an Service\Social\SocialViewFactory.
+ *
+ * Rendert ausschließlich @Contao/kulturnetz/social/_tabs_events.html.twig. Eingebunden per
+ * require_once aus mod_artist.html5, mod_host.html5 und mod_location.html5; deren
+ * Variablen $artist (Profil), $profiletable (z. B. "tl_artists") und
+ * $this->member_id bestimmen das Profil. Die Daten liefert die SocialViewFactory
+ * einmal je Seite für alle vier Brücken.
+ */
+$kulturnetzSocialContext ??= \Contao\System::getContainer()
+	->get(\SeKultur\ContaoKulturnetzBundle\Service\Social\SocialViewFactory::class)
+	->createProfileContext(
+		\SeKultur\ContaoKulturnetzBundle\Service\Profile\ProfileType::tryFromTypeOrTable($profiletable) ?? throw new \LogicException('Unbekannte Profilart: '.$profiletable),
+		$artist->row(),
+		(int) $this->member_id,
+	);
 
-<?php if($eventscount == 0): ?>
-Es stehen momentan keine Veranstaltungen von <?= $artist->name ?> bevor.
-<?php endif; ?>
-<?php $events_output = ob_get_clean(); ?>
-
-<?php if(is_array($this->sekevents) && count($this->sekevents) > 0): ?>
-<h6>SE-KulturTage</h6>
-<?php $this->events = $this->sekevents ?>
-<?php require_once(__DIR__.'/../mod_sekevents_list.html5'); ?>
-<?php endif; ?>
-
-<?= $events_output ?>
+$this->insert('@Contao/kulturnetz/social/_tabs_events.html.twig', $kulturnetzSocialContext);

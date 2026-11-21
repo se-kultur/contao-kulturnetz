@@ -1,38 +1,22 @@
-<?php if($this->member_id > 0): ?>
-<div id="mwrapper">
-	<div class="inner">
-		<strong>Mit welchem Ihrer Profile möchten Sie diesem Profil folgen?</strong>
-		<form id="following-data">
-			<input type="hidden" name="member_id" value="<?= $this->member_id ?>">
-			<input type="hidden" name="following_id" value="<?= $artist->id ?>">
-			<input type="hidden" name="following_type" value="<?= $profiletable ?>">
-			
-			<ul class="select-followers">
-				<?php foreach($this->member_profiles as $type => $profiles): ?>
-					<?php foreach($profiles ?? [] as $profile): ?>
-						<?php if(in_array($type.'-'.$profile->id, $this->following_profiles)): ?>
-							<li>
-								<input type="hidden" name="follower[]" value="<?= $type ?>-<?= $profile->id ?>" disabled> 
-								<input type="checkbox" name="reverse" data-value="<?= $type ?>-<?= $profile->id ?>" id="sfp_<?= $type ?>_<?= $profile->id ?>" checked> 
-								<label for="sfp_<?= $type ?>_<?= $profile->id ?>">
-									<?php $__mPath = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::avatarPath($profile->avatar_file); ?><img src="<?= \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($__mPath, 120, 120, 'crop') ?: $__mPath ?>" alt="Profilbild <?= $profile->name ?>"> <?= $profile->name ?>
-								</label>
-							</li>	
-						<?php else: ?>
-							<li>
-								<input type="checkbox" name="follower[]" value="<?= $type ?>-<?= $profile->id ?>" id="sfp_<?= $type ?>_<?= $profile->id ?>"> 
-								<label for="sfp_<?= $type ?>_<?= $profile->id ?>">
-									<?php $__mPath = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::avatarPath($profile->avatar_file); ?><img src="<?= \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($__mPath, 120, 120, 'crop') ?: $__mPath ?>" alt="Profilbild <?= $profile->name ?>"> <?= $profile->name ?>
-								</label>
-							</li>	
-						<?php endif; ?>
-					<?php endforeach; ?>
-				<?php endforeach; ?>
-			</ul>
-			
-			<button class="btn btn-primary follow-submit" type="submit"><i class="fa-regular fa-floppy-disk"></i> Speichern</button>
-			<a href="#" class="btn btn-outline follow-close">Abbrechen</a>
-		</form>
-	</div>
-</div>
-<?php endif; ?>
+<?php
+/*
+ * BEFRISTETE ÜBERGANGSBRÜCKE (Plan E34) für den Dialog Profil folgen, bis die
+ * Profil-Detailmodule (Paket b-module-profile) die Partials selbst einbinden.
+ * Das Paket "abschluss" löscht diese Datei; danach entfällt auch "public: true"
+ * an Service\Social\SocialViewFactory.
+ *
+ * Rendert ausschließlich @Contao/kulturnetz/social/_following_dialog.html.twig. Eingebunden per
+ * require_once aus mod_artist.html5, mod_host.html5 und mod_location.html5; deren
+ * Variablen $artist (Profil), $profiletable (z. B. "tl_artists") und
+ * $this->member_id bestimmen das Profil. Die Daten liefert die SocialViewFactory
+ * einmal je Seite für alle vier Brücken.
+ */
+$kulturnetzSocialContext ??= \Contao\System::getContainer()
+	->get(\SeKultur\ContaoKulturnetzBundle\Service\Social\SocialViewFactory::class)
+	->createProfileContext(
+		\SeKultur\ContaoKulturnetzBundle\Service\Profile\ProfileType::tryFromTypeOrTable($profiletable) ?? throw new \LogicException('Unbekannte Profilart: '.$profiletable),
+		$artist->row(),
+		(int) $this->member_id,
+	);
+
+$this->insert('@Contao/kulturnetz/social/_following_dialog.html.twig', $kulturnetzSocialContext);

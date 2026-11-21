@@ -1,0 +1,38 @@
+{#
+ # Reiter "Netzwerk" eines Profils (bisher elements/tabs-followers.html5).
+ #
+ # Variablen (Service\Social\SocialViewFactory::createProfileContext()):
+ #   profile, member_id, is_owner, followings, followings_any, followers, followers_any
+ #
+ # Wie bisher steht die Liste, sobald es Einträge gibt, auch wenn keiner sichtbar
+ # ist (gesperrte Profile); der Hinweistext richtet sich nach den sichtbaren.
+ #}
+<h6>Vernetzt mit</h6>
+{% if followings_any %}
+<ul class="followers-list">
+	{% for entry in followings %}
+		{{ include('@Contao/kulturnetz/social/_follower_item.html.twig', {entry: entry}, with_context: false) }}
+	{% endfor %}
+</ul>
+{% endif %}
+
+{% if followings is empty %}
+Aktuell folgt {{ profile.name }} keinem anderen Profil im KulturNetz.
+{% endif %}
+
+
+<h6 class="mt-4">Gefolgt von</h6>
+{% if followers_any %}
+<ul class="followers-list">
+	{% for entry in followers %}
+		{{ include('@Contao/kulturnetz/social/_follower_item.html.twig', {entry: entry}, with_context: false) }}
+	{% endfor %}
+</ul>
+{% endif %}
+
+{% if followers is empty %}
+	Bisher folgt niemand diesem Profil.
+	{% if member_id > 0 and not is_owner %}
+	Seien Sie der/die Erste und <a href="#" class="follow-options">folgen Sie diesem Profil</a>!
+	{% endif %}<br><br>
+{% endif %}
