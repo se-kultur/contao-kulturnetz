@@ -12,8 +12,10 @@ use Contao\CoreBundle\Image\Studio\Figure;
  * - figure: Bild in der Größe kulturnetz_gallery (bei der Beispielgalerie null),
  * - imageUrl: Quelle des sichtbaren Bildes (img src),
  * - lightboxUrl: Ziel der Lightbox (Größe kulturnetz_lightbox bzw. Beispielbild),
- * - title, caption: Bildbeschreibung und Copyright als Klartext (ohne Entities);
- *   das Template maskiert sie selbst.
+ * - title, caption: Bildbeschreibung und Copyright im Contao-Eingabeformat
+ *   (Service\Text\TemplateTextEncoder: Sonderzeichen und Insert-Tag-Klammern als
+ *   Entities); das Template maskiert sie mit dem Contao-Escaper ohne
+ *   Doppelkodierung.
  */
 final class GallerySlide
 {

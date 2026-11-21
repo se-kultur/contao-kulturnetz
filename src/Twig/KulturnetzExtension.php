@@ -32,6 +32,7 @@ use Twig\Attribute\AsTwigFunction;
  *  - kulturnetz_sparten: Sparten-Liste in Großbuchstaben, getrennt durch " | "
  *  - kulturnetz_url_host: Host einer Webseitenangabe ("www.beispiel.de")
  *  - kulturnetz_external_url: Webseitenangabe als Link-Ziel mit "https://"
+ *    (geschweifte Klammern prozentkodiert, siehe externalUrl())
  *
  * Größen sind die Namen aus Service\Image\ImageSize ohne Präfix, z. B. "list"
  * oder "kulturnetz_list".
@@ -138,6 +139,13 @@ final class KulturnetzExtension
     /**
      * Link-Ziel einer Webseitenangabe wie bisher "https://" plus Angabe; eine
      * Angabe mit Schema (http, https) bleibt unverändert. Leer bleibt leer.
+     *
+     * Die gespeicherten Entities (Contao-Speicherformat) werden dekodiert, damit
+     * die Adresse als URL stimmt. Geschweifte Klammern sind in URLs nicht
+     * zulässig (RFC 3986) und werden prozentkodiert ("%7B", "%7D"): Sonst
+     * enthielte die Seite nach dem Dekodieren "{{...}}" aus der Angabe eines
+     * Mitglieds, und Contao würde das als Insert-Tag auswerten. Browser rufen
+     * die kodierte Adresse gleich auf.
      */
     #[AsTwigFilter('kulturnetz_external_url')]
     public function externalUrl(string|null $value): string
@@ -147,6 +155,8 @@ final class KulturnetzExtension
         if ('' === $value) {
             return '';
         }
+
+        $value = str_replace(['{', '}'], ['%7B', '%7D'], $value);
 
         return preg_match('~^https?://~i', $value) ? $value : 'https://'.$value;
     }

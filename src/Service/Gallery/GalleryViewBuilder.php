@@ -9,7 +9,7 @@ use SeKultur\ContaoKulturnetzBundle\Service\Gallery\Value\GalleryView;
 use SeKultur\ContaoKulturnetzBundle\Service\Image\FigureFactory;
 use SeKultur\ContaoKulturnetzBundle\Service\Image\ImageSize;
 use SeKultur\ContaoKulturnetzBundle\Service\Media\RecordMediaRepository;
-use SeKultur\ContaoKulturnetzBundle\Service\Text\TextNormalizer;
+use SeKultur\ContaoKulturnetzBundle\Service\Text\TemplateTextEncoder;
 use Symfony\Component\Asset\Packages;
 use Symfony\Component\Uid\Uuid;
 
@@ -21,7 +21,10 @@ use Symfony\Component\Uid\Uuid;
  * Verhalten wie bisher:
  *  - Bilder in der Reihenfolge von multiSRC, nur vorhandene Dateien; Bild in der
  *    Größe kulturnetz_gallery (620 x 465, box), Lightbox kulturnetz_lightbox
- *    (Breite 1400), Bildbeschreibung und Copyright aus tl_files.meta ("de").
+ *    (Breite 1400), Bildbeschreibung und Copyright aus tl_files.meta ("de"),
+ *    für die Ausgabe im Contao-Eingabeformat mit kodierten Insert-Tag-Klammern
+ *    (TemplateTextEncoder), damit Contao keine Insert-Tags aus Bildtiteln
+ *    auswertet.
  *  - Wiederholung für das Karussell (Swiper mit Loop): Bei 5 und mehr Bildern
  *    jedes Bild einmal; bei weniger Bildern werden die Bilder so oft wiederholt
  *    (1 Bild 1-mal, 2 Bilder 3-mal, 3 und 4 Bilder 2-mal), höchstens aber 5 Folien
@@ -46,7 +49,7 @@ final class GalleryViewBuilder
     public function __construct(
         private readonly RecordMediaRepository $records,
         private readonly FigureFactory $figureFactory,
-        private readonly TextNormalizer $textNormalizer,
+        private readonly TemplateTextEncoder $templateText,
         private readonly Packages $packages,
         private readonly string $exampleImage = 'files/se-kultur.de/img/beispielfoto.jpg',
     ) {
@@ -126,8 +129,8 @@ final class GalleryViewBuilder
         return new GallerySlide(
             $imageUrl,
             $this->figureFactory->getImageUrl($uuid, ImageSize::Lightbox, false) ?? $imageUrl,
-            $this->textNormalizer->toPlainText($metadata?->getTitle() ?? ''),
-            $this->textNormalizer->toPlainText($metadata?->getCaption() ?? ''),
+            $this->templateText->encode($metadata?->getTitle()),
+            $this->templateText->encode($metadata?->getCaption()),
             $figure,
             $this->toUuidString($uuid),
         );

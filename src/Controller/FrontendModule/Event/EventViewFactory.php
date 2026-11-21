@@ -6,10 +6,9 @@ namespace SeKultur\ContaoKulturnetzBundle\Controller\FrontendModule\Event;
 
 use SeKultur\ContaoKulturnetzBundle\Service\Event\EventFormatter;
 use SeKultur\ContaoKulturnetzBundle\Service\Event\EventType;
-use SeKultur\ContaoKulturnetzBundle\Service\Gallery\Value\GallerySlide;
-use SeKultur\ContaoKulturnetzBundle\Service\Gallery\Value\GalleryView;
 use SeKultur\ContaoKulturnetzBundle\Service\Image\FigureFactory;
 use SeKultur\ContaoKulturnetzBundle\Service\Image\ImageSize;
+use SeKultur\ContaoKulturnetzBundle\Service\Text\TemplateTextEncoder;
 use SeKultur\ContaoKulturnetzBundle\Service\Text\TextNormalizer;
 use Symfony\Component\Uid\Uuid;
 
@@ -35,6 +34,7 @@ final class EventViewFactory
     public function __construct(
         private readonly FigureFactory $figureFactory,
         private readonly TextNormalizer $textNormalizer,
+        private readonly TemplateTextEncoder $templateText,
         private readonly EventFormatter $formatter,
     ) {
     }
@@ -47,29 +47,6 @@ final class EventViewFactory
     public function encodeInsertTags(string $value): string
     {
         return str_replace(['{{', '}}'], ['&#123;&#123;', '&#125;&#125;'], $value);
-    }
-
-    /**
-     * Galerie mit kodierten Insert-Tag-Klammern in Titel und Copyright der Folien. Der
-     * GalleryViewBuilder liefert beide als Klartext; das Partial gibt sie aus, und Contao
-     * ersetzt Insert-Tags in der fertigen Seite. Die Kodierung ist wiederholbar
-     * (kodierte Werte enthalten keine Klammern mehr).
-     */
-    public function protectGallery(GalleryView $gallery): GalleryView
-    {
-        $slides = array_map(
-            fn (GallerySlide $slide): GallerySlide => new GallerySlide(
-                $slide->imageUrl,
-                $slide->lightboxUrl,
-                $this->encodeInsertTags($slide->title),
-                $this->encodeInsertTags($slide->caption),
-                $slide->figure,
-                $slide->uuid,
-            ),
-            $gallery->slides,
-        );
-
-        return new GalleryView($slides, $gallery->isExample, $gallery->imageCount);
     }
 
     /**
@@ -90,7 +67,8 @@ final class EventViewFactory
 
     /**
      * Titelbild der Detailansicht mit Lightbox-Ziel und Bildbeschreibung (Titel und
-     * Copyright aus den Metadaten der Datei; Klartext, das Template maskiert).
+     * Copyright aus den Metadaten der Datei; im Contao-Eingabeformat wie bei Profilen
+     * und in der Galerie, siehe plain()).
      *
      * @param array<string, mixed> $event
      *
@@ -114,13 +92,13 @@ final class EventViewFactory
     }
 
     /**
-     * Termine der Detailansicht (Datum als Text, Beginn, Ende, Hinweis) als Klartext.
+     * Termine der Detailansicht (Datum als Text, Beginn, Ende, Hinweis).
      *
      * Die Felder "dates" und "prices" sind JSON mit decodeEntities: Contao kodiert dort
      * nur das Zeichen "<" (als "&#60;"), ">" und Anführungszeichen bleiben roh. Der
      * Contao-Escaper von Twig kodiert Zeichenketten mit rohem ">" oder Anführungszeichen
-     * doppelt und würde "&#60;" sichtbar ausgeben; Klartext wird dagegen vollständig und
-     * richtig maskiert.
+     * doppelt und würde "&#60;" sichtbar ausgeben. plain() bringt die Werte deshalb
+     * vollständig in das Contao-Eingabeformat, das der Escaper unverändert ausgibt.
      *
      * @param array<string, mixed> $event
      *
@@ -143,7 +121,7 @@ final class EventViewFactory
     }
 
     /**
-     * Preiszeilen der Detailansicht (Preis, Bezeichnung) als Klartext, siehe dates().
+     * Preiszeilen der Detailansicht (Preis, Bezeichnung), siehe dates().
      *
      * @param array<string, mixed> $event
      *
@@ -364,8 +342,8 @@ final class EventViewFactory
             }
         }
 
-        // Preise und Termine als Klartext (Felder mit decodeEntities, siehe dates()); ein
-        // Eingabefeld zeigt den Wert sonst mit sichtbaren Entities.
+        // Preise und Termine im Contao-Eingabeformat (Felder mit decodeEntities, siehe
+        // dates()); ein Eingabefeld zeigt den Wert sonst mit sichtbaren Entities.
         $formValues = $this->formatter->getFormValues($event);
         $values['price_rows'] = array_map(fn (array $row): array => array_map($this->plain(...), $row), $formValues['prices']);
         $values['date_rows'] = 'add' === $mode
@@ -407,13 +385,14 @@ final class EventViewFactory
     }
 
     /**
-     * Wert im Contao-Speicherformat als Klartext für die Ausgabe in Twig. Die Klammern von
-     * Insert-Tags bleiben kodiert: Der Klartext enthielte sonst "{{...}}", und Contao ersetzt
-     * Insert-Tags in der fertigen Seite, ein Mitglied könnte so Insert-Tags einschleusen.
+     * Gespeicherter Wert für die Ausgabe in Twig, gleicher Weg wie bei Profilen und in der
+     * Galerie (TemplateTextEncoder): Contao-Eingabeformat mit kodierten Insert-Tag-Klammern.
+     * Contao ersetzt Insert-Tags in der fertigen Seite, ein Mitglied könnte sonst über
+     * "{{...}}" Insert-Tags einschleusen.
      */
     private function plain(mixed $value): string
     {
-        return $this->encodeInsertTags($this->textNormalizer->toPlainText(\is_scalar($value) ? (string) $value : ''));
+        return $this->templateText->encode(\is_scalar($value) ? (string) $value : '');
     }
 
     private function toUuidString(string $binary): string

@@ -10,7 +10,7 @@ use SeKultur\ContaoKulturnetzBundle\Service\Image\FigureFactory;
 use SeKultur\ContaoKulturnetzBundle\Service\Image\ImageSize;
 use SeKultur\ContaoKulturnetzBundle\Service\Profile\ProfileType;
 use SeKultur\ContaoKulturnetzBundle\Service\Search\AvatarUrlResolver;
-use SeKultur\ContaoKulturnetzBundle\Service\Text\TextNormalizer;
+use SeKultur\ContaoKulturnetzBundle\Service\Text\TemplateTextEncoder;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -19,8 +19,9 @@ use Symfony\Component\Uid\Uuid;
  *
  * Liegt neben den Controllern, weil nur die Profilmodule diese Ansichten
  * brauchen; die Daten selbst kommen aus den Services (ProfileRepository,
- * FigureFactory). Bildbeschreibungen werden als Klartext geliefert, das
- * Template maskiert sie selbst.
+ * FigureFactory). Bildangaben (Alternativtext, Titel, Copyright) werden im
+ * Contao-Eingabeformat mit kodierten Insert-Tag-Klammern geliefert
+ * (TemplateTextEncoder); das Template maskiert sie mit dem Contao-Escaper.
  */
 final class ProfileViewFactory
 {
@@ -32,7 +33,7 @@ final class ProfileViewFactory
     public function __construct(
         private readonly FigureFactory $figureFactory,
         private readonly AvatarUrlResolver $avatarUrlResolver,
-        private readonly TextNormalizer $textNormalizer,
+        private readonly TemplateTextEncoder $templateText,
         private readonly KulturnetzConfig $config,
         private readonly ClockInterface $clock,
     ) {
@@ -55,9 +56,9 @@ final class ProfileViewFactory
         return [
             'src' => (string) $this->figureFactory->getImageUrl($source, ImageSize::Detail),
             'lightbox_src' => (string) $this->figureFactory->getImageUrl($source, ImageSize::Lightbox),
-            'alt' => $this->plain($metadata?->getAlt()),
-            'title' => $this->plain($metadata?->getTitle()),
-            'caption' => $this->plain($metadata?->getCaption()),
+            'alt' => $this->templateText->encode($metadata?->getAlt()),
+            'title' => $this->templateText->encode($metadata?->getTitle()),
+            'caption' => $this->templateText->encode($metadata?->getCaption()),
         ];
     }
 
@@ -86,7 +87,7 @@ final class ProfileViewFactory
                 'profile' => $profile,
                 'image' => [
                     'src' => (string) $this->figureFactory->getImageUrl($source, ImageSize::List),
-                    'alt' => $this->plain($this->figureFactory->getMetadata($source)?->getAlt()),
+                    'alt' => $this->templateText->encode($this->figureFactory->getMetadata($source)?->getAlt()),
                 ],
                 'is_owner' => $memberId > 0 && $memberId === (int) $profile['member_id'],
                 'is_sample' => $sampleId === (int) $profile['id'],
@@ -129,10 +130,5 @@ final class ProfileViewFactory
         $avatar = $profile['avatar'] ?? null;
 
         return \is_string($avatar) && '' !== $avatar ? $avatar : null;
-    }
-
-    private function plain(string|null $value): string
-    {
-        return $this->textNormalizer->toPlainText((string) $value);
     }
 }
