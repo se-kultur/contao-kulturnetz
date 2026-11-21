@@ -10,8 +10,11 @@ composer require se-kultur/contao-kulturnetz
 
 ## Voraussetzungen
 
-- PHP >= 8.1
-- Contao >= 4.13
+- PHP >= 8.3
+- Contao 5.7 LTS oder neuer innerhalb von Contao 5 (`contao/core-bundle` `^5.7`)
+
+Für Contao 4.13 (PHP >= 8.1) ist die Version 1.0.0 der letzte passende Stand
+(`composer require se-kultur/contao-kulturnetz:^1.0`).
 
 ## Funktionen
 
