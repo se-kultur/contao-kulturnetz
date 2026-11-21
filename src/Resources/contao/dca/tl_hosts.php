@@ -373,11 +373,13 @@ class tl_hosts extends Backend {
 	
 	public function addLabelData($row, $label, DataContainer $dc, $args) 
 	{
+		// Contao 5 übergibt in $args bereits formatierte Werte (Datum, Optionen).
+		// Die Spalten werden wie unter Contao 4.13 aus den Rohwerten in $row gebildet.
 		// Label NAME
 		$fieldName = 'name';
         $fields = $GLOBALS['TL_DCA'][$dc->table]['list']['label']['fields'];
         $key = array_search($fieldName, $fields, true);
-		$oldVar = $args[$key];
+		$oldVar = $row[$fieldName];
 
         $args[$key] = '<a href="https://'.Idna::decode(Environment::get('host')).'/detailansicht-veranstalterprofil/'.$row['alias'].'.html" target="_blank" title="Im Frontend ansehen">'.$oldVar.'</a>';
 		
@@ -385,7 +387,7 @@ class tl_hosts extends Backend {
 		$fieldName = 'member_id';
         $fields = $GLOBALS['TL_DCA'][$dc->table]['list']['label']['fields'];
         $key = array_search($fieldName, $fields, true);
-		$oldVar = $args[$key];
+		$oldVar = $row[$fieldName];
 		
 		$objMember = $this->Database->prepare("SELECT * FROM tl_member WHERE id = ?")
 				->execute($oldVar);
@@ -404,18 +406,18 @@ class tl_hosts extends Backend {
 		$fieldName = 'tstamp';
         $fields = $GLOBALS['TL_DCA'][$dc->table]['list']['label']['fields'];
         $key = array_search($fieldName, $fields, true);
-		$oldVar = $args[$key];
+		$oldVar = $row[$fieldName];
 
-        $args[$key] = '<span style="white-space: nowrap;">'.date('d.m.y - H:i', $oldVar).'</span>';
+        $args[$key] = '<span style="white-space: nowrap;">'.date('d.m.y - H:i', (int) $oldVar).'</span>';
 		
 		
 		// Label CREATED
 		$fieldName = 'created';
         $fields = $GLOBALS['TL_DCA'][$dc->table]['list']['label']['fields'];
         $key = array_search($fieldName, $fields, true);
-		$oldVar = $args[$key];
+		$oldVar = $row[$fieldName];
 
-        $args[$key] = '<span style="white-space: nowrap;">'.date('d.m.y - H:i', $oldVar).'</span>';
+        $args[$key] = '<span style="white-space: nowrap;">'.date('d.m.y - H:i', (int) $oldVar).'</span>';
 		
 		return $args;
 	}
