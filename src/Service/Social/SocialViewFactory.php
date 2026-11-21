@@ -10,27 +10,19 @@ use SeKultur\ContaoKulturnetzBundle\Service\Event\EventType;
 use SeKultur\ContaoKulturnetzBundle\Service\Image\FigureFactory;
 use SeKultur\ContaoKulturnetzBundle\Service\Image\ImageSize;
 use SeKultur\ContaoKulturnetzBundle\Service\Profile\ProfileType;
-use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 
 /**
  * Baut die Template-Daten der Social-Partials unter
  * contao/templates/kulturnetz/social/ (Reiter Veranstaltungen, Beiträge und
  * Netzwerk eines Profils, Folgen-Dialog) und der Beitrags-Feeds.
  *
- * Die Sichtbarkeitsregeln entsprechen den bisherigen Templates
- * (elements/tabs-*.html5, modal-followings.html5, mod_events_list.html5,
- * mod_sekevents_list.html5, mod_postings_list*.html5).
+ * Die Sichtbarkeitsregeln übernehmen die der früheren Legacy-Templates von
+ * Contao 4.13 (Reiter, Folgen-Dialog, Veranstaltungs- und Beitragslisten).
  *
  * Bilder kommen als ['src' => URL, 'alt' => Text]: Titelbilder in der Größe
  * kulturnetz_avatar (120 × 120) bzw. kulturnetz_list (272 × 272), ohne Bild das
  * Ersatzbild in derselben Größe.
- *
- * Öffentlich nur für die befristeten Übergangsbrücken (Entscheidung E34) in
- * contao/templates/elements/{tabs-events,tabs-followers,tabs-postings,modal-followings}.html5,
- * die als Legacy-Templates keine Dependency Injection haben. Das Paket
- * "abschluss" entfernt die Brücken und mit ihnen "public: true".
  */
-#[Autoconfigure(public: true)]
 final class SocialViewFactory
 {
     public function __construct(

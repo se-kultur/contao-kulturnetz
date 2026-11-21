@@ -10,8 +10,9 @@ use Symfony\Bundle\SecurityBundle\Security;
 /**
  * Liefert das angemeldete Frontend-Mitglied über Symfony Security.
  *
- * Ersatz für Helper\RequestContext::getFrontendUser()/getMemberId() und damit für
- * FrontendUser::getInstance() und die Konstante FE_USER_LOGGED_IN aus Contao 4.
+ * Einzige Stelle des Bundles, die das Mitglied bestimmt; es gibt weder
+ * FrontendUser::getInstance() noch die Konstante FE_USER_LOGGED_IN (beides
+ * entfällt in Contao 6).
  *
  * Abgedeckte Fälle:
  *  - Frontend-Seiten, Fragment-Controller und Routen mit "_scope: frontend": Der
@@ -21,9 +22,7 @@ use Symfony\Bundle\SecurityBundle\Security;
  *    gewählte Mitglied in derselben Firewall (FrontendPreviewAuthenticator), das
  *    Mitglied ist damit ebenfalls über Security::getUser() verfügbar, wie bisher
  *    über den Token-Checker.
- *  - Backend-Requests, Konsole und Cron: kein Mitglied (null bzw. 0). Bisher lieferte
- *    RequestContext dort unter Umständen das Mitglied der Sitzung; die Legacy-Module
- *    gaben im Backend aber ohnehin nur die Wildcard aus.
+ *  - Backend-Requests, Konsole und Cron: kein Mitglied (null bzw. 0).
  */
 final class FrontendMemberProvider
 {
@@ -39,7 +38,7 @@ final class FrontendMemberProvider
     {
         $user = $this->security->getUser();
 
-        // Ein Benutzerobjekt ohne ID gilt wie bisher nicht als Mitglied.
+        // Ein Benutzerobjekt ohne ID gilt nicht als Mitglied.
         if (!$user instanceof FrontendUser || (int) $user->id < 1) {
             return null;
         }

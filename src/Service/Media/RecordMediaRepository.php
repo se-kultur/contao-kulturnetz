@@ -20,13 +20,13 @@ use Symfony\Contracts\Service\ResetInterface;
  * wird nur multiSRC. Leere Galerie = NULL.
  *
  * Befristeter Übergang (orderSRC-Spiegel): Solange die Spalte orderSRC existiert,
- * schreibt saveGallery() denselben Wert zusätzlich nach orderSRC. Grund: Die
- * Legacy-Templates der Detailansichten lesen bis zu ihrer Ablösung durch die
- * Modulpakete orderSRC, und GalleryOrderMigration würde eine abweichende
- * orderSRC-Reihenfolge bei jedem contao:migrate wieder nach multiSRC kopieren
- * (Änderungen der Mitglieder gingen verloren). Der Spiegel endet von selbst,
- * sobald die Spalte bei der bewussten Bereinigung entfällt; abschluss entfernt
- * ihn zusammen mit GalleryOrderMigration (siehe CONTAO6-BEREITSCHAFT.md).
+ * schreibt saveGallery() denselben Wert zusätzlich nach orderSRC. Grund: Kein
+ * Template und kein Skript liest orderSRC mehr; der Spiegel verhindert nur, dass
+ * GalleryOrderMigration eine abweichende orderSRC-Reihenfolge bei jedem
+ * contao:migrate wieder nach multiSRC kopiert (Änderungen der Mitglieder gingen
+ * verloren). Er endet von selbst, sobald die Spalte beim Go-live-DROP entfällt;
+ * danach werden Spiegel, GalleryOrderMirrorListener und GalleryOrderMigration
+ * gemeinsam gelöscht (siehe CONTAO6-BEREITSCHAFT.md).
  */
 final class RecordMediaRepository implements ResetInterface
 {

@@ -18,10 +18,11 @@ use Doctrine\DBAL\Connection;
  * das Backend zeigt die Bilder in der Reihenfolge von multiSRC an.
  *
  * Anders als die Core-Migration Version500\OrderFieldMigration bleibt orderSRC
- * erhalten und unverändert: Die Frontend-Templates des Bundles und die
- * Ajax-Skripte unter files/se-kultur.de/code lesen die Reihenfolge weiterhin
- * aus orderSRC. Beim Speichern im Backend gleichen die DCA-Dateien orderSRC
- * mit multiSRC ab (onbeforesubmit_callback syncOrderSRC).
+ * erhalten und unverändert; die Spalte entfällt erst bei der bewussten
+ * Bereinigung der Datenbank. Bis dahin spiegeln GalleryOrderMirrorListener
+ * (Backend) und RecordMediaRepository (Frontend-Endpunkte) die Reihenfolge von
+ * multiSRC nach orderSRC, damit diese Migration eine geänderte Reihenfolge nicht
+ * zurückschreibt. Kein Template und kein Skript liest orderSRC mehr.
  *
  * Neue Reihenfolge von multiSRC: zuerst alle Einträge aus orderSRC, danach die
  * übrigen Einträge aus multiSRC, ohne Duplikate (wie die Core-Migration).
@@ -82,7 +83,7 @@ class GalleryOrderMigration extends AbstractMigration
                 // Nur aktualisieren, wenn sich multiSRC seit dem Lesen nicht
                 // geändert hat (gleichzeitige Bearbeitung im Frontend).
                 $updated += $this->connection->executeStatement(
-                    'UPDATE '.$this->connection->quoteIdentifier($table).' SET multiSRC = :items WHERE id = :id AND multiSRC <=> :multiSRC',
+                    'UPDATE '.$this->connection->quoteSingleIdentifier($table).' SET multiSRC = :items WHERE id = :id AND multiSRC <=> :multiSRC',
                     [
                         'items' => serialize($items),
                         'id' => $row['id'],
@@ -100,22 +101,21 @@ class GalleryOrderMigration extends AbstractMigration
      */
     private function getTables(): array
     {
-        $schemaManager = $this->connection->createSchemaManager();
-        $tables = [];
+        // Abfrage über information_schema statt über die Schema-Introspektion von
+        // DBAL (listTableColumns()/tablesExist() sind in DBAL 4 als veraltet markiert).
+        // Eine Tabelle zählt nur, wenn beide Spalten existieren; fehlt eine der
+        // beiden (z. B. nach der Bereinigung der Altspalte), wird sie übersprungen.
+        $placeholders = implode(', ', array_fill(0, \count(self::TABELLEN), '?'));
 
-        foreach (self::TABELLEN as $table) {
-            if (!$schemaManager->tablesExist([$table])) {
-                continue;
-            }
+        $found = $this->connection->fetchFirstColumn(
+            'SELECT TABLE_NAME FROM information_schema.COLUMNS'
+            .' WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ('.$placeholders.')'
+            ." AND COLUMN_NAME IN ('multiSRC', 'orderSRC')"
+            .' GROUP BY TABLE_NAME HAVING COUNT(DISTINCT COLUMN_NAME) = 2',
+            self::TABELLEN,
+        );
 
-            $columns = $schemaManager->listTableColumns($table);
-
-            if (isset($columns['multisrc'], $columns['ordersrc'])) {
-                $tables[] = $table;
-            }
-        }
-
-        return $tables;
+        return array_values(array_filter(self::TABELLEN, static fn (string $table): bool => \in_array($table, $found, true)));
     }
 
     /**
@@ -124,7 +124,7 @@ class GalleryOrderMigration extends AbstractMigration
     private function fetchRows(string $table): array
     {
         return $this->connection->fetchAllAssociative(
-            'SELECT id, multiSRC, orderSRC FROM '.$this->connection->quoteIdentifier($table)." WHERE orderSRC IS NOT NULL AND orderSRC != ''",
+            'SELECT id, multiSRC, orderSRC FROM '.$this->connection->quoteSingleIdentifier($table)." WHERE orderSRC IS NOT NULL AND orderSRC != ''",
         );
     }
 

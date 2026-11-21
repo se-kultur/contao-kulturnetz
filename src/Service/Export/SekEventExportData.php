@@ -80,8 +80,7 @@ final class SekEventExportData
     }
 
     /**
-     * Preiszeilen als Klartext ("Bezeichnung = Preis" bzw. nur "Bezeichnung"),
-     * "u20ac" aus Altdaten als Euro-Zeichen.
+     * Preiszeilen als Klartext ("Bezeichnung = Preis" bzw. nur "Bezeichnung").
      *
      * @return list<string>
      */
@@ -91,7 +90,7 @@ final class SekEventExportData
 
         foreach ($event['prices_formatted'] ?? [] as $price) {
             $tag = $this->textNormalizer->toPlainText($this->scalar($price['pricetag'] ?? ''));
-            $amount = str_replace('u20ac', '€', $this->textNormalizer->toPlainText($this->scalar($price['price'] ?? '')));
+            $amount = $this->textNormalizer->toPlainText($this->scalar($price['price'] ?? ''));
 
             $lines[] = '' !== $amount ? $tag.' = '.$amount : $tag;
         }

@@ -15,20 +15,17 @@ use Symfony\Contracts\Service\ResetInterface;
  * Befristete Übergangsbrücke (Entscheidung E25): spiegelt nach dem Speichern im
  * Backend die Galerie-Reihenfolge aus multiSRC in die Altspalte orderSRC.
  *
- * Das DCA-Feld orderSRC und der Callback syncOrderSRC sind entfernt; multiSRC
- * ist die einzige Quelle der Reihenfolge. Solange die Spalte orderSRC noch
- * existiert, lesen sie aber zwei Stellen weiter:
- *  - die Legacy-Templates der Profil- und Veranstaltungsmodule (bis zu ihrer
- *    Ablösung durch die Modulpakete),
- *  - GalleryOrderMigration, die eine abweichende orderSRC-Reihenfolge bei jedem
- *    contao:migrate nach multiSRC zurückschreiben würde.
- * Ohne Spiegel würde eine im Backend geänderte Reihenfolge deshalb im Frontend
- * nicht erscheinen und beim nächsten Migrationslauf verloren gehen. Die
- * Endpunkte der Mitglieder spiegeln aus demselben Grund (RecordMediaRepository).
+ * multiSRC ist die einzige Quelle der Reihenfolge; kein Template und kein Skript
+ * liest orderSRC noch. Solange die Spalte existiert, liest sie nur noch
+ * GalleryOrderMigration, die eine abweichende orderSRC-Reihenfolge bei jedem
+ * contao:migrate nach multiSRC zurückschreiben würde. Ohne Spiegel ginge eine im
+ * Backend geänderte Reihenfolge deshalb beim nächsten Migrationslauf verloren.
+ * Die Endpunkte der Mitglieder spiegeln aus demselben Grund
+ * (RecordMediaRepository).
  *
  * Fehlt die Spalte (nach der bewussten Bereinigung mit --with-deletes), tut der
- * Listener nichts. Entfernen zusammen mit dem Spiegel in RecordMediaRepository,
- * sobald kein Legacy-Template mehr orderSRC liest und die Spalte gelöscht ist.
+ * Listener nichts. Nach dem Go-live-DROP von orderSRC wird er zusammen mit dem
+ * Spiegel in RecordMediaRepository und GalleryOrderMigration gelöscht.
  */
 #[AsCallback(table: 'tl_artists', target: 'config.onsubmit')]
 #[AsCallback(table: 'tl_hosts', target: 'config.onsubmit')]
@@ -67,7 +64,7 @@ final class GalleryOrderMirrorListener implements ResetInterface
             return;
         }
 
-        // Wie bisher syncOrderSRC: eine geleerte Galerie ergibt "a:0:{}".
+        // Eine geleerte Galerie ergibt "a:0:{}".
         $order = serialize(array_values(StringUtil::deserialize($row['multiSRC'], true)));
 
         if ($order === $row['orderSRC']) {

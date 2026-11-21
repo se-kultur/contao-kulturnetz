@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace SeKultur\ContaoKulturnetzBundle\Security;
 
-use Contao\CoreBundle\Framework\ContaoFramework;
-use Contao\StringUtil;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use SeKultur\ContaoKulturnetzBundle\Config\KulturnetzConfig;
@@ -21,10 +19,8 @@ use SeKultur\ContaoKulturnetzBundle\Config\KulturnetzConfig;
  */
 final class OwnershipChecker
 {
-    public function __construct(
-        private readonly Connection $connection,
-        private readonly ContaoFramework $framework,
-    ) {
+    public function __construct(private readonly Connection $connection)
+    {
     }
 
     /**
@@ -148,55 +144,6 @@ final class OwnershipChecker
         );
 
         return \is_string($path) && str_starts_with($path, rtrim($homeDir, '/').'/');
-    }
-
-    /**
-     * True, wenn die Datei dem Datensatz zugeordnet ist: Titelbild (avatar) oder
-     * Teil der Galerie (multiSRC, bis zur Bereinigung auch orderSRC).
-     */
-    public function fileBelongsToRecord(string $type, int $recordId, string $fileUuid): bool
-    {
-        $table = $this->table($type);
-        $binary = $this->toBinaryUuid($fileUuid);
-
-        if (null === $binary || $recordId < 1) {
-            return false;
-        }
-
-        $row = $this->connection->fetchAssociative(
-            "SELECT avatar, multiSRC, orderSRC FROM $table WHERE id = ?",
-            [$recordId],
-            [ParameterType::INTEGER],
-        );
-
-        if (false === $row) {
-            return false;
-        }
-
-        if ($binary === $row['avatar']) {
-            return true;
-        }
-
-        $this->framework->initialize();
-        $stringUtil = $this->framework->getAdapter(StringUtil::class);
-
-        foreach (['multiSRC', 'orderSRC'] as $column) {
-            if (\in_array($binary, $stringUtil->deserialize($row[$column] ?? null, true), true)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Prüft Mitgliedsordner und Zuordnung zum eigenen Datensatz in einem Schritt.
-     */
-    public function ownsRecordFile(string $type, int $recordId, string $fileUuid, int $memberId): bool
-    {
-        return $this->ownsRecord($type, $recordId, $memberId)
-            && $this->isFileInHomeDir($fileUuid, $memberId)
-            && $this->fileBelongsToRecord($type, $recordId, $fileUuid);
     }
 
     private function table(string $type): string

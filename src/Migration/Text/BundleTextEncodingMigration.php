@@ -8,7 +8,6 @@ use Contao\CoreBundle\Migration\AbstractMigration;
 use Contao\CoreBundle\Migration\MigrationResult;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
-use Doctrine\DBAL\Types\StringType;
 use SeKultur\ContaoKulturnetzBundle\Service\Text\TextNormalizer;
 
 /**
@@ -233,23 +232,35 @@ class BundleTextEncodingMigration extends AbstractMigration
             'tl_postings' => ['text' => ['content'], 'json' => []],
         ];
 
-        $schemaManager = $this->connection->createSchemaManager();
         $targets = [];
 
         foreach ($wanted as $table => $fields) {
-            if (!$schemaManager->tablesExist([$table])) {
+            // Spalten und Längen über information_schema statt über die Schema-Introspektion
+            // von DBAL (tablesExist()/listTableColumns() sind in DBAL 4 als veraltet
+            // markiert). Eine fehlende Tabelle liefert keine Zeilen und wird übersprungen.
+            $rows = $this->connection->fetchAllAssociative(
+                'SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH FROM information_schema.COLUMNS'
+                .' WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?',
+                [$table],
+            );
+
+            if ([] === $rows) {
                 continue;
             }
 
-            $tableColumns = $schemaManager->listTableColumns($table);
             $columns = [];
 
-            foreach ($tableColumns as $column) {
-                $name = strtolower($column->getName());
+            foreach ($rows as $row) {
+                $name = strtolower((string) $row['COLUMN_NAME']);
                 $columns[] = $name;
-                $length = $column->getLength();
-                $this->lengths[$table][$name] = null === $length ? null : ($column->getType() instanceof StringType ? $length : -$length);
+                $length = $row['CHARACTER_MAXIMUM_LENGTH'];
+
+                // varchar/char zählen in Zeichen, TEXT-Typen in Byte (negativer Wert)
+                $this->lengths[$table][$name] = null === $length
+                    ? null
+                    : (\in_array(strtolower((string) $row['DATA_TYPE']), ['varchar', 'char'], true) ? (int) $length : -(int) $length);
             }
+
             $filter = static fn (array $list): array => array_values(array_filter($list, static fn (string $column): bool => \in_array(strtolower($column), $columns, true)));
 
             $existing = ['text' => $filter($fields['text']), 'json' => $filter($fields['json'])];
