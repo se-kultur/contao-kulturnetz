@@ -1,0 +1,40 @@
+{#
+ # Beitrags-Feed der Module "ModulePostingsList" (eigener Feed) und
+ # "ModulePostingsListAll" (öffentlicher Feed). Markup wie bisher in
+ # mod_postings_list.html5 und mod_postings_list_all.html5, ohne Modul-Wrapper.
+ #
+ # Variablen (Controller unter src/Controller/FrontendModule/Posting/):
+ #   postings   sichtbare Beiträge mit profile, type und image
+ #   member_id  angemeldetes Mitglied oder 0
+ #   own_feed   eigener Feed: Hinweisbox und Hinweis "Nicht öffentlich"
+ #}
+{% if own_feed %}
+	<div class="info mb-4">
+	<strong>NEU: Ihr persönlicher Newsfeed</strong>
+	<p>Ab sofort können Sie Ihre Profile mit anderen Profilen verknüpfen, indem Sie ihnen folgen. Dadurch erhalten Sie auf dieser Seite nur die Beiträge von Profilen, denen Sie folgen und die für Sie relevant sind.</p>
+	<p>Um einem Profil zu folgen, gehen Sie in das <a href="{{ kulturnetz_page_url('teaser') }}">SE-KulturNetz</a> und klicken dort ein Profil an - anschließend können Sie oben rechts auf den Button "Profil folgen" klicken und auswählen, welches Ihrer eigenen Profile Sie mit dem jeweiligen Profil verknüpfen möchten. Die Verknüpfung wird in Ihrem und dem anderen Profil unter dem Reiter "Verknüpft mit" öffentlich angezeigt.</p>
+	</div>
+{% endif %}
+
+{% for post in postings %}
+	{% set profile_href = kulturnetz_page_url(post.type.value ~ '.detail', post.profile.alias) %}
+	{% set can_edit = member_id > 0 and member_id == post.member_id %}
+	{% include '@Contao/kulturnetz/social/_posting.html.twig' with {
+		post: post,
+		profile_name: post.profile.name,
+		profile_href: profile_href,
+		name_href: profile_href,
+		image: post.image,
+		image_alt: 'Profilbild von ' ~ post.profile.name,
+		can_edit: can_edit,
+		disabled_badge: own_feed and '1' == post.profile.disable,
+		feed: true,
+	} only %}
+{% endfor %}
+
+{# posting.js nur, wenn Beiträge des Mitglieds Aktionen tragen #}
+{% if member_id > 0 and postings|filter(post => post.member_id == member_id) is not empty %}
+	{% add 'kulturnetz_posting_js' to body %}
+		<script src="{{ asset('js/posting.js', 'se_kultur_theme') }}" defer></script>
+	{% endadd %}
+{% endif %}
