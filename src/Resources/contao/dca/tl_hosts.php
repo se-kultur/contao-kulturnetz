@@ -7,6 +7,7 @@ use Contao\DC_Table;
 use Contao\Email;
 use Contao\Environment;
 use Contao\Idna;
+use Contao\Input;
 use Contao\StringUtil;
 use Contao\System;
 
@@ -185,14 +186,14 @@ $GLOBALS['TL_DCA']['tl_hosts'] = [
 			'exclude' => false,
 			'label'					=> ['Latitude', ''],
 			'inputType'               => 'text',
-			'sql'                     => "varchar(25) NOT NULL",
+			'sql'                     => "varchar(25) NOT NULL default ''",
 			'eval'                    => array('tl_class'=>'w50'),
 		],
 		'lon' => [
 			'exclude' => false,
 			'label'					=> ['Longitude', ''],
 			'inputType'               => 'text',
-			'sql'                     => "varchar(25) NOT NULL",
+			'sql'                     => "varchar(25) NOT NULL default ''",
 			'eval'                    => array('tl_class'=>'w50'),
 		],
 		'map' => [
@@ -507,23 +508,54 @@ class tl_hosts extends Backend {
 	}
 	
 	public function mailing($varValue, DataContainer $dc) {
-		if ($varValue == '1') {
-			$objMember = $this->Database->prepare("SELECT * FROM tl_member WHERE id = ?")
+		if ($varValue != '1') {
+			return '';
+		}
+
+		// Die Eingabenamen hängen vom Modus ab: Einzelbearbeitung und "Alle überschreiben"
+		// nutzen den Feldnamen, "Mehrere bearbeiten" <feld>_<id>. Das Suffix wird aus dem
+		// aktuellen Eingabenamen abgeleitet und gilt für die Geschwisterfelder.
+		$strSuffix = (string) substr((string) $dc->inputName, \strlen((string) $dc->field));
+		$arrSuffixes = [$strSuffix];
+
+		// "Mehrere bearbeiten": Alle zum Versand markierten Datensätze prüfen, bevor die erste
+		// Mail das System verlässt. Ein Fehler bricht das Speichern aller Datensätze ab
+		// (Rollback), bereits versendete Mails könnten sonst bei erneutem Speichern doppelt gehen.
+		if ($strSuffix !== '') {
+			$arrSuffixes = [];
+
+			foreach (System::getContainer()->get('request_stack')->getCurrentRequest()->request->keys() as $strKey) {
+				if (preg_match('/^sendmail(_\d+)$/', (string) $strKey, $arrMatch) && Input::postUnsafeRaw($strKey) == '1') {
+					$arrSuffixes[] = $arrMatch[1];
+				}
+			}
+		}
+
+		foreach ($arrSuffixes as $strCheck) {
+			if (trim((string) Input::postUnsafeRaw('sendmailsubject'.$strCheck)) === '' || trim((string) Input::postUnsafeRaw('sendmailtext'.$strCheck)) === '') {
+				throw new \Exception('Die E-Mail wurde nicht gesendet und nichts gespeichert: Zu jedem Datensatz mit "E-Mail senden?" müssen "E-Mail Betreff" und "E-Mail Inhalt" ausgefüllt sein.');
+			}
+		}
+
+		$objMember = $this->Database->prepare("SELECT * FROM tl_member WHERE id = ?")
 			->execute($dc->activeRecord->member_id);
-			
-			$objEmail = new Email();
-			// Kein eigener Absender: $GLOBALS['TL_ADMIN_EMAIL'] ist nur im Frontend gesetzt,
-			// Email::send() verwendet dann wie unter Contao 4.13 die Systemadresse (adminEmail).
-			$objEmail->subject = $_POST['sendmailsubject'];
-			$objEmail->text = $_POST['sendmailtext'];
-			$objEmail->sendTo($objMember->email);
-			
-			System::getContainer()->get('monolog.logger.contao.email')->info(
-				'Bestätigungsmail wurde an '.$objMember->email.' gesendet (tl_hosts)',
-				['contao' => new ContaoContext(__METHOD__, ContaoContext::EMAIL)]
-			);
-		}	
-		
+
+		if ($objMember->numRows < 1 || !$objMember->email) {
+			throw new \Exception('Die E-Mail wurde nicht gesendet: Dem Datensatz ist kein Mitglied mit E-Mail-Adresse zugeordnet.');
+		}
+
+		$objEmail = new Email();
+		// Kein eigener Absender: $GLOBALS['TL_ADMIN_EMAIL'] ist nur im Frontend gesetzt,
+		// Email::send() verwendet dann wie unter Contao 4.13 die Systemadresse (adminEmail).
+		$objEmail->subject = (string) Input::postUnsafeRaw('sendmailsubject'.$strSuffix);
+		$objEmail->text = (string) Input::postUnsafeRaw('sendmailtext'.$strSuffix);
+		$objEmail->sendTo($objMember->email);
+
+		System::getContainer()->get('monolog.logger.contao.email')->info(
+			'Bestätigungsmail wurde an '.$objMember->email.' gesendet (tl_hosts)',
+			['contao' => new ContaoContext(__METHOD__, ContaoContext::EMAIL)]
+		);
+
 		return '';
 	}
 	
