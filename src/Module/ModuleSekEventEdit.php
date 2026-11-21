@@ -54,10 +54,30 @@ class ModuleSekEventEdit extends Module
 				$this->Template->event = $event;
 			} else {
 				// REDIRECT
+				// Unbekannte oder fremde Veranstaltung: Die Maske bleibt wie bisher
+				// leer. Ein leeres Model statt null, damit das Template unter PHP 8
+				// keine Warnungen für jeden Feldzugriff erzeugt.
+				$this->Template->event = $this->createEmptyEvent();
 			}
         } else {
 			// REDIRECT LOGIN
 		}
 		
+	}
+
+	/**
+	 * Leeres Model mit den Zusatzfeldern, die das Bearbeiten-Template ausliest
+	 *
+	 * @return SekEventsModel
+	 */
+	protected function createEmptyEvent()
+	{
+		$event = new SekEventsModel();
+		$event->linked_artists_data = [];
+		$event->linked_locations_data = [];
+		$event->linked_hosts_data = [];
+		$event->dates = '[]';
+
+		return $event;
 	}
 }
