@@ -59,7 +59,8 @@ abstract class AbstractEventDirectoryController extends AbstractEventController
 
         $template->set('event_type', $type->value);
         $template->set('member_id', $this->memberProvider->getMemberId());
-        $template->set('search', $search);
+        // Die Werte stehen wieder im Formular: Insert-Tags aus der Anfrage kodieren, Contao ersetzt sie sonst.
+        $template->set('search', array_map($this->viewFactory->encodeInsertTags(...), $search));
         $template->set('has_active_filter', $this->hasActiveFilter($search));
         $template->set('reset_url', $resetUrl);
         $template->set('location_badges', $this->createLocationBadges($facets->locationOrte, $search, $resetUrl));

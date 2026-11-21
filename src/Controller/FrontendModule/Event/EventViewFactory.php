@@ -38,6 +38,16 @@ final class EventViewFactory
     }
 
     /**
+     * Kodiert die Klammern von Insert-Tags ("{{" und "}}") als Entities, bisher
+     * Input::encodeInsertTags(). Für Werte aus der Anfrage (Suchfelder), die ins Markup
+     * zurückgeschrieben werden: Contao ersetzt Insert-Tags in der fertigen Seite.
+     */
+    public function encodeInsertTags(string $value): string
+    {
+        return str_replace(['{{', '}}'], ['&#123;&#123;', '&#125;&#125;'], $value);
+    }
+
+    /**
      * Bild einer Datei (UUID, binär oder Text) in einer benannten Größe, ohne Datei
      * das Ersatzbild.
      *
@@ -73,8 +83,8 @@ final class EventViewFactory
             'src' => $src,
             'lightbox_src' => (string) ($this->figureFactory->getImageUrl($source, ImageSize::Lightbox) ?? $src),
             'alt' => (string) $metadata?->getAlt(),
-            'title' => $this->textNormalizer->toPlainText((string) $metadata?->getTitle()),
-            'caption' => $this->textNormalizer->toPlainText((string) $metadata?->getCaption()),
+            'title' => $this->plain($metadata?->getTitle()),
+            'caption' => $this->plain($metadata?->getCaption()),
         ];
     }
 
@@ -371,9 +381,14 @@ final class EventViewFactory
         return ['first' => $first, 'more' => $more];
     }
 
+    /**
+     * Wert im Contao-Speicherformat als Klartext für die Ausgabe in Twig. Die Klammern von
+     * Insert-Tags bleiben kodiert: Der Klartext enthielte sonst "{{...}}", und Contao ersetzt
+     * Insert-Tags in der fertigen Seite, ein Mitglied könnte so Insert-Tags einschleusen.
+     */
     private function plain(mixed $value): string
     {
-        return $this->textNormalizer->toPlainText(\is_scalar($value) ? (string) $value : '');
+        return $this->encodeInsertTags($this->textNormalizer->toPlainText(\is_scalar($value) ? (string) $value : ''));
     }
 
     private function toUuidString(string $binary): string
