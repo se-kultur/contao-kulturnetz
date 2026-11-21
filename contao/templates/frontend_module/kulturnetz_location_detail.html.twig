@@ -1,0 +1,64 @@
+{#
+    Detailansicht Locationprofil (Modultyp ModuleLocation, bisher mod_location.html5).
+    Aufbau und Variablen: @Contao/kulturnetz/profile/_detail.html.twig
+    Zusätzlich die Tabelle "Location-Eigenschaften" unter der Beschreibung.
+#}
+{% extends '@Contao/kulturnetz/profile/_detail.html.twig' %}
+
+{% block focus %}
+			Themenschwerpunkt(e):<br>
+			<span class="themen">{{ profile.themen }}</span>
+{% endblock %}
+
+{% block details %}
+		<div class="termine mb-4">
+			<h6>Location-Eigenschaften</h6>
+			<table>
+				<tbody>
+					{% if profile.barrierefreiheit|length > 0 %}
+					<tr>
+						<td class="property-label"><strong>Barrierefreiheit</strong></td>
+						<td>{{ profile.barrierefreiheit }}</td>
+					</tr>
+					{% endif %}
+					{% if profile.buehnentyp|length > 0 %}
+					<tr>
+						<td><strong>Bühnentyp</strong></td>
+						<td>{{ profile.buehnentyp }}</td>
+					</tr>
+					{% endif %}
+					{% if profile.technik|length > 0 %}
+					<tr>
+						<td><strong>Techn. Ausstattung</strong></td>
+						<td>{{ profile.technik }}</td>
+					</tr>
+					{% endif %}
+					{% if profile.auftrittsflaeche|length > 0 %}
+					<tr>
+						<td><strong>Auftrittsfläche</strong></td>
+						<td>{{ profile.auftrittsflaeche }} m²</td>
+					</tr>
+					{% endif %}
+					{% if profile.gesamtflaeche|length > 0 %}
+					<tr>
+						<td><strong>Gesamtfläche</strong></td>
+						<td>{{ profile.gesamtflaeche }} m²</td>
+					</tr>
+					{% endif %}
+					{% if profile.sitzplaetze|length > 0 %}
+					<tr>
+						<td><strong>Sitzplätze</strong></td>
+						<td>{{ profile.sitzplaetze }}</td>
+					</tr>
+					{% endif %}
+					{% if profile.stehplaetze|length > 0 %}
+					<tr>
+						<td><strong>Stehplätze</strong></td>
+						<td>{{ profile.stehplaetze }}</td>
+					</tr>
+					{% endif %}
+				</tbody>
+			</table>
+		</div>
+
+{% endblock %}

@@ -1,0 +1,12 @@
+{#
+    Formular zum Anlegen und Bearbeiten eines Veranstalter*innenprofils (Modultypen
+    ModuleHostAdd und ModuleHostEdit, bisher mod_host_add.html5 und mod_host_edit.html5).
+    Aufbau und Variablen: @Contao/kulturnetz/profile/_form.html.twig
+#}
+{% extends '@Contao/kulturnetz/profile/_form.html.twig' %}
+
+{% block profile_fields %}
+	{% include '@Contao/kulturnetz/profile/_form_host.html.twig' %}
+
+	{% add 'kulturnetz_hostform_js' to body %}<script src="{{ asset('js/hostform.js', 'se_kultur_theme') }}" defer></script>{% endadd %}
+{% endblock %}

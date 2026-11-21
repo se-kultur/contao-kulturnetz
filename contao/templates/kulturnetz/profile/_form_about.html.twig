@@ -1,0 +1,19 @@
+{#
+    Fieldset "Informationen" der Profilformulare: Zitat, Kurzbeschreibung, lange
+    Beschreibung (Frontend-Editor, @Contao/kulturnetz/form/_editor.html.twig) und der
+    Hinweis zur Bildergalerie.
+
+    Variablen: record, mode
+#}
+{% import '@Contao/kulturnetz/profile/_widgets.html.twig' as w %}
+	<fieldset>
+		<legend>Informationen</legend>
+
+		{{ w.text('zitat', 'Ihr persönliches Kultur-Zitat', record, mode == 'add' ? {placeholder: 'Kultur ist ...'} : {}) }}
+
+		{{ w.textarea('kurzbeschreibung', 'Kurzbeschreibung', record, {maxlength: 255, class: 'nobreaks', required: true}) }}
+
+		{{ w.textarea('beschreibung', 'Lange Beschreibung', record, {class: 'textarea useEditorFrontend'}) }}
+
+		<p class="info"><i class="fa-solid fa-images"></i> <strong>Bildergalerie</strong><br>Ihre Bildergalerie können Sie direkt in Ihrem Profil ansehen und verwalten. Speichern Sie Ihre Angaben und gehen Sie anschließend auf Ihr Profil, um die Galerie zu bearbeiten.</p>
+	</fieldset>

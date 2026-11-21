@@ -1,0 +1,16 @@
+{#
+    Titelbild im Formular: Vorschau mit den Schaltflächen des Uploaders
+    (files/se-kultur.de/js/fileuploader.js) und das versteckte Feld "avatar".
+
+    Variablen: avatar (src, uuid)
+#}
+<figure class="avatar">
+	<img src="{{ avatar.src }}">
+	<div class="actions">
+		<a href="#" class="upload"><i class="fa-solid fa-cloud-arrow-up"></i></a>
+		<a href="#" class="edit"><i class="fa-solid fa-pen-to-square"></i></a>
+		<a href="#" class="delete"><i class="fa-solid fa-trash-can"></i></a>
+	</div>
+</figure>
+
+<input type="hidden" name="avatar" value="{{ avatar.uuid }}">

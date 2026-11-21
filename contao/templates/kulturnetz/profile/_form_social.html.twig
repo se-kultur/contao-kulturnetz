@@ -1,0 +1,16 @@
+{#
+    Fieldset "Web & Social Media", für alle Profilarten gleich.
+
+    Variablen: record
+#}
+{% import '@Contao/kulturnetz/profile/_widgets.html.twig' as w %}
+	<fieldset>
+		<legend>Web & Social Media</legend>
+
+		{{ w.text('website', 'Internetseite', record, {widget: 'widget-url'}) }}
+		{{ w.text('facebook', 'Facebook-Profil', record, {widget: 'widget-url'}) }}
+		{{ w.text('instagram', 'Instagram-Profil', record, {widget: 'widget-url'}) }}
+		{{ w.text('tiktok', 'TikTok-Profil', record, {widget: 'widget-url'}) }}
+		{{ w.text('linkedin', 'LinkedIn-Profil', record, {widget: 'widget-url'}) }}
+		{{ w.text('xing', 'Xing-Profil', record, {widget: 'widget-url'}) }}
+	</fieldset>

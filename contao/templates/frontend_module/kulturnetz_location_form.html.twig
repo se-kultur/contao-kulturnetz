@@ -1,0 +1,12 @@
+{#
+    Formular zum Anlegen und Bearbeiten eines Locationprofils (Modultypen
+    ModuleLocationAdd und ModuleLocationEdit, bisher mod_location_add.html5 und mod_location_edit.html5).
+    Aufbau und Variablen: @Contao/kulturnetz/profile/_form.html.twig
+#}
+{% extends '@Contao/kulturnetz/profile/_form.html.twig' %}
+
+{% block profile_fields %}
+	{% include '@Contao/kulturnetz/profile/_form_location.html.twig' %}
+
+	{% add 'kulturnetz_locationform_js' to body %}<script src="{{ asset('js/locationform.js', 'se_kultur_theme') }}" defer></script>{% endadd %}
+{% endblock %}

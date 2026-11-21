@@ -1,0 +1,47 @@
+{#
+    Fieldsets des Locationformulars (Anlegen und Bearbeiten), mit den
+    ortsspezifischen Angaben.
+
+    Variablen: mode, record, avatar
+#}
+{% import '@Contao/kulturnetz/profile/_widgets.html.twig' as w %}
+{% set stage_types = ['keine Bühne vorhanden', 'Bühne fest eingebaut', 'flexible Podeste', 'Zuschauerplätze als Tribühne', 'ebenerdig', 'Guckkastenbühne', 'flexible Position', 'sonstiges'] %}
+	<fieldset>
+		<legend>Allgemeine Daten</legend>
+
+		{% if mode == 'edit' %}
+		<input type="hidden" name="id" value="{{ record.id|default('') }}">
+
+		{% endif %}
+		{% include '@Contao/kulturnetz/profile/_form_avatar.html.twig' %}
+
+		<div class="profile-form-main">
+			{{ w.text('name', 'Name der Location', record, {required: true}) }}
+
+			{{ w.text('themen', 'Künstlerische Themenschwerpunkte', record, {required: true}) }}
+		</div>
+	</fieldset>
+
+	{% include '@Contao/kulturnetz/profile/_form_social.html.twig' %}
+
+	{% include '@Contao/kulturnetz/profile/_form_contact.html.twig' with {address_marked: mode == 'add'} %}
+
+	<fieldset>
+		<legend>Ortspezifische Informationen</legend>
+
+		{{ w.text('barrierefreiheit', 'Barrierefreiheit', record) }}
+
+		{{ w.multiselect('buehnentyp', 'Bühnentyp', record, stage_types) }}
+
+		{{ w.text('technik', 'Technische Ausstattung', record) }}
+
+		{{ w.text('auftrittsflaeche', 'Bühnen-Auftrittsfläche', record, {type: 'number', class: 'col-6', unit: 'm²'}) }}
+
+		{{ w.text('gesamtflaeche', 'Gesamtfläche', record, {type: 'number', class: 'col-6', unit: 'm²'}) }}
+
+		{{ w.text('sitzplaetze', 'Sitzplätze', record, {type: 'number', class: 'col-6'}) }}
+
+		{{ w.text('stehplaetze', 'Stehplätze', record, {type: 'number', class: 'col-6'}) }}
+	</fieldset>
+
+	{% include '@Contao/kulturnetz/profile/_form_about.html.twig' %}

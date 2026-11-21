@@ -1,0 +1,10 @@
+{#
+    Detailansicht Künstler*innenprofil (Modultyp ModuleArtist, bisher mod_artist.html5).
+    Aufbau und Variablen: @Contao/kulturnetz/profile/_detail.html.twig
+#}
+{% extends '@Contao/kulturnetz/profile/_detail.html.twig' %}
+
+{% block focus %}
+			Kulturform(en):<br>
+			<span class="sparten">{{ profile.sparten|kulturnetz_sparten }}</span>
+{% endblock %}

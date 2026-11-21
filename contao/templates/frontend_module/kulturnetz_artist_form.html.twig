@@ -1,0 +1,12 @@
+{#
+    Formular zum Anlegen und Bearbeiten eines Künstler*innenprofils (Modultypen
+    ModuleArtistAdd und ModuleArtistEdit, bisher mod_artist_add.html5 und mod_artist_edit.html5).
+    Aufbau und Variablen: @Contao/kulturnetz/profile/_form.html.twig
+#}
+{% extends '@Contao/kulturnetz/profile/_form.html.twig' %}
+
+{% block profile_fields %}
+	{% include '@Contao/kulturnetz/profile/_form_artist.html.twig' %}
+
+	{% add 'kulturnetz_artistform_js' to body %}<script src="{{ asset('js/artistform.js', 'se_kultur_theme') }}" defer></script>{% endadd %}
+{% endblock %}

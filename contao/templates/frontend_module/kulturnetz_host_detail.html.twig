@@ -1,0 +1,10 @@
+{#
+    Detailansicht Veranstalter*innenprofil (Modultyp ModuleHost, bisher mod_host.html5).
+    Aufbau und Variablen: @Contao/kulturnetz/profile/_detail.html.twig
+#}
+{% extends '@Contao/kulturnetz/profile/_detail.html.twig' %}
+
+{% block focus %}
+			Themenschwerpunkt(e):<br>
+			<span class="themen">{{ profile.themen }}</span>
+{% endblock %}

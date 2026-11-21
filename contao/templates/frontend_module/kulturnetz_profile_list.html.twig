@@ -1,0 +1,93 @@
+{#
+    Profilliste für alle sechs Listenmodule (bisher mod_artists_list.html5,
+    mod_hosts_list.html5, mod_locations_list.html5): eigene Profile
+    (ModuleArtistsList, ModuleHostsList, ModuleLocationsList) und Verzeichnisse
+    aller Profile (ModuleArtistsListAll, ModuleHostsListAll, ModuleLocationsListAll),
+    jeweils für Künstler*innen, Veranstalter*innen und Locations.
+
+    Markup, Klassen und Texte wie bisher, ohne Modul-Wrapper und ohne Erweiterung
+    von frontend_module/_base. Alle Links sind absolute Pfade.
+
+    Variablen (Controller unter src/Controller/FrontendModule/Profile/):
+      profile_type  Typschlüssel ("artists", "hosts", "locations")
+      items         Einträge: profile, image (src, alt), is_owner, is_sample, is_new
+      filter        Suchformular anzeigen
+      search        Filterwerte aus der URL (kategorie, text), nur gesetzte Schlüssel
+      categories    Auswahl des Kategorie-Filters (Wert => Text) oder null
+#}
+{% if filter %}
+<form method="get" id="search" class="formbody">
+	{% if categories %}
+	<div class="widget widget-select">
+		<label>Kategorie</label>
+		<select name="kategorie">
+			{% for value, label in categories %}
+			<option value="{{ value }}"{% if search.kategorie|default('') == value %} selected{% endif %}>{{ label }}</option>
+			{% endfor %}
+		</select>
+	</div>
+	{% endif %}
+	<div class="widget widget-text">
+		<label>Volltextsuche</label>
+		<input name="text" type="text" placeholder="Namen oder Ort eingeben" value="{{ search.text|default('') }}">
+	</div>
+
+	<div>
+		<button type="submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i><span class="hide-xs hide-sm hide-md"> Suchen</span></button>
+		{% if search.text is defined %}
+		<a href="{{ content_url(contao.page, {}, true) }}" class="btn btn-outline"><i class="fa-solid fa-xmark"></i><span class="hide-xs hide-sm hide-md">  Zurücksetzen</span></a>
+		{% endif %}
+	</div>
+</form>
+{% endif %}
+
+<div class="artists-list">
+	{% for item in items %}
+	{% set profile = item.profile %}
+	{% set detail_url = kulturnetz_page_url(profile_type ~ '.detail', profile.alias) %}
+	<div class="artist{% if item.is_sample %} highlight{% endif %}">
+		<a href="{{ detail_url }}">
+			<figure class="avatar">
+				<img src="{{ item.image.src }}" alt="{{ item.image.alt }}" loading="lazy">
+			</figure>
+		</a>
+		<div class="infos">
+			{% if item.is_owner %}
+			<div class="badges">
+				{% if profile.disable == '1' %}
+				<span class="badge bg-error"><i class="fa-solid fa-eye-slash"></i><span class="hide-xs hide-sm hide-md"> Nicht öffentlich</span></span>
+				{% endif %}
+
+				<a href="{{ kulturnetz_page_url(profile_type ~ '.edit', profile.alias) }}" class="btn btn-primary btn-sm">
+					<i class="fa-solid fa-pen-to-square"></i><span class="hide-sm hide-xs hide-md"> Profil bearbeiten</span>
+				</a>
+
+				<a href="{{ detail_url }}#galerie" class="btn btn-outline btn-sm">
+					<i class="fa-solid fa-images"></i><span class="hide-sm hide-xs hide-md"> Galerie</span>
+				</a>
+			</div>
+			{% else %}
+			<div class="badges">
+				{% if item.is_new %}
+				<span class="badge bg-error"><i class="fa-solid fa-bolt"></i> NEU</span>
+				{% endif %}
+
+				{% if item.is_sample %}
+				<span class="badge bg-kulturnetz hide-xs"><i class="fa-solid fa-star"></i> Musterprofil</span>
+				{% endif %}
+			</div>
+			{% endif %}
+
+			<a href="{{ detail_url }}"><h6>{{ profile.name }}</h6></a>
+			<p class="beschreibung">{{ profile.kurzbeschreibung }}</p>
+			<div class="footer">
+				<span class="sparten">{% if profile_type == 'artists' %}{{ profile.sparten|kulturnetz_sparten }}{% endif %}</span>
+				<span class="ort">{{ profile.ort }}</span>
+				<div>
+					<a href="{{ detail_url }}"><i class="fa-solid fa-arrow-right-long"></i></a>
+				</div>
+			</div>
+		</div>
+	</div>
+	{% endfor %}
+</div>

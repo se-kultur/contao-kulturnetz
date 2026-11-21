@@ -1,0 +1,149 @@
+{#
+    Gemeinsame Basis der Detailansichten von Künstler*innen, Veranstalter*innen und
+    Locations (bisher mod_artist.html5, mod_host.html5, mod_location.html5). Die
+    drei Module erweitern dieses Template und füllen nur die Blöcke "focus"
+    (Sparten bzw. Themenschwerpunkte) und "details" (Zusatzangaben unter der
+    Beschreibung).
+
+    Markup, Klassen und Texte wie bisher, ohne Modul-Wrapper und ohne
+    Erweiterung von frontend_module/_base. Alle Links sind absolute Pfade.
+
+    Variablen (Controller unter src/Controller/FrontendModule/Profile/):
+      profile_type   Typschlüssel ("artists", "hosts", "locations")
+      profile_label  Beschriftung, z. B. "Künstler*innenprofil"
+      profile        Profilzeile (Tabelle tl_<typ>)
+      avatar         Titelbild: src, lightbox_src, alt, title, caption (Klartext)
+      social         Daten der Reiter und des Folgen-Dialogs (SocialViewFactory),
+                     enthält member_id und is_owner
+      gallery        GalleryView der Bildergalerie
+
+    Skripte: posting.js für den Besitzer, follow.js für andere angemeldete
+    Mitglieder, history-back.js für den Zurück-Pfeil; der Uploader bindet seine
+    Skripte selbst ein. Alle als Dateien mit defer.
+#}
+{% set is_owner = social.is_owner %}
+{% set member_id = social.member_id %}
+{% set list_url = kulturnetz_page_url(profile_type ~ '.list') %}
+{% set caption_html = avatar.title|e('html') ~ "<br><span style='font-size:0.8em;'>© " ~ avatar.caption|e('html') ~ '</span>' %}
+
+<div class="artist-headline mt-4">
+{% if is_owner %}
+<div class="badges">
+	<a href="{{ kulturnetz_page_url(profile_type ~ '.edit', profile.alias) }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-pen-to-square"></i><span> Profil bearbeiten</span></a>
+
+	{% if profile.disable == '1' %}
+	<span class="badge bg-error"><i class="fa-solid fa-eye-slash"></i><span class="hide-xs">  Nicht öffentlich</span></span>
+	{% endif %}
+</div>
+{% elseif member_id > 0 %}
+<div class="badges">
+	<a href="#" class="btn btn-primary btn-sm follow-options"><i class="fa-solid fa-plus"></i><span> Profil folgen</span></a>
+</div>
+{% endif %}
+<h2><a href="{{ list_url }}" data-history-back aria-label="Zurück zur vorigen Seite" role="tooltip"><i class="fa-solid fa-arrow-left-long"></i></a> {{ profile_label }}</h2>
+</div>
+
+<div class="artist-details flex gap-2 space-between mb-4 wrap">
+	<div class="sidebar col-3 col-md-4 col-sm-12">
+		<figure class="avatar">
+			<a href="{{ avatar.lightbox_src }}" data-fslightbox data-caption="{{ caption_html|e('html_attr') }}">
+				<img src="{{ avatar.src }}" alt="{{ avatar.alt }}">
+			</a>
+			<figcaption>
+				<span class="title">{{ avatar.title }}</span>
+				<span class="copyright">&copy; {{ avatar.caption }}</span>
+			</figcaption>
+		</figure>
+
+		<h6>{{ profile.name }}</h6>
+
+		<p class="kurzbeschreibung">{{ profile.kurzbeschreibung }}</p>
+
+		<div class="data">
+			{% block focus %}{% endblock %}
+			<br>
+			{% if profile.ort|length > 0 %}Adresse / Region:<br>{% endif %}
+			{% if profile.ort|length > 0 %}<span class="ort">{{ (profile.plz ~ ' ' ~ profile.ort)|trim }}</span>{% endif %}
+			{% if profile.adresse|length > 0 %}<span class="adresse">{{ profile.adresse }}</span>{% endif %}
+			<br>
+			{% if profile.telefon|length > 0 or profile.email|length > 0 or profile.website|length > 0 %}Kontakt:<br>{% endif %}
+			{% if profile.telefon|length > 0 %}<a aria-label="Nummer anrufen" role="tooltip" class="telefon" href="tel:{{ profile.telefon|replace({'-': ''}) }}"><span>{{ profile.telefon }}</span></a>{% endif %}
+			{% if profile.email|length > 0 %}<a aria-label="E-Mail senden" role="tooltip" class="email" href="mailto:{{ profile.email }}"><span>{{ profile.email }}</span></a>{% endif %}
+			{% if profile.website|length > 0 %}
+				<a aria-label="Zur Webseite" role="tooltip" class="website" target="_blank" rel="noopener" href="{{ profile.website|kulturnetz_external_url }}"><span>{{ profile.website|kulturnetz_url_host }}</span></a>
+			<br>
+			{% endif %}
+			<br>
+			{% if profile.facebook|length > 0 %}
+				<a aria-label="Zur Facebook-Fanpage" role="tooltip" class="facebook" target="_blank" rel="noopener" href="{{ profile.facebook|kulturnetz_external_url }}"><i class="fa-brands fa-facebook"></i></a>
+			{% endif %}
+			{% if profile.instagram|length > 0 %}
+				<a aria-label="Zur Instagram-Seite" role="tooltip" class="instagram" target="_blank" rel="noopener" href="{{ profile.instagram|kulturnetz_external_url }}"><i class="fa-brands fa-instagram"></i></a>
+			{% endif %}
+			{% if profile.tiktok|length > 0 %}
+				<a aria-label="Zum TikTok-Account" role="tooltip" class="tiktok" target="_blank" rel="noopener" href="{{ profile.tiktok|kulturnetz_external_url }}"><i class="fa-brands fa-tiktok"></i></a>
+			{% endif %}
+			{% if profile.linkedin|length > 0 %}
+				<a aria-label="Zum LinkedIn-Profil" role="tooltip" class="linkedin" target="_blank" rel="noopener" href="{{ profile.linkedin|kulturnetz_external_url }}"><i class="fa-brands fa-linkedin"></i></a>
+			{% endif %}
+			{% if profile.xing|length > 0 %}
+				<a aria-label="Zum Xing-Profil" role="tooltip" class="xing" target="_blank" rel="noopener" href="{{ profile.xing|kulturnetz_external_url }}"><i class="fa-brands fa-xing"></i></a>
+			{% endif %}
+		</div>
+	</div>
+	<div class="main col-9 col-md-8 col-sm-12">
+		{% if profile.zitat|length > 0 %}
+		<h3>&bdquo;{{ profile.zitat }}&rdquo;</h3>
+		{% endif %}
+
+		<div class="beschreibung">{{ profile.beschreibung|sanitize_html('contao') }}</div>
+
+		{% block details %}{% endblock %}
+
+		<div class="tabs mt-4">
+			<ul class="tabs-nav">
+				<li><a href="#events" class="active">Veranstaltungen</a></li>
+				<li><a href="#postings">Beiträge</a></li>
+				<li><a href="#followers">Netzwerk</a></li>
+			</ul>
+
+			<div class="tabs-contents">
+				<div class="tabs-content-element active" data-href="#events">
+					{% include '@Contao/kulturnetz/social/_tabs_events.html.twig' with social only %}
+				</div>
+				<div class="tabs-content-element" data-href="#postings">
+					{% include '@Contao/kulturnetz/social/_tabs_postings.html.twig' with social only %}
+				</div>
+				<div class="tabs-content-element" data-href="#followers">
+					{% include '@Contao/kulturnetz/social/_tabs_followers.html.twig' with social only %}
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+{% if is_owner %}
+<div class="text-right mb-2 gallery-actions">
+	<a href="#" class="btn btn-primary btn-sm galleryupload"><i class="fa-solid fa-cloud-arrow-up"></i> Foto(s) hochladen</a>
+	<a href="#" class="btn btn-outline btn-sm galleryedit"><i class="fa-solid fa-pen-to-square"></i> Fotos verwalten</a>
+</div>
+
+{% include '@Contao/kulturnetz/media/_uploader.html.twig' with {upload: 'gallery', type: profile_type, id: profile.id} only %}
+{% endif %}
+
+{% include '@Contao/kulturnetz/media/_gallery.html.twig' with {gallery: gallery} only %}
+
+<div class="mt-4 mb-4 text-center">
+	<a href="{{ list_url }}" class="btn btn-primary"><i class="fa-solid fa-arrow-left-long"></i> Zurück zur Übersicht</a>
+
+	{% include '@Contao/kulturnetz/form/_disclaimer.html.twig' only %}
+</div>
+
+{% include '@Contao/kulturnetz/social/_following_dialog.html.twig' with social only %}
+
+{% if is_owner %}
+	{% add 'kulturnetz_posting_js' to body %}<script src="{{ asset('js/posting.js', 'se_kultur_theme') }}" defer></script>{% endadd %}
+{% elseif member_id > 0 %}
+	{% add 'kulturnetz_follow_js' to body %}<script src="{{ asset('js/follow.js', 'se_kultur_theme') }}" defer></script>{% endadd %}
+{% endif %}
+{% add 'kulturnetz_history_back_js' to body %}<script src="{{ asset('js/history-back.js', 'se_kultur_theme') }}" defer></script>{% endadd %}

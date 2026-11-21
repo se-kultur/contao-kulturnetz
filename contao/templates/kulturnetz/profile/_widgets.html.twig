@@ -1,0 +1,54 @@
+{#
+    Eingabefelder der Profilformulare als Makros (Markup wie bisher in
+    mod_artist_add.html5 usw.). Einbindung:
+
+        {% import '@Contao/kulturnetz/profile/_widgets.html.twig' as w %}
+        {{ w.text('website', 'Internetseite', record, {widget: 'widget-url'}) }}
+
+    Der Wert eines Feldes kommt aus dem Datensatz (record, bei leerem Formular
+    leer); abweichend benannte Spalten nennt die Option "field".
+
+    Optionen von text():
+      field        Spalte im Datensatz (Standard: Feldname)
+      type         Eingabeart (Standard "text")
+      widget       Klasse des Widgets (Standard "widget-text")
+      class        weitere Klassen des Widgets (z. B. "postal", "col-6")
+      required     Pflichtfeld im Browser (required) und Pflichtmarke im Label
+      marked       nur die Pflichtmarke im Label
+      maxlength    maximale Länge
+      placeholder  Platzhaltertext
+      unit         Einheit hinter dem Feld (Eingabegruppe)
+
+    Optionen von textarea(): field, maxlength, required, class (Klassen des Feldes).
+
+    multiselect(name, label, record, choices, options): Mehrfachauswahl (Select Pure,
+    files/se-kultur.de/js/<art>form.js). Die Auswahlmöglichkeiten stehen als JSON in
+    data-options, die gewählten Werte (kommagetrennt) im versteckten Feld und in
+    data-value. Option "marked": Pflichtmarke im Label.
+#}
+{% macro text(name, label, record, options = {}) %}
+	{%- set required = options.required|default(false) -%}
+	{%- set marked = options.marked|default(required) -%}
+	<div class="widget {{ options.widget|default('widget-text') }}{% if options.class is defined %} {{ options.class }}{% endif %}">
+		<label{% if marked %} class="mandatory"{% endif %}>{{ label }}{% if marked %}<span class="mandatory">*</span>{% endif %}</label>
+		{% if options.unit is defined %}<div class="inputgroup">{% endif %}
+		<input type="{{ options.type|default('text') }}" name="{{ name }}"{% if required %} required=""{% endif %}{% if options.maxlength is defined %} maxlength="{{ options.maxlength }}"{% endif %}{% if options.placeholder is defined %} placeholder="{{ options.placeholder }}"{% endif %} value="{{ record[options.field|default(name)]|default('') }}">
+		{% if options.unit is defined %}<span>{{ options.unit }}</span></div>{% endif %}
+	</div>
+{% endmacro %}
+
+{% macro textarea(name, label, record, options = {}) %}
+	<div class="widget widget-textarea">
+		<label class="mandatory">{{ label }}<span class="mandatory">*</span></label>
+		<textarea{% if options.maxlength is defined %} maxlength="{{ options.maxlength }}"{% endif %} name="{{ name }}" class="{{ options.class|default('') }}"{% if options.required|default(false) %} required=""{% endif %}>{{ record[options.field|default(name)]|default('') }}</textarea>
+	</div>
+{% endmacro %}
+
+{% macro multiselect(name, label, record, choices, options = {}) %}
+	{%- set marked = options.marked|default(false) -%}
+	<div class="widget widget-text">
+		<label{% if marked %} class="mandatory"{% endif %}>{{ label }}{% if marked %}<span class="mandatory">*</span>{% endif %}</label>
+		<input type="hidden" name="{{ name }}" value="{{ record[name]|default('') }}">
+		<span class="multiselect" data-value="{{ record[name]|default('') }}" data-options="{{ choices|json_encode }}"></span>
+	</div>
+{% endmacro %}

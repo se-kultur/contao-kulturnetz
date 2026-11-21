@@ -1,0 +1,24 @@
+{#
+    Fieldset "Kontaktdaten" der Profilformulare.
+
+    Variablen:
+      record
+      contact_notice    Hinweis zur Öffentlichkeit der Daten anzeigen (Künstler*innen)
+      address_marked    Pflichtmarke an Straße, Postleitzahl und Ort (Veranstalter*innen
+                        und Locations beim Anlegen)
+#}
+{% import '@Contao/kulturnetz/profile/_widgets.html.twig' as w %}
+	<fieldset>
+		<legend>Kontaktdaten</legend>
+
+		{% if contact_notice|default(false) %}
+		<p class="info">Bitte beachten Sie, dass diese Daten öffentlich in Ihrem Profil dargestellt werden. Wenn Sie nicht möchten, dass Ihre Kontakt- oder Adressdaten angezeigt werden, lassen Sie diese Felder einfach leer. 😊</p>
+
+		{% endif %}
+		{% set marked = address_marked|default(false) %}
+		{{ w.text('email', 'E-Mail Adresse', record, {type: 'email'}) }}
+		{{ w.text('telefon', 'Telefon- oder Handynummer', record, {type: 'tel'}) }}
+		{{ w.text('adresse', 'Straße und Hausnummer', record, {marked: marked}) }}
+		{{ w.text('plz', 'Postleitzahl', record, {class: 'postal', maxlength: 5, marked: marked}) }}
+		{{ w.text('ort', 'Ort', record, {class: 'city', marked: marked}) }}
+	</fieldset>

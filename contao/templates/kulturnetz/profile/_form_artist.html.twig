@@ -1,0 +1,29 @@
+{#
+    Fieldsets des Künstler*innenformulars (Anlegen und Bearbeiten).
+
+    Variablen: mode, record, avatar, categories (Sparten zur Auswahl)
+#}
+{% import '@Contao/kulturnetz/profile/_widgets.html.twig' as w %}
+	<fieldset>
+		<legend>Allgemeine Daten</legend>
+
+		{% if mode == 'edit' %}
+		<input type="hidden" name="id" value="{{ record.id|default('') }}">
+
+		{% endif %}
+		{% include '@Contao/kulturnetz/profile/_form_avatar.html.twig' %}
+
+		<div class="profile-form-main">
+			{{ w.text('kuenstlername', 'Künstler*innenname', record, {field: 'name', required: true}) }}
+
+			{{ w.multiselect('sparten', 'Sparte(n)', record, categories, {marked: true}) }}
+		</div>
+
+		{{ w.text('themen', 'Künstlerische Themenschwerpunkte', record, {required: true}) }}
+	</fieldset>
+
+	{% include '@Contao/kulturnetz/profile/_form_social.html.twig' %}
+
+	{% include '@Contao/kulturnetz/profile/_form_contact.html.twig' with {contact_notice: true} %}
+
+	{% include '@Contao/kulturnetz/profile/_form_about.html.twig' %}
