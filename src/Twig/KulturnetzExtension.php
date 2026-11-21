@@ -7,11 +7,13 @@ namespace SeKultur\ContaoKulturnetzBundle\Twig;
 use Contao\CoreBundle\Image\Studio\Figure;
 use Contao\FilesModel;
 use Psr\Clock\ClockInterface;
+use SeKultur\ContaoKulturnetzBundle\Config\KulturnetzConfig;
 use SeKultur\ContaoKulturnetzBundle\Service\Image\FigureFactory;
 use SeKultur\ContaoKulturnetzBundle\Service\Image\ImageSize;
 use SeKultur\ContaoKulturnetzBundle\Service\Page\PageUrlResolver;
 use SeKultur\ContaoKulturnetzBundle\Service\Page\SignupWindowChecker;
 use SeKultur\ContaoKulturnetzBundle\Service\Profile\ProfileCategories;
+use Symfony\Component\Asset\Packages;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Twig\Attribute\AsTwigFilter;
 use Twig\Attribute\AsTwigFunction;
@@ -26,6 +28,10 @@ use Twig\Attribute\AsTwigFunction;
  *  - kulturnetz_profile_categories(): Kategorien der Suchformulare (Wert => Text)
  *  - kulturnetz_figure(quelle, größe, ersatzbild = true): Figure für figure-Komponenten
  *  - kulturnetz_image_url(quelle, größe, ersatzbild = true): URL eines skalierten Bildes
+ *  - kulturnetz_asset(pfad): URL einer Datei aus dem Theme-Build über das
+ *    konfigurierte Asset-Paket (kulturnetz.asset_package, Standard
+ *    se_kultur_theme), versioniert über dessen Manifest; z. B.
+ *    kulturnetz_asset('js/fileuploader.js')
  *
  * Filter:
  *  - kulturnetz_time_ago: relative Zeitangabe eines Zeitstempels ("Vor 3 Stunden")
@@ -45,6 +51,8 @@ final class KulturnetzExtension
         private readonly FigureFactory $figureFactory,
         private readonly ProfileCategories $profileCategories,
         private readonly ClockInterface $clock,
+        private readonly Packages $packages,
+        private readonly KulturnetzConfig $config,
     ) {
     }
 
@@ -91,6 +99,12 @@ final class KulturnetzExtension
     public function imageUrl(FilesModel|string|null $source, string $size, bool $usePlaceholder = true): string|null
     {
         return $this->figureFactory->getImageUrl($source, $this->imageSize($size), $usePlaceholder);
+    }
+
+    #[AsTwigFunction('kulturnetz_asset')]
+    public function asset(string $path): string
+    {
+        return $this->packages->getUrl($path, $this->config->getAssetPackage());
     }
 
     /**
