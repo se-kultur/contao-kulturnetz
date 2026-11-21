@@ -116,7 +116,9 @@ final class FollowerService
      * Profil bereits, wird der Eintrag gelöscht, sonst angelegt.
      *
      * Vor jeder Änderung wird alles geprüft; bei einem Fehler ändert sich nichts.
-     *  - Ziel: Profilart aus der festen Liste, Profil existiert (sonst 422 bzw. 404),
+     *  - Ziel: Profilart aus der festen Liste, Profil existiert (sonst 422 bzw. 404);
+     *    ein nicht freigeschaltetes fremdes Profil gilt für neues Folgen als
+     *    unbekannt (404), bestehende Verbindungen lassen sich lösen,
      *  - jedes Follower-Profil: Schlüssel gültig, Profil gehört dem Mitglied (403),
      *  - kein Profil folgt sich selbst (422).
      *
@@ -138,7 +140,18 @@ final class FollowerService
             throw SocialActionException::invalid(SocialActionException::MESSAGE_ACCESS_DENIED);
         }
 
-        if (null === $this->profileRepository->findById($followingType, $followingId)) {
+        $target = $this->profileRepository->findById($followingType, $followingId);
+
+        if (null === $target) {
+            throw SocialActionException::notFound(SocialActionException::MESSAGE_ACCESS_DENIED);
+        }
+
+        // Nicht freigeschaltetes fremdes Profil: Antwort wie bei einem unbekannten
+        // Profil, außer das Mitglied löst ausschließlich eigene bestehende
+        // Verbindungen (die es ohnehin kennt).
+        if ('1' === (string) $target['disable'] && (int) $target['member_id'] !== $memberId
+            && !$this->onlyRemovesOwnFollowings($memberId, $followerKeys, $followingType, $followingId)
+        ) {
             throw SocialActionException::notFound(SocialActionException::MESSAGE_ACCESS_DENIED);
         }
 
@@ -171,6 +184,39 @@ final class FollowerService
         }
 
         return \count($followers);
+    }
+
+    /**
+     * True, wenn jeder Schlüssel ein Profil bezeichnet, das dem Ziel bereits über
+     * einen Eintrag des Mitglieds folgt (Umschalten löst also nur Verbindungen).
+     *
+     * @param list<string> $followerKeys
+     */
+    private function onlyRemovesOwnFollowings(int $memberId, array $followerKeys, ProfileType $followingType, int $followingId): bool
+    {
+        if ([] === $followerKeys) {
+            return false;
+        }
+
+        foreach ($followerKeys as $key) {
+            try {
+                [$followerType, $followerId] = $this->parseKey($key);
+            } catch (SocialActionException) {
+                return false;
+            }
+
+            $owned = $this->connection->fetchOne(
+                'SELECT id FROM tl_followers WHERE follower_id = ? AND follower_type = ? AND following_id = ? AND following_type = ? AND member_id = ? LIMIT 1',
+                [$followerId, $followerType->table(), $followingId, $followingType->table(), $memberId],
+                [ParameterType::INTEGER, ParameterType::STRING, ParameterType::INTEGER, ParameterType::STRING, ParameterType::INTEGER],
+            );
+
+            if (false === $owned) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function toggleOne(Connection $connection, ProfileType $followerType, int $followerId, ProfileType $followingType, int $followingId, int $memberId): void
