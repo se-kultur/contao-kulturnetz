@@ -35,20 +35,22 @@ contao/
   dca/                   Data Container der Bundle-Tabellen, tl_member, tl_page
   languages/{de,en}/     Sprachdateien
   templates/             Twig-Templates (.twig-root, siehe unten)
-public/                  Backend-Assets (CSS, Karte, Mitgliederinfo, Symbole), per assets:install unter bundles/contaokulturnetz/
+public/                  Backend-Assets (CSS, Karte, Mitgliederinfo, Symbole), per assets:install unter bundles/contaokulturnetz/;
+                         manifest.json mit Versionsparametern (siehe Abschnitt Backend)
 src/
   ContaoKulturnetzBundle.php   AbstractBundle mit semantischer Konfiguration "kulturnetz"
   ContaoManager/Plugin.php     Bundle- und Routing-Plugin (Attribut-Routen aus src/Controller/)
   Config/                      KulturnetzConfig (typisierter Zugriff auf die Konfiguration)
   Controller/FrontendModule/   27 Frontend-Module als Fragment-Controller (Profile, Event, Posting)
   Controller/Endpoint/         Frontend-Routen für Mitglieder (Media, Social, Write, Search)
-  Controller/Backend/          Backend-Exporte (CSV, PDF)
+  Controller/Backend/          Backend-Exporte (CSV, PDF), Routen unter /contao/kulturnetz/export/
   EventListener/DataContainer/ DCA-Callbacks als Services (#[AsCallback])
   EventListener/Member/        Anmeldung per E-Mail-Adresse (Ersatz für terminal42/contao-mailusername)
   Migration/                   Datenmigrationen (siehe unten)
   Models/                      Contao-Models ohne eigene Logik
   Security/, Http/             CSRF-Prüfung, Besitzprüfung, JSON-Fehlerantworten
   Service/                     Fachlogik (Profile, Event, Media, Gallery, Social, Write, Search, Export, Mail, Text, Image, Page, Member)
+  Service/Export/Resources/fonts/  Schriftdaten DejaVu Sans für den PDF-Export (README dort: Quelle, Lizenz, Erzeugung)
   Twig/                        Twig-Funktionen des Bundles
 ```
 
@@ -90,6 +92,16 @@ kulturnetz:
         profile_postings: 25
         event_directory: 0       # 0 = unbegrenzt
         sekevent_directory: 200
+    postings:
+        max_length: 10000        # Zeichen je Beitrag (11 bis 16383), gezählt im Speicherformat; das Formular begrenzt weiter im Browser auf 500
+    records:
+        max_dates: 100           # Terminzeilen je Veranstaltung
+        max_prices: 100          # Preiszeilen je Veranstaltung
+        create_rate_limit:       # neue Einträge je Mitglied über alle Typen (gleitendes Zeitfenster), danach 429
+            limit: 20
+            interval: '1 hour'   # Format von DateInterval::createFromDateString()
+    sekevents:
+        festival_month: 9        # Monat der SE-KulturTage (1 bis 12), begrenzt die Terminauswahl im Anmeldeformular
     sample_profiles: { artists: 17, hosts: 7, locations: 16 }
     kulturrouten:
         url: 'https://se-kultur.de/kulturrouten.html'
@@ -155,7 +167,7 @@ Prüfreihenfolge der schreibenden Routen:
 4. Datensatz bzw. Datei vorhanden, sonst **404**.
 5. Besitz, Mitgliedsordner (`homeDir`) und Schreibschutz (`readonly`) aus der Datenbank (`Security\OwnershipChecker`), sonst **403**.
 
-Ungültige Eingaben liefern **422** mit den betroffenen Feldern. Erfolgsantworten haben dasselbe Format wie die früheren Skripte, Fehler sind JSON (`Http\JsonErrorResponse`). Geschrieben wird nur eine Feldliste je Typ, über DBAL mit gebundenen Parametern, Text im Contao-Speicherformat (`Service\Text\TextNormalizer`), HTML über den Contao-HTML-Sanitizer. Dateien laufen ausschließlich über das Contao-Dateisystem (`contao.filesystem.virtual.files`), zulässig sind JPEG und PNG mit Inhaltsprüfung. Die Endpunkt-URLs und das Token stehen als `data-*`-Attribute im Markup, nie fest im JavaScript.
+Ungültige Eingaben liefern **422** mit den betroffenen Feldern (Pflichtangaben, Längen der Spalten und des Beitrags, Zahlenfelder der Locations, Terminzeilen mit Datum, Preiszeilen mit Titel). Wer mehr als `kulturnetz.records.create_rate_limit` Einträge in einem Zeitfenster anlegt, erhält **429** mit `Retry-After` (nur erfolgreiche Anlagen zählen, Bearbeiten ist nicht begrenzt; der Zähler liegt im Cache-Pool und wird mit `cache:clear` zurückgesetzt). Stößt das Anlegen auf einen doppelten Alias (gleichzeitiges Absenden), versucht der Dienst es bis zu fünfmal neu und antwortet danach mit **409**. Erfolgsantworten haben dasselbe Format wie die früheren Skripte, Fehler sind JSON (`Http\JsonErrorResponse`). Geschrieben wird nur eine Feldliste je Typ, über DBAL mit gebundenen Parametern, Text im Contao-Speicherformat (`Service\Text\TextNormalizer`), HTML über den Contao-HTML-Sanitizer. Dateien laufen ausschließlich über das Contao-Dateisystem (`contao.filesystem.virtual.files`), zulässig sind JPEG und PNG mit Inhaltsprüfung; Daten hinter dem Bildende werden abgeschnitten (`MediaUploadValidator`, Pixel und EXIF bleiben unverändert), ein beschädigtes Bild wird mit 422 abgelehnt. Folgen auf ein nicht freigeschaltetes fremdes Profil antwortet wie auf ein unbekanntes (404). Die Bearbeiten-Seiten (`ModuleArtistEdit` usw.) antworten für unbekannte und fremde Datensätze mit 404, nicht freigeschaltete Detailseiten tragen `noindex,nofollow`. Die Endpunkt-URLs und das Token stehen als `data-*`-Attribute im Markup, nie fest im JavaScript.
 
 ### Backend (Exporte)
 
@@ -172,9 +184,27 @@ Die Exporte verlangen eine Backend-Anmeldung (sonst Weiterleitung zur Anmeldung)
 ## Backend
 
 - **Module:** Gruppe „KulturNetz“ mit `Kuenstler`, `- Postings`, `Veranstalter`, `Locations`, `Veranstaltungen` sowie Gruppe „KulturTage“ mit `Events`. Die Schlüssel stehen in den `do=`-URLs und bleiben unverändert.
-- **Callbacks:** Services unter `src/EventListener/DataContainer/` (Alias, Listenbeschriftung, Spaltenauswahl, Freischaltungsmail, Mitgliederinfo, Karte). Sie nutzen DBAL, `$dc->getCurrentRecord()`, den `RequestStack` und Twig.
+- **Callbacks:** Services unter `src/EventListener/DataContainer/` (Alias, Listenbeschriftung, Spaltenauswahl der Event-Listen über `config.onload`, Freischaltungsmail, Mitgliederinfo, Karte mit Adressfeldern je Tabelle in `eval.addressFields`, `CreatedTimestampListener` setzt „Erstellt am“ beim Anlegen im Backend). Sie nutzen DBAL, `$dc->getCurrentRecord()`, den `RequestStack` und Twig. Löschen ist die Core-Kurzform (`!delete`, POST mit `_method=DELETE` und Rechteprüfung).
+- **Exporte und Rechte:** CSV und PDF sind globale Operationen mit `route` (Tabelle oben); Controller `Controller\Backend\ExportController`, Exporter unter `src/Service/Export/`. Anmeldung und Modulrecht prüft der Controller. Der PDF-Export (`tecnickcom/tc-lib-pdf`) braucht umgewandelte Schriftdaten, die im Bundle liegen: `src/Service/Export/Resources/fonts/README.md` nennt Quelle, Lizenz und den Befehl zur Erzeugung.
+- **Asset-Manifest:** `public/manifest.json` (Asset-Paket `contao_kulturnetz`) hängt jeder Datei einen Versionsparameter an (`<pfad>?v=<erste 16 Zeichen SHA-256>`). Es entsteht von Hand und muss nach jeder Änderung an Dateien unter `public/` neu erzeugt werden:
+
+  ```bash
+  cd public && python3 - <<'PY'
+  import hashlib, json, os
+  m = {}
+  for root, _, files in os.walk('.'):
+      for f in files:
+          p = os.path.join(root, f)[2:]
+          if p != 'manifest.json':
+              m[p] = f"{p}?v={hashlib.sha256(open(p, 'rb').read()).hexdigest()[:16]}"
+  open('manifest.json', 'w').write(json.dumps(dict(sorted(m.items())), indent=2) + '\n')
+  PY
+  ```
+
+  Die Datei ist abgeglichen (Stand 2026-11-22: alle sieben Einträge stimmen mit den Dateien überein).
+- **Beschriftungen und Masken:** Legenden und Felder der fünf Tabellen haben Texte in `contao/languages/{de,en}/` (keine Rohnamen), URL-Felder sind `varchar(1024)` mit `maxlength`, damit Contaos Kodierung beim Speichern nicht über die Spalte hinausläuft.
 - **Karte und Mitgliederinfo:** Twig-Templates unter `contao/templates/backend/`, Skripte und Stile unter `public/`, eingebunden über `contao.backend.custom_css` (`config/prepend/backend.yaml`). Leaflet kommt lokal aus dem Theme-Build der Website.
-- **Mitglieder:** Anmeldung per E-Mail-Adresse. `EventListener\Member\MailUsernameListener` setzt den Benutzernamen gleich der E-Mail-Adresse (Registrierung, Backend, Persönliche Daten); er bleibt untätig, solange `terminal42/contao-mailusername` installiert ist.
+- **Mitglieder:** Anmeldung per E-Mail-Adresse. `EventListener\Member\MailUsernameListener` setzt den Benutzernamen gleich der E-Mail-Adresse (Registrierung, Backend, Persönliche Daten); er ersetzt `terminal42/contao-mailusername`, das aus der Website entfernt ist. Die Beschriftung „E-Mail-Adresse“ des Login-Felds kommt aus `MSC.username` in den Sprachdateien des Bundles, die DCA-Einstellungen von `tl_member` (E-Mail eindeutig, Benutzername deaktiviert) aus `contao/dca/tl_member.php`.
 
 ## Migrationen
 
@@ -182,29 +212,34 @@ Alle Migrationen laufen bei `contao:migrate` automatisch, sind idempotent (ein z
 
 | Migration | Zweck |
 | --- | --- |
-| „KulturNetz: Basic Entities in den Bundle-Tabellen umwandeln“ (`BasicEntitiesMigration`) | Contao 4.13 speicherte Platzhalter wie `[nbsp]` und `[&]`, Contao 5 ersetzt sie nicht mehr. Läuft nur vor der Bereinigung mit `--with-deletes` (erkennt den 4.13-Stand an `tl_article.keywords` und `tl_theme.vars`). |
+| „KulturNetz: Basic Entities in den Bundle-Tabellen umwandeln“ (`BasicEntitiesMigration`) | Contao 4.13 speicherte Platzhalter wie `[nbsp]` und `[&]`, Contao 5 ersetzt sie nicht mehr. Läuft nur vor der Bereinigung mit `--with-deletes` (erkennt den 4.13-Stand an `tl_article.keywords` und `tl_theme.vars`). Erbt von `Version500\AbstractBasicEntitiesMigration` des Cores; nach der Bereinigung löschen (Restpunkt R23). |
 | „KulturNetz: Galerie-Reihenfolge von orderSRC nach multiSRC übertragen“ (`GalleryOrderMigration`) | Contao 5 kennt `eval.orderField` nicht mehr; die Reihenfolge steht danach nur in `multiSRC`. Die Spalte `orderSRC` entfällt bei der bewussten Bereinigung (`--with-deletes`), danach überspringt die Migration die Tabellen. |
 | „KulturNetz: Preise der Veranstaltungen mit "€" statt "u20ac"“ (`Price\PriceCurrencyMigration`) | Die früheren Skripte haben das Euro-Zeichen als `u20ac` gespeichert. |
-| „KulturNetz: Textkodierung der Bundle-Tabellen auf das Contao-Format bringen“ (`Text\BundleTextEncodingMigration`) | Überführt benannte HTML-Entities der früheren Skripte (`&ouml;` usw.) in das Speicherformat, das Contao 5.7 selbst schreibt. HTML-Felder bleiben unberührt. |
+| „KulturNetz: Textkodierung der Bundle-Tabellen auf das Contao-Format bringen“ (`Text\BundleTextEncodingMigration`) | Überführt benannte HTML-Entities der früheren Skripte (`&ouml;` usw.) in das Speicherformat, das Contao 5.7 selbst schreibt. HTML-Felder bleiben unberührt. Sie liest die Spaltenlängen vor dem Schemaabgleich; deshalb ruft der Go-live `contao:migrate` zweimal auf. |
 
-Archivtabellen `tl_sekevents_<Jahr>` (z. B. `tl_sekevents_2024`) berühren die Migrationen nicht; die Website schützt sie per `doctrine.dbal.schema_filter` vor dem Schemaabgleich.
+Die Migrationen prüfen das Schema über `information_schema` bzw. `quoteSingleIdentifier()` (keine veraltete DBAL-Schema-API). Archivtabellen `tl_sekevents_<Jahr>` (z. B. `tl_sekevents_2024`) berühren die Migrationen nicht; die Website schützt sie per `doctrine.dbal.schema_filter` vor dem Schemaabgleich.
 
 Ältere Stände in `tl_version` und `tl_undo` enthalten das alte Format weiter. Wer eine alte Version im Backend wiederherstellt, bringt es zurück (wie beim Contao-Kern für seine eigenen Tabellen).
 
 ## Contao-6-Hinweise
 
-Der Stand erzeugt im Dev-Modus keine Deprecation aus eigenem Code, mit Ausnahme der unten genannten offenen Punkte. Beim Umstieg auf Contao 6 sind diese Stellen zu prüfen (Nummern aus der Restpunktliste des Upgrade-Projekts):
+Der Stand erzeugt im Dev-Modus keine Deprecation aus eigenem Code. Gemessen am 2026-11-22 (Bundle `8dd02fb`, Website `85d17b6`):
+`deprecations.sh --login all` über 183 Seiten der Website im Dev-Container, einmal mit `DOCTRINE_DEPRECATIONS=trigger`, dazu
+`contao:migrate --dry-run` mit Trigger: 0 Einträge aus Bundle- und Projektcode, der Rest stammt aus Core und Vendor. Beim Umstieg
+auf Contao 6 sind die folgenden Stellen zu prüfen (Nummern aus der Restpunktliste des Upgrade-Projekts, `CONTAO6-BEREITSCHAFT.md`,
+Abschnitt 9). Der Twig-Filter `insert_tag_raw` (R1) kommt in den Bundle-Templates nicht vor; er steht nur in Templates der Website.
 
 | Punkt | Stelle | Maßnahme beim Sprung |
 | --- | --- | --- |
-| R1 | Twig-Filter `insert_tag_raw` | in 6.0 `insert_tag_html` (nach `sanitize_html`) |
 | R2 | `label_callback` liefern HTML | in 6.0 `RecordLabel` zurückgeben |
 | R14 | `$GLOBALS['TL_MODELS']`, `$GLOBALS['BE_MOD']` in `contao/config/config.php` | prüfen, ob es einen Attribut-Nachfolger gibt |
 | R17 | `Service\Page\AutoItemResolver` ruft `Input::get('auto_item')` | einzige `Input`-Stelle; mit Contao 6/7 dort ersetzen |
-| R19 | `Service\Text\TextNormalizer` speichert input-kodiert wie Contao 5.7 | auf Rohtext umstellen (eine Stelle), Contao-Migration `OutputEncodingMigration` vor den Bundle-Migrationen |
+| R19 | `Service\Text\TextNormalizer` speichert input-kodiert wie Contao 5.7; `Service\Text\TemplateTextEncoder` kodiert gespeicherte Texte für die Ausgabe im selben Format | auf Rohtext umstellen (beide Klassen, Docblocks nennen den Weg), Contao-Migration `OutputEncodingMigration` vor den Bundle-Migrationen |
 | R20 | `Service\Media\MemberMediaStorage` nutzt das in 5.7 als experimentell markierte Contao-Dateisystem | Schnittstelle gegen 6.x prüfen (eine Klasse) |
 | R21 | `decodeEntities` an `prices`, `dates`, `linked_*` in `tl_events`/`tl_sekevents` | nach dem 6.0-Migrationslauf entfernen |
 | R22 | DCA-Zugriff zur Laufzeit über `$GLOBALS['TL_DCA']` (Spaltenauswahl, Beschriftungen) | prüfen, ob es eine DCA-API gibt |
+| R23 | `Migration\BasicEntitiesMigration` erbt von `Version500\AbstractBasicEntitiesMigration` des Cores | nach der bewussten Bereinigung (`--with-deletes`) löschen; Contao 6 enthält keine Migrationen 5.0 bis 5.7 |
+| R24 | befristete Bundle-Teile: `GalleryOrderMirrorListener`, Spiegel in `RecordMediaRepository`, `GalleryOrderMigration`, `PriceCurrencyMigration`, `BundleTextEncodingMigration` | nach dem Go-live-DROP von `orderSRC` und stabilem Betrieb löschen |
 
 Contao 6 verlangt die Migrationen 5.x nicht mehr: Vor dem Sprung muss `contao:migrate` auf 5.7 vollständig gelaufen sein.
 
