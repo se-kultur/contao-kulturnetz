@@ -2,9 +2,12 @@
 
 namespace SeKultur\ContaoKulturnetzBundle\Module;
 
+use Contao\BackendTemplate;
+use Contao\Module;
+use SeKultur\ContaoKulturnetzBundle\Helper\RequestContext;
 use SeKultur\ContaoKulturnetzBundle\Models\LocationsModel;
 
-class ModuleLocationAdd extends \Module
+class ModuleLocationAdd extends Module
 {
 	/**
 	 * @var string
@@ -18,10 +21,10 @@ class ModuleLocationAdd extends \Module
 	 */
 	public function generate()
 	{
-		if (TL_MODE == 'BE')
+		if (RequestContext::isBackendRequest())
 		{
-			/** @var \BackendTemplate|object $objTemplate */
-			$objTemplate = new \BackendTemplate('be_wildcard');
+			/** @var BackendTemplate|object $objTemplate */
+			$objTemplate = new BackendTemplate('be_wildcard');
 
 			$objTemplate->wildcard = '### Locationprofil anlegen ###';
 			$objTemplate->title = $this->headline;
@@ -40,7 +43,7 @@ class ModuleLocationAdd extends \Module
 	 */
 	protected function compile()
 	{
-		if (FE_USER_LOGGED_IN === true) {
+		if (RequestContext::hasFrontendUser()) {
             
         } else {
 			// REDIRECT LOGIN

@@ -2,9 +2,12 @@
 
 namespace SeKultur\ContaoKulturnetzBundle\Module;
 
+use Contao\BackendTemplate;
+use Contao\Module;
+use SeKultur\ContaoKulturnetzBundle\Helper\RequestContext;
 use SeKultur\ContaoKulturnetzBundle\Models\ArtistsModel;
 
-class ModuleArtistsList extends \Module
+class ModuleArtistsList extends Module
 {
 	/**
 	 * @var string
@@ -18,10 +21,10 @@ class ModuleArtistsList extends \Module
 	 */
 	public function generate()
 	{
-		if (TL_MODE == 'BE')
+		if (RequestContext::isBackendRequest())
 		{
-			/** @var \BackendTemplate|object $objTemplate */
-			$objTemplate = new \BackendTemplate('be_wildcard');
+			/** @var BackendTemplate|object $objTemplate */
+			$objTemplate = new BackendTemplate('be_wildcard');
 
 			$objTemplate->wildcard = '### Liste eigener Künstler:innenprofile ###';
 			$objTemplate->title = $this->headline;
@@ -40,11 +43,7 @@ class ModuleArtistsList extends \Module
 	 */
 	protected function compile()
 	{
-		$memberId = 0;
-		if (FE_USER_LOGGED_IN === true) {
-            $objUser = \FrontendUser::getInstance();
-            $memberId = $objUser->id;
-        }
+		$memberId = RequestContext::getMemberId();
 		$this->Template->member_id = $memberId;
 		
 		$artists = ArtistsModel::findByMemberId($memberId);

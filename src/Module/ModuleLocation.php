@@ -2,7 +2,11 @@
 
 namespace SeKultur\ContaoKulturnetzBundle\Module;
 
+use Contao\BackendTemplate;
 use Contao\CoreBundle\Exception\PageNotFoundException;
+use Contao\Input;
+use Contao\Module;
+use SeKultur\ContaoKulturnetzBundle\Helper\RequestContext;
 use SeKultur\ContaoKulturnetzBundle\Models\ArtistsModel;
 use SeKultur\ContaoKulturnetzBundle\Models\HostsModel;
 use SeKultur\ContaoKulturnetzBundle\Models\LocationsModel;
@@ -11,7 +15,7 @@ use SeKultur\ContaoKulturnetzBundle\Models\EventsModel;
 use SeKultur\ContaoKulturnetzBundle\Models\SekEventsModel;
 use SeKultur\ContaoKulturnetzBundle\Models\PostingsModel;
 
-class ModuleLocation extends \Module
+class ModuleLocation extends Module
 {
 	/**
 	 * @var string
@@ -25,10 +29,10 @@ class ModuleLocation extends \Module
 	 */
 	public function generate()
 	{
-		if (TL_MODE == 'BE')
+		if (RequestContext::isBackendRequest())
 		{
-			/** @var \BackendTemplate|object $objTemplate */
-			$objTemplate = new \BackendTemplate('be_wildcard');
+			/** @var BackendTemplate|object $objTemplate */
+			$objTemplate = new BackendTemplate('be_wildcard');
 
 			$objTemplate->wildcard = '### Detailansicht Locationprofil ###';
 			$objTemplate->title = $this->headline;
@@ -47,27 +51,26 @@ class ModuleLocation extends \Module
 	 */
 	protected function compile()
 	{
-		$alias = \Input::get('auto_item');
-		$location = LocationsModel::findByIdOrAlias($alias);
+		$alias = Input::get('auto_item');
+		// Ohne Alias gibt es kein Profil; findByIdOrAlias() erwartet in Contao 5.7 einen String.
+		$location = (null !== $alias && '' !== $alias) ? LocationsModel::findByIdOrAlias($alias) : null;
 
 		if ($location === null) {
 			throw new PageNotFoundException('Locationprofil nicht gefunden: ' . $alias);
 		}
 
-		$memberId = 0;
 		$memberProfiles = [];
 		$followingProfiles = [];
-		if (FE_USER_LOGGED_IN === true) {
-			$objUser = \FrontendUser::getInstance();
-			$memberId = $objUser->id;
-
+		$memberId = RequestContext::getMemberId();
+		if ($memberId > 0) {
 			$memberProfiles = [
 				'tl_artists' => ArtistsModel::findByMemberId($memberId),
 				'tl_hosts' => HostsModel::findByMemberId($memberId),
 				'tl_locations' => LocationsModel::findByMemberId($memberId),
 			];
 			$fpData = FollowersModel::findMembersFollowingsFor($location->id, 'tl_locations', $memberId);
-			foreach($fpData as $fp) {
+			// Ohne Treffer liefert das Model null.
+			foreach($fpData ?? [] as $fp) {
 				$followingProfiles[] = $fp->follower_type.'-'.$fp->follower_id;
 			}
 		}

@@ -2,9 +2,12 @@
 
 namespace SeKultur\ContaoKulturnetzBundle\Module;
 
+use Contao\BackendTemplate;
+use Contao\Module;
+use SeKultur\ContaoKulturnetzBundle\Helper\RequestContext;
 use SeKultur\ContaoKulturnetzBundle\Models\HostsModel;
 
-class ModuleHostsListAll extends \Module
+class ModuleHostsListAll extends Module
 {
 	/**
 	 * @var string
@@ -18,10 +21,10 @@ class ModuleHostsListAll extends \Module
 	 */
 	public function generate()
 	{
-		if (TL_MODE == 'BE')
+		if (RequestContext::isBackendRequest())
 		{
-			/** @var \BackendTemplate|object $objTemplate */
-			$objTemplate = new \BackendTemplate('be_wildcard');
+			/** @var BackendTemplate|object $objTemplate */
+			$objTemplate = new BackendTemplate('be_wildcard');
 
 			$objTemplate->wildcard = '### Alle Veranstalter:innenprofile ###';
 			$objTemplate->title = $this->headline;
@@ -44,13 +47,9 @@ class ModuleHostsListAll extends \Module
 		
 		$filter = false;
 		
-		$memberId = 0;
-		if (FE_USER_LOGGED_IN === true) {
-            $objUser = \FrontendUser::getInstance();
-            $memberId = $objUser->id;
-        }
+		$memberId = RequestContext::getMemberId();
 		$this->Template->member_id = $memberId;
-		
+
 		if($objPage->id == 7) { // Übersichtsseite SE-KulturNetz
 			$hosts = HostsModel::findAllHosts(3);
 			$this->Template->hosts = $hosts;	

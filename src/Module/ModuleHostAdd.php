@@ -2,9 +2,12 @@
 
 namespace SeKultur\ContaoKulturnetzBundle\Module;
 
+use Contao\BackendTemplate;
+use Contao\Module;
+use SeKultur\ContaoKulturnetzBundle\Helper\RequestContext;
 use SeKultur\ContaoKulturnetzBundle\Models\HostsModel;
 
-class ModuleHostAdd extends \Module
+class ModuleHostAdd extends Module
 {
 	/**
 	 * @var string
@@ -18,10 +21,10 @@ class ModuleHostAdd extends \Module
 	 */
 	public function generate()
 	{
-		if (TL_MODE == 'BE')
+		if (RequestContext::isBackendRequest())
 		{
-			/** @var \BackendTemplate|object $objTemplate */
-			$objTemplate = new \BackendTemplate('be_wildcard');
+			/** @var BackendTemplate|object $objTemplate */
+			$objTemplate = new BackendTemplate('be_wildcard');
 
 			$objTemplate->wildcard = '### Veranstalter:innenprofil anlegen ###';
 			$objTemplate->title = $this->headline;
@@ -40,7 +43,7 @@ class ModuleHostAdd extends \Module
 	 */
 	protected function compile()
 	{
-		if (FE_USER_LOGGED_IN === true) {
+		if (RequestContext::hasFrontendUser()) {
             
         } else {
 			// REDIRECT LOGIN
