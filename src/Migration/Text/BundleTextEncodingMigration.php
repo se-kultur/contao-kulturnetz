@@ -1,0 +1,269 @@
+<?php
+
+declare(strict_types=1);
+
+namespace SeKultur\ContaoKulturnetzBundle\Migration\Text;
+
+use Contao\CoreBundle\Migration\AbstractMigration;
+use Contao\CoreBundle\Migration\MigrationResult;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
+use Doctrine\DBAL\Types\StringType;
+use SeKultur\ContaoKulturnetzBundle\Service\Text\TextNormalizer;
+
+/**
+ * Bringt die Klartextfelder der Bundle-Tabellen in das Speicherformat von
+ * Contao 5.7 (Entscheidung E21, Service\Text\TextNormalizer).
+ *
+ * Die früheren Ajax-Skripte (files/se-kultur.de/code/insert*.php, posting.php)
+ * schrieben Eingaben mit htmlentities() bzw. utf8_decode() in die Datenbank. Die
+ * Daten bestehen deshalb aus einem Gemisch aus benannten HTML-Entities
+ * ("&ouml;", "&amp;", "&#039;") und echten Zeichen; Werte aus dem Backend folgen
+ * dagegen der Contao-Kodierung. Die Migration dekodiert die Altentities und kodiert
+ * nach der Contao-Regel neu, sodass alle Werte einheitlich sind und die
+ * OutputEncodingMigration von Contao 6 sie korrekt in Rohtext überführen kann.
+ *
+ * Erfasst sind die Klartextfelder, die die Altskripte schreiben (research/13,
+ * Abschnitt 1.3 und 1.5), in tl_artists, tl_hosts, tl_locations, tl_events,
+ * tl_sekevents und tl_postings. In den JSON-Feldern prices und dates werden die
+ * Zeichenketten nach der Regel für Felder mit "decodeEntities" normalisiert.
+ * Nicht erfasst:
+ *  - HTML-Felder (beschreibung): Sie werden nicht dekodiert, sondern beim
+ *    Speichern über Service\Text\HtmlSanitizer gefiltert.
+ *  - Felder, die nur das Backend schreibt (comment, lat, lon), Aliase und die
+ *    Zahlenlisten linked_*.
+ *  - Archivtabellen (tl_sekevents_<Jahr>).
+ *
+ * Idempotent und konvergent: Die Migration läuft, solange ein Wert vom
+ * normalisierten Wert abweicht. Erzeugt die BasicEntitiesMigration des Bundles
+ * danach neue Entities, gleicht ein weiterer Durchlauf sie an; eine feste
+ * Reihenfolge ist deshalb nicht nötig. Ungültiges JSON bleibt unverändert.
+ */
+class BundleTextEncodingMigration extends AbstractMigration
+{
+    private const PROFILE_FIELDS = [
+        'name', 'kurzbeschreibung', 'ort', 'plz', 'adresse', 'telefon', 'email', 'xing', 'linkedin', 'tiktok',
+        'instagram', 'facebook', 'website', 'themen', 'zitat',
+    ];
+
+    private const EVENT_FIELDS = [
+        'name', 'kurzbeschreibung', 'sparten', 'kulturform', 'zielgruppen', 'artists', 'pricecomment', 'anmeldestelle',
+        'locations', 'location_adresse', 'location_plz', 'location_ort', 'location_barrierefreiheit', 'location_telefon',
+        'location_email', 'location_website', 'hosts', 'host_adresse', 'host_plz', 'host_ort', 'host_telefon',
+        'host_email', 'host_website', 'kooperationspartner',
+    ];
+
+    private const EVENT_JSON_FIELDS = ['prices', 'dates'];
+
+    /**
+     * @var array<string, array{text: list<string>, json: list<string>}>|null
+     */
+    private array|null $targets = null;
+
+    /**
+     * Höchstlänge je Tabelle und Spalte: varchar in Zeichen, TEXT-Spalten in Byte
+     * (negativer Wert), null ohne bekannte Grenze.
+     *
+     * @var array<string, array<string, int|null>>
+     */
+    private array $lengths = [];
+
+    public function __construct(
+        private readonly Connection $connection,
+        private readonly TextNormalizer $normalizer,
+    ) {
+    }
+
+    public function getName(): string
+    {
+        return 'KulturNetz: Textkodierung der Bundle-Tabellen auf das Contao-Format bringen';
+    }
+
+    public function shouldRun(): bool
+    {
+        foreach ($this->getTargets() as $table => $fields) {
+            foreach ($this->fetchRows($table, $fields) as $row) {
+                if ([] !== $this->computeChanges($table, $row, $fields)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public function run(): MigrationResult
+    {
+        $counts = [];
+        $invalidJson = [];
+        $tooLong = [];
+
+        foreach ($this->getTargets() as $table => $fields) {
+            foreach ($this->fetchRows($table, $fields) as $row) {
+                $changes = $this->computeChanges($table, $row, $fields, $invalidJson, $tooLong);
+
+                if ([] === $changes) {
+                    continue;
+                }
+
+                $this->connection->update($table, $changes, ['id' => (int) $row['id']], ['id' => ParameterType::INTEGER]);
+
+                foreach (array_keys($changes) as $field) {
+                    $counts["$table.$field"] = ($counts["$table.$field"] ?? 0) + 1;
+                }
+            }
+        }
+
+        ksort($counts);
+
+        $summary = [] === $counts
+            ? 'keine Änderungen'
+            : implode(', ', array_map(static fn (string $key, int $count): string => "$key: $count", array_keys($counts), $counts));
+
+        if ([] !== $invalidJson) {
+            $summary .= '; ungültiges JSON unverändert: '.implode(', ', $invalidJson);
+        }
+
+        if ([] !== $tooLong) {
+            $summary .= '; zu lang für die Spalte, unverändert: '.implode(', ', $tooLong);
+        }
+
+        return $this->createResult(true, $this->getName().' ('.$summary.')');
+    }
+
+    /**
+     * Geänderte Werte einer Zeile (Spalte => neuer Wert).
+     *
+     * @param array<string, mixed>                          $row
+     * @param array{text: list<string>, json: list<string>} $fields
+     * @param list<string>                                  $invalidJson
+     * @param list<string>                                  $tooLong
+     *
+     * @return array<string, string>
+     */
+    private function computeChanges(string $table, array $row, array $fields, array &$invalidJson = [], array &$tooLong = []): array
+    {
+        $changes = [];
+
+        foreach ($fields['text'] as $field) {
+            $value = $row[$field] ?? null;
+
+            if (!\is_string($value) || '' === $value) {
+                continue;
+            }
+
+            $normalized = $this->normalizer->normalize($value);
+
+            if ($normalized === $value) {
+                continue;
+            }
+
+            // Die Kodierung verlängert den Wert (z. B. "=" in URLs wird "&#61;"). Passt er
+            // nicht mehr in die Spalte, bleibt er unverändert; der alte Wert ist gültiges
+            // UTF-8 und wird weiter korrekt ausgegeben.
+            $maxLength = $this->lengths[$table][$field] ?? null;
+
+            $length = null !== $maxLength && $maxLength < 0 ? \strlen($normalized) : mb_strlen($normalized);
+
+            if (null !== $maxLength && $length > abs($maxLength)) {
+                $tooLong[] = $table.'.'.$row['id'].'.'.$field;
+
+                continue;
+            }
+
+            $changes[$field] = $normalized;
+        }
+
+        foreach ($fields['json'] as $field) {
+            $value = $row[$field] ?? null;
+
+            if (!\is_string($value) || '' === trim($value)) {
+                continue;
+            }
+
+            $normalized = $this->normalizer->normalizeJson($value);
+
+            if (null === $normalized) {
+                $invalidJson[] = $table.'.'.$row['id'].'.'.$field;
+
+                continue;
+            }
+
+            if ($normalized !== $value) {
+                $changes[$field] = $normalized;
+            }
+        }
+
+        return $changes;
+    }
+
+    /**
+     * @param array{text: list<string>, json: list<string>} $fields
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function fetchRows(string $table, array $fields): array
+    {
+        $columns = array_map(
+            fn (string $column): string => $this->connection->quoteSingleIdentifier($column),
+            ['id', ...$fields['text'], ...$fields['json']],
+        );
+
+        return $this->connection->fetchAllAssociative(\sprintf('SELECT %s FROM %s ORDER BY id', implode(', ', $columns), $table));
+    }
+
+    /**
+     * Tabellen und vorhandene Spalten; fehlende Tabellen oder Spalten werden
+     * übersprungen (z. B. bei einer frischen Installation vor dem Schema-Abgleich).
+     *
+     * @return array<string, array{text: list<string>, json: list<string>}>
+     */
+    private function getTargets(): array
+    {
+        if (null !== $this->targets) {
+            return $this->targets;
+        }
+
+        $wanted = [
+            'tl_artists' => ['text' => [...self::PROFILE_FIELDS, 'sparten'], 'json' => []],
+            'tl_hosts' => ['text' => self::PROFILE_FIELDS, 'json' => []],
+            'tl_locations' => ['text' => [...self::PROFILE_FIELDS, 'barrierefreiheit', 'auftrittsflaeche', 'gesamtflaeche', 'buehnentyp', 'technik', 'sitzplaetze', 'stehplaetze'], 'json' => []],
+            'tl_events' => ['text' => self::EVENT_FIELDS, 'json' => self::EVENT_JSON_FIELDS],
+            'tl_sekevents' => ['text' => self::EVENT_FIELDS, 'json' => self::EVENT_JSON_FIELDS],
+            'tl_postings' => ['text' => ['content'], 'json' => []],
+        ];
+
+        $schemaManager = $this->connection->createSchemaManager();
+        $targets = [];
+
+        foreach ($wanted as $table => $fields) {
+            if (!$schemaManager->tablesExist([$table])) {
+                continue;
+            }
+
+            $tableColumns = $schemaManager->listTableColumns($table);
+            $columns = [];
+
+            foreach ($tableColumns as $column) {
+                $name = strtolower($column->getName());
+                $columns[] = $name;
+                $length = $column->getLength();
+                $this->lengths[$table][$name] = null === $length ? null : ($column->getType() instanceof StringType ? $length : -$length);
+            }
+            $filter = static fn (array $list): array => array_values(array_filter($list, static fn (string $column): bool => \in_array(strtolower($column), $columns, true)));
+
+            $existing = ['text' => $filter($fields['text']), 'json' => $filter($fields['json'])];
+
+            // Spaltennamen der Längenliste wie im DCA schreiben (Schema liefert Kleinschreibung).
+            foreach ([...$existing['text'], ...$existing['json']] as $field) {
+                $this->lengths[$table][$field] = $this->lengths[$table][strtolower($field)] ?? null;
+            }
+
+            if ([] !== $existing['text'] || [] !== $existing['json']) {
+                $targets[$table] = $existing;
+            }
+        }
+
+        return $this->targets = $targets;
+    }
+}
