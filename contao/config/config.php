@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use SeKultur\ContaoKulturnetzBundle\Models\ArtistsModel;
 use SeKultur\ContaoKulturnetzBundle\Models\EventsModel;
 use SeKultur\ContaoKulturnetzBundle\Models\FollowersModel;
@@ -9,10 +11,10 @@ use SeKultur\ContaoKulturnetzBundle\Models\PostingsModel;
 use SeKultur\ContaoKulturnetzBundle\Models\SekEventsModel;
 
 /*
- * Registrierungen ohne Attribut-Nachfolger in Contao 5.7 (Restpunkt R14):
- * Models und Backend-Module. Frontend-Module stehen nicht mehr hier, sie werden
- * per Attribut (Fragment-Controller) bzw. übergangsweise über die Listener unter
- * src/EventListener/LegacyModules/ registriert.
+ * Registrierungen ohne Attribut-Nachfolger in Contao 5.7 und 6.0 (Restpunkt R14):
+ * Models und Backend-Module. Alles andere (Frontend-Module, DCA-Callbacks, Hooks,
+ * Migrationen, Routen) registriert das Bundle über Attribute und
+ * config/services.yaml.
  */
 
 // Models registrieren

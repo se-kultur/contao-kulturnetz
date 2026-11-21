@@ -10,9 +10,8 @@
 # Ausgenommen sind Dateien, die keine Services sind:
 #   - die Bundle-Klasse und das Manager-Plugin,
 #   - reine Wertobjekte in Unterordnern namens Value/ (z. B. src/Service/Profile/Value/),
-#   - die Legacy-Klassen unter Models/, Module/ und Helper/. Legacy, Ausschluss
-#     entfernt abschluss: Sie werden statisch bzw. über $GLOBALS benutzt und von
-#     den Modulpaketen abgelöst.
+#   - die Contao-Models unter Models/: Datenobjekte ohne Logik, registriert über
+#     $GLOBALS['TL_MODELS'] in contao/config/config.php (Restpunkt R14).
 services:
     _defaults:
         autowire: true
@@ -25,5 +24,3 @@ services:
             - ../src/ContaoManager/
             - ../src/**/Value/
             - ../src/Models/
-            - ../src/Module/
-            - ../src/Helper/
