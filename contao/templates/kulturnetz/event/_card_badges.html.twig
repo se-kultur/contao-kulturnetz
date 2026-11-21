@@ -1,0 +1,29 @@
+{#
+ # Aktionen der Besitzer:in an einer Veranstaltungskachel (Hinweis "Nicht öffentlich",
+ # Bearbeiten, Galerie), Markup wie bisher in mod_events_list*.html5 und
+ # mod_sekevents_list*.html5.
+ #
+ # Variablen:
+ #   event       Veranstaltung
+ #   event_type  "events" oder "sekevents"
+ #   edit_label  Beschriftung der Schaltfläche ("Event bearbeiten" bzw. "Veranstaltung bearbeiten")
+ #}
+{% set detail_href = kulturnetz_page_url(event_type ~ '.detail', event.alias) %}
+<div class="badges">
+	{% if '1' == event.disable|default('') %}
+	<span class="badge bg-error"><i class="fa-solid fa-eye-slash"></i><span class="hide-xs hide-sm hide-md"> Nicht öffentlich</span></span>
+	{% endif %}
+
+	{% if '1' != event.readonly|default('') %}
+	<a href="{{ kulturnetz_page_url(event_type ~ '.edit', event.alias) }}" class="btn btn-primary btn-sm">
+		<i class="fa-solid fa-pen-to-square"></i><span class="hide-sm hide-xs hide-md"> {{ edit_label }}</span>
+	</a>
+	{% else %}
+	<button type="button" class="btn btn-primary btn-sm" disabled aria-label="Bearbeitung durch Admins deaktiviert" role="tooltip">
+		<i class="fa-solid fa-pen-to-square"></i><span class="hide-sm hide-xs hide-md"> {{ edit_label }}</span>
+	</button>
+	{% endif %}
+	<a href="{{ detail_href }}#galerie" class="btn btn-outline btn-sm">
+		<i class="fa-solid fa-images"></i><span class="hide-sm hide-xs hide-md"> Galerie</span>
+	</a>
+</div>

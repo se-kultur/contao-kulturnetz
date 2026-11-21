@@ -1,0 +1,49 @@
+{#
+ # Kachel einer eigenen Veranstaltung in der Liste des Mitglieds, Markup wie bisher in
+ # mod_events_list.html5 und mod_sekevents_list.html5.
+ #
+ # Variablen:
+ #   event       Veranstaltung
+ #   image       {src, alt} des Titelbildes (Größe kulturnetz_list)
+ #   event_type  "events" oder "sekevents"
+ #   member_id   angemeldetes Mitglied
+ #   past        vergangene Veranstaltung (blass dargestellt, ohne nächsten Termin)
+ #
+ # Die Ortsangabe im Fuß liest wie bisher die Spalte "ort", die es in tl_events und
+ # tl_sekevents nicht gibt; sie bleibt deshalb leer (Beobachtung im Paketbericht).
+ #}
+{% import '@Contao/kulturnetz/event/_macros.html.twig' as event_macros %}
+{% set detail_href = kulturnetz_page_url(event_type ~ '.detail', event.alias) %}
+<div class="artist{{ past ? ' event-past' }}">
+	<a href="{{ detail_href }}">
+		<figure class="avatar">
+			<img src="{{ image.src }}" alt="{{ image.alt }}" loading="lazy">
+		</figure>
+	</a>
+	<div class="infos">
+		{% if member_id > 0 and member_id == event.member_id %}
+		{{ include('@Contao/kulturnetz/event/_card_badges.html.twig', {event: event, event_type: event_type, edit_label: 'Veranstaltung bearbeiten'}, with_context: false) }}
+		{% endif %}
+
+		<a href="{{ detail_href }}"><h6>{{ event.name }}</h6></a>
+		<p class="beschreibung">
+			{% if not past %}
+			<span class="event-next-date"><i class="fa-regular fa-clock"></i>
+			Nächster Termin am {{ event_macros.weekday(event.nextdate) }}, {{ event.nextdate|date('d.m.Y - H:i') }} Uhr
+			</span><br><br>
+			{% endif %}
+
+			{{ event.kurzbeschreibung }}<br><br>
+
+			{{ include('@Contao/kulturnetz/event/_card_hints.html.twig', {event: event}, with_context: false) }}
+		</p>
+
+		<div class="footer">
+			<span class="sparten">{{ event.sparten|default('')|kulturnetz_sparten }}</span>
+			<span class="ort">{{ event.ort|default('') }}</span>
+			<div>
+				<a href="{{ detail_href }}"><i class="fa-solid fa-arrow-right-long"></i></a>
+			</div>
+		</div>
+	</div>
+</div>

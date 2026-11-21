@@ -1,0 +1,27 @@
+{#
+ # KulturKalender, das Verzeichnis aller kommenden Veranstaltungen (Modultyp
+ # "ModuleEventsListAll", bisher mod_events_list_all.html5). Markup in
+ # kulturnetz/event/_directory.html.twig.
+ #}
+{% extends '@Contao/kulturnetz/event/_directory.html.twig' %}
+
+{% block day_label %}<span class="highlighter">{{ day.date }}</span>{% endblock %}
+
+{% block empty_state %}
+	<div class="flex wrap">
+		<div class="col-4 col-sm-12">
+			<img class="event-empty-image" src="{{ asset('files/se-kultur.de/img/veranstaltungen-leer.png') }}" alt="Veranstaltung erstellen">
+		</div>
+
+		<div class="col-8 col-sm-12">
+			<h6>Keine Veranstaltung gefunden</h6>
+
+			<p>Für den angegebenen Zeitraum haben wir keine Veranstaltung gefunden.</p>
+			<p>Wenn Sie eine Veranstaltung erstellen möchten, registrieren Sie sich oder melden Sie sich an und erstellen Sie kostenlos Ihre erste Veranstaltung!</p>
+
+			<a href="{{ kulturnetz_page_url('events.add') }}" class="btn btn-primary">
+				<span><i class="fa-solid fa-plus"></i><span class="hide-sm hide-xs hide-md"> Veranstaltung erstellen</span></span>
+			</a>
+		</div>
+	</div>
+{% endblock %}

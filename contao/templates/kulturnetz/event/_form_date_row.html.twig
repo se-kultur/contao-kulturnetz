@@ -1,0 +1,41 @@
+{#
+ # Terminzeile im Formular (Datum, Beginn, Ende, Kommentar, Aktionen), Markup wie bisher
+ # in mod_event_add.html5, mod_event_edit.html5 und den SE-KulturTage-Fassungen.
+ # eventform.js klont die erste Zeile für neue Termine.
+ #
+ # Variablen:
+ #   row            {date, start, end, comment}
+ #   first          erste Zeile (Verschieben und Löschen gesperrt)
+ #   required       Pflichtfelder (nur beim Bearbeiten)
+ #   year_suffix    Jahr hinter dem Datum (SE-KulturTage speichern Termine ohne Jahr), sonst leer
+ #}
+<div class="event-item">
+	<div class="widget widget-text eventdate">
+		<label class="mandatory">Datum<span class="mandatory">*</span></label>
+		<div class="inputgroup">
+			<input type="text" name="eventdate[]" value="{{ row.date }}"{% if required %} required{% endif %}>
+			{% if year_suffix|default %}<span>{{ year_suffix }}</span>{% endif %}
+		</div>
+	</div>
+
+	<div class="widget widget-text eventtime">
+		<label class="mandatory">Beginn<span class="mandatory">*</span></label>
+		<input type="text" name="eventtimestart[]" value="{{ row.start }}"{% if required %} required{% endif %}>
+	</div>
+
+	<div class="widget widget-text eventtime">
+		<label class="mandatory">Ende<span class="mandatory">*</span></label>
+		<input type="text" name="eventtimeend[]" value="{{ row.end }}"{% if required %} required{% endif %}>
+	</div>
+
+	<div class="widget widget-text eventcomment">
+		<label>Kommentar (optional)</label>
+		<input type="text" name="eventcomment[]" value="{{ row.comment }}">
+	</div>
+
+	<div class="widget eventactions">
+		<button type="button" class="btn btn-outline sorthandle" role="tooltip" aria-label="Terminzeile verschieben"{% if first %} disabled{% endif %}><i class="fa-solid fa-sort"></i></button>
+		<button type="button" class="btn btn-outline copydate" role="tooltip" aria-label="Terminzeile duplizieren"><i class="fa-solid fa-copy"></i></button>
+		<button type="button" class="btn btn-outline deletedate" role="tooltip" aria-label="Terminzeile löschen"{% if first %} disabled{% endif %}><i class="fa-solid fa-trash-can"></i></button>
+	</div>
+</div>

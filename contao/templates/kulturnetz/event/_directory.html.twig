@@ -1,0 +1,88 @@
+{#
+ # Verzeichnis aller kommenden Veranstaltungen mit Suchformular, gemeinsame Basis von
+ # kulturnetz_event_directory (KulturKalender) und kulturnetz_sekevent_directory
+ # (Programm der SE-KulturTage). Markup, Klassen und Texte wie bisher in
+ # mod_events_list_all.html5 und mod_sekevents_list_all.html5, ohne Modul-Wrapper.
+ # Die Kartenansicht (toter Code mit Leaflet) entfällt (Entscheidung E27).
+ #
+ # Variablen (Controller unter src/Controller/FrontendModule/Event/):
+ #   event_type         "events" oder "sekevents"
+ #   member_id          angemeldetes Mitglied oder 0
+ #   search             gesetzte Filter (datum, kategorie, format, text)
+ #   has_active_filter  mindestens ein Filter schränkt ein (Zurücksetzen-Link)
+ #   reset_url          Pfad der Seite ohne Filter
+ #   location_badges    Orts-Badges {label, url}
+ #   date_range         {min, max} der Termine als TT.MM.JJJJ (Datepicker der SE-KulturTage)
+ #   days               Treffer je Kalendertag {date, entries[{event, image, times}]}
+ #   event_count        Zahl der Treffer
+ #   formats            Veranstaltungsformate der SE-KulturTage
+ #   kulturrouten_url   Seite der KulturRouten
+ #
+ # Blöcke für die Unterschiede der SE-KulturTage:
+ #   date_placeholder, date_attributes   Datumsfeld (Beispiel, data-mindate/-maxdate)
+ #   format_widget                       Auswahl des Veranstaltungsformats
+ #   day_label                           Datum der Zwischenüberschrift
+ #   empty_state                         Text bei null Treffern
+ #
+ # Skripte (Dateien mit defer): autocompleteEvents.js (Vorschläge im Textfeld, Endpunkt und
+ # Detailseite als data-Attribute). Der Datepicker kommt aus js/theme/40-datepicker.js.
+ #}
+{% set is_sekevents = 'sekevents' == event_type %}
+{% set categories = kulturnetz_profile_categories() %}
+<form method="get" id="search" class="formbody">
+	<div class="widget widget-text eventdate">
+		<label>Datum</label>
+		<div class="inputgroup">
+			<input type="text" name="datum" value="{{ search.datum|default('') }}" placeholder="z. B. {% block date_placeholder %}01.09.{% endblock %}{{ 'now'|date('Y') }}"{% block date_attributes %}{% endblock %}>
+		</div>
+	</div>
+
+	<div class="widget widget-select">
+		<label>Kategorie</label>
+		<select name="kategorie">
+			{% for value, label in categories %}
+			<option{% if 'Alle' == value %} value="Alle"{% endif %}{% if search.kategorie|default(null) == value %} selected{% endif %}>{{ label }}</option>
+			{% endfor %}
+		</select>
+	</div>
+
+	{% block format_widget %}{% endblock %}
+
+	<div class="widget widget-text">
+		<label>Volltextsuche</label>
+		<input name="text" type="text" placeholder="Namen oder Ort eingeben" value="{{ search.text|default('') }}" data-endpoint-search="{{ path(is_sekevents ? 'kulturnetz_suche_sekevents' : 'kulturnetz_suche_events') }}" data-detail-url="{{ kulturnetz_page_url(event_type ~ '.detail', '__alias__') }}">
+	</div>
+
+
+	<div>
+		<button type="submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i><span class="hide-xs hide-sm hide-md"> Suchen</span></button>
+		{% if has_active_filter %}
+		<a href="{{ reset_url }}" class="btn btn-outline"><i class="fa-solid fa-xmark"></i><span class="hide-xs hide-sm hide-md">  Zurücksetzen</span></a>
+		{% endif %}
+	</div>
+
+	{% if location_badges is not empty %}
+	<div class="event-search-locations">
+		Sie können die Ergebnisse auch nach Orten filtern:<br>
+		{% for badge in location_badges %}
+		<a href="{{ badge.url }}" class="badge badge-link">{{ badge.label }}</a>
+		{% endfor %}
+	</div>
+	{% endif %}
+</form>
+
+<div class="artists-list">
+	{% for day in days %}
+	<h4 class="mt-4"><i class="fa-solid fa-calendar-days"></i> Events am {% block day_label %}{{ day.date }}{% endblock %}</h4>
+
+	{% for entry in day.entries %}
+	{{ include('@Contao/kulturnetz/event/_card_directory.html.twig', {event: entry.event, image: entry.image, times: entry.times, event_type: event_type, member_id: member_id, kulturrouten_url: kulturrouten_url}, with_context: false) }}
+	{% endfor %}
+	{% endfor %}
+
+	{% if event_count == 0 %}
+	{% block empty_state %}{% endblock %}
+	{% endif %}
+</div>
+
+{% add 'kulturnetz_event_search_js' to body %}<script src="{{ asset('js/autocompleteEvents.js', 'se_kultur_theme') }}" defer></script>{% endadd %}

@@ -1,0 +1,38 @@
+{#
+ # Programm der SE-KulturTage, das Verzeichnis aller kommenden Events (Modultyp
+ # "ModuleSekEventsListAll", bisher mod_sekevents_list_all.html5): zusätzlich mit
+ # Format-Filter und Datepicker-Grenzen aus dem Zeitraum der Termine. Markup in
+ # kulturnetz/event/_directory.html.twig.
+ #}
+{% extends '@Contao/kulturnetz/event/_directory.html.twig' %}
+
+{% block date_placeholder %}15.09.{% endblock %}
+
+{% block date_attributes %}{% if date_range.min is not empty %} data-mindate="{{ date_range.min }}"{% endif %}{% if date_range.max is not empty %} data-maxdate="{{ date_range.max }}"{% endif %}{% endblock %}
+
+{% block format_widget %}
+	<div class="widget widget-select">
+		<label>Veranstaltungsformat</label>
+		<select name="format">
+			<option value="Alle"{% if search.format|default(null) == 'Alle' %} selected{% endif %}>Alle Formate</option>
+			{% for format in formats %}
+			<option{% if search.format|default(null) == format %} selected{% endif %}>{{ format }}</option>
+			{% endfor %}
+		</select>
+	</div>
+{% endblock %}
+
+{% block empty_state %}
+	<div class="flex wrap">
+		<div class="col-4 col-sm-12">
+			<img class="event-empty-image" src="{{ asset('files/se-kultur.de/img/veranstaltungen-leer.png') }}" alt="Keine Veranstaltung gefunden">
+		</div>
+
+		<div class="col-8 col-sm-12">
+			<h6>Keine Veranstaltung gefunden</h6>
+
+			<p>Für die gewählten Filter haben wir keine Veranstaltung gefunden. Angezeigt werden ausschließlich heutige und künftige Termine.</p>
+			<p>Bitte passen Sie Datum, Kategorie, Format oder Suchbegriff an.</p>
+		</div>
+	</div>
+{% endblock %}

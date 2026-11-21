@@ -1,0 +1,23 @@
+{#
+ # Preiszeile im Formular (Titel, Preis, Löschen), Markup wie bisher in
+ # mod_event_add.html5 und mod_event_edit.html5. eventform.js klont die erste Zeile.
+ #
+ # Variablen:
+ #   row    {pricetag, price}
+ #   first  erste Zeile (Löschen gesperrt)
+ #}
+<div class="price-item">
+	<div class="widget widget-text pricetag">
+		<label class="mandatory">Titel<span class="mandatory">*</span></label>
+		<input type="text" name="pricetag[]" value="{{ row.pricetag }}" placeholder="VVK, Abendkasse, Ermäßigung, ...">
+	</div>
+
+	<div class="widget widget-text price">
+		<label class="mandatory">Preis<span class="mandatory">*</span></label>
+		<input type="text" name="price[]" value="{{ row.price }}">
+	</div>
+
+	<div class="widget priceactions">
+		<button type="button" class="btn btn-outline deleteprice"{% if first %} disabled{% endif %}><i class="fa-solid fa-trash-can"></i></button>
+	</div>
+</div>

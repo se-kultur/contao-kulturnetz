@@ -1,0 +1,10 @@
+{#
+ # Hilfsmakros der Veranstaltungsseiten.
+ #
+ # Einbindung: {% import '@Contao/kulturnetz/event/_macros.html.twig' as event_macros %}
+ #}
+
+{# Deutscher Wochentag eines Zeitstempels (Montag bis Sonntag). #}
+{% macro weekday(timestamp) -%}
+{{ {Monday: 'Montag', Tuesday: 'Dienstag', Wednesday: 'Mittwoch', Thursday: 'Donnerstag', Friday: 'Freitag', Saturday: 'Samstag', Sunday: 'Sonntag'}[timestamp|date('l')] }}
+{%- endmacro %}

@@ -1,0 +1,20 @@
+{#
+ # Detailansicht eines Events der SE-KulturTage (Modultyp "ModuleSekEvent", bisher
+ # mod_sekevent.html5): Titel mit Jahr, Badge des Veranstaltungsformats und Hinweis
+ # auf die KulturRoute. Markup in kulturnetz/event/_detail.html.twig.
+ #}
+{% extends '@Contao/kulturnetz/event/_detail.html.twig' %}
+
+{% block headline_suffix %} SE-Kultur Event {{ 'now'|date('Y') }}{% endblock %}
+
+{% block format_badge %}
+		<span class="badge bg-{{ event.kulturform|slice(3)|lower }}">{{ event.kulturform }}</span>
+{% endblock %}
+
+{% block route_hint %}
+		{% if event.kulturroute is not null %}
+			<br><br>
+		Diese Veranstaltung liegt an der folgenden KulturRoute:
+			<a href="{{ kulturrouten_url }}#route{{ event.kulturroute }}" target="_blank"><span class="badge badge-kulturroute"><i class="fa-solid fa-bicycle"></i> KulturRoute #{{ event.kulturroute }}</span></a>
+		{% endif %}
+{% endblock %}

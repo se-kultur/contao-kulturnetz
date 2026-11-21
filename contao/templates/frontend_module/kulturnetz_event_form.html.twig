@@ -1,0 +1,29 @@
+{#
+ # Formular zum Anlegen und Bearbeiten einer Veranstaltung des KulturKalenders (Module
+ # "ModuleEventAdd" und "ModuleEventEdit", bisher mod_event_add.html5 und
+ # mod_event_edit.html5). Felder in kulturnetz/event/_form.html.twig, Rahmen in
+ # kulturnetz/form/_shell.html.twig.
+ #}
+{% extends '@Contao/kulturnetz/event/_form.html.twig' %}
+
+{% block header_add %}
+	<div class="bg-kulturnetz p-4 mb-1">
+		<h3>Veranstaltung erstellen</h3>
+		<p>Im nachfolgenden Formular können Sie Ihre Veranstaltung eingeben. Versuchen Sie, dabei möglichst alle Felder auszufüllen. Aber keine Angst, falls Sie etwas vergessen haben – Sie können Ihre Veranstaltung jederzeit bearbeiten.</p>
+		<p class="hide-xs hide-sm hide-md">Rechts, in der blauen Leiste, finden Sie wichtige Hinweise und Tipps zu einzelnen Feldern, sobald Sie das entsprechende Eingabefeld angeklickt haben.</p>
+		<p>Nach erfolgter Prüfung informieren wir Sie über die Freischaltung Ihres Events per E-Mail.</p>
+	</div>
+
+	{{ include('@Contao/kulturnetz/event/_form_profile_hint.html.twig') }}
+{% endblock %}
+
+{% block header_edit %}
+	<div class="bg-kulturnetz p-4 mb-1">
+		<h3>Veranstaltung bearbeiten</h3>
+		<a href="{{ kulturnetz_page_url('events.detail', values.alias) }}" class="btn btn-primary">Veranstaltung ansehen</a>
+		<a href="{{ kulturnetz_page_url('events.detail', values.alias) }}#galerie" class="btn btn-outline">Fotos verwalten</a>
+		<a href="{{ kulturnetz_page_url('own_events') }}" class="btn btn-outline">Zurück zur Übersicht</a>
+	</div>
+{% endblock %}
+
+{% block consent_label %}{% if is_edit %}Ich versichere, alle Urheberrechte beachtet zu haben.{% else %}Mit der Erstellung meines Events erkläre ich mich damit einverstanden, dass die angegebenen Daten öffentlich in auf der Webseite www.se-kultur.de einsehbar sind. Ich versichere, alle Urheberrechte beachtet zu haben.{% endif %}{% endblock %}

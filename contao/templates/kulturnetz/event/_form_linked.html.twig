@@ -1,0 +1,11 @@
+{#
+ # Gewählte Profile eines Vorschlagsfeldes (Künstler:innen, Veranstalter:innen, Location),
+ # Markup wie bisher in mod_event_edit.html5. eventform.js ergänzt und entfernt Einträge.
+ #
+ # Variablen:
+ #   profiles  Liste {id, name, alias, image}
+ #   page_key  Seitenschlüssel der Detailseite ("artists.detail", "hosts.detail", "locations.detail")
+ #}
+{% for linked in profiles %}
+<span class="linked-profile"><a href="{{ kulturnetz_page_url(page_key, linked.alias) }}" target="_blank"><img src="{{ linked.image }}" alt=""> {{ linked.name }} </a> <i class="fa-solid fa-xmark" data-id="{{ linked.id }}"></i></span>
+{% endfor %}

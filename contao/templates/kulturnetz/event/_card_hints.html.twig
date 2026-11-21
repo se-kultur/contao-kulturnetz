@@ -1,0 +1,20 @@
+{#
+ # Hinweis-Badges einer Veranstaltungskachel (Eintritt, Spenden, Anmeldung, Zielgruppen),
+ # Markup wie bisher in mod_events_list*.html5 und mod_sekevents_list*.html5.
+ #
+ # Variable: event
+ #}
+{% if '1' == event.eintrittfrei|default('') %}
+<span class="badge">Eintritt frei</span>
+{% endif %}
+{% if '1' == event.spenden|default('') %}
+<span class="badge">Spenden erbeten</span>
+{% endif %}
+{% if '1' == event.anmeldung|default('') %}
+<span class="badge">Anmeldung erforderlich</span>
+{% endif %}
+{% if event.zielgruppen|length > 0 %}
+{% for group in event.zielgruppen|split(',') %}
+<span class="badge bg-kulturtage">{{ group }}</span>
+{% endfor %}
+{% endif %}

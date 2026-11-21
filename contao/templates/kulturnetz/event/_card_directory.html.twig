@@ -1,0 +1,58 @@
+{#
+ # Kachel einer Veranstaltung im Verzeichnis (KulturKalender und Programm der
+ # SE-KulturTage), Markup wie bisher in mod_events_list_all.html5 und
+ # mod_sekevents_list_all.html5.
+ #
+ # Variablen:
+ #   event             Veranstaltung
+ #   image             {src, alt} des Titelbildes (Größe kulturnetz_list)
+ #   times             {first, more}: Zeitstempel der Termine an diesem Tag
+ #   event_type        "events" oder "sekevents"
+ #   member_id         angemeldetes Mitglied oder 0
+ #   kulturrouten_url  Seite der KulturRouten (nur SE-KulturTage)
+ #}
+{% import '@Contao/kulturnetz/event/_macros.html.twig' as event_macros %}
+{% set detail_href = kulturnetz_page_url(event_type ~ '.detail', event.alias) %}
+<div class="artist">
+	<a href="{{ detail_href }}">
+		<figure class="avatar">
+			<img src="{{ image.src }}" alt="{{ image.alt }}" loading="lazy">
+		</figure>
+	</a>
+	<div class="infos">
+		{% if member_id > 0 and member_id == event.member_id %}
+		{{ include('@Contao/kulturnetz/event/_card_badges.html.twig', {event: event, event_type: event_type, edit_label: 'Event bearbeiten'}, with_context: false) }}
+		{% endif %}
+
+		<a href="{{ detail_href }}"><h6>{{ event.name }}</h6></a>
+		<p class="beschreibung">
+			<span class="event-next-date"><i class="fa-regular fa-clock"></i>
+			{% if times.first is not null %}
+				{{ event_macros.weekday(times.first) }}, {{ times.first|date('d.m.Y - H:i') }} Uhr
+				{% for tstamp in times.more %}
+				+ {{ tstamp|date('H:i') }} Uhr
+				{% endfor %}
+			{% endif %}
+			</span><br><br>
+
+			{{ event.kurzbeschreibung }}<br><br>
+
+			{{ include('@Contao/kulturnetz/event/_card_hints.html.twig', {event: event}, with_context: false) }}
+
+			{% if 'sekevents' == event_type %}
+			<span class="badge bg-{{ event.kulturform|slice(3)|lower }}">{{ event.kulturform }}</span>
+
+			{% if event.kulturroute is not null %}
+			<a href="{{ kulturrouten_url }}#route{{ event.kulturroute }}" target="_blank"><span class="badge badge-kulturroute"><i class="fa-solid fa-bicycle"></i> KulturRoute #{{ event.kulturroute }}</span></a>
+			{% endif %}
+			{% endif %}
+		</p>
+		<div class="footer">
+			<span class="sparten">{{ event.sparten|default('')|kulturnetz_sparten }}</span>
+			<span class="ort">{{ event.location_ort|default('') }}</span>
+			<div>
+				<a href="{{ detail_href }}"><i class="fa-solid fa-arrow-right-long"></i></a>
+			</div>
+		</div>
+	</div>
+</div>

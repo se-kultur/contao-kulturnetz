@@ -1,0 +1,294 @@
+{#
+ # Formular zum Anlegen und Bearbeiten einer Veranstaltung auf dem Formularrahmen
+ # kulturnetz/form/_shell.html.twig, gemeinsame Basis von kulturnetz_event_form und
+ # kulturnetz_sekevent_form. Markup, Klassen und Texte wie bisher in mod_event_add.html5,
+ # mod_event_edit.html5, mod_sekevent_add.html5 und mod_sekevent_edit.html5.
+ #
+ # Variablen (Controller unter src/Controller/FrontendModule/Event/):
+ #   event_type    "events" oder "sekevents"
+ #   form_mode     "add" oder "edit"
+ #   values        Formularwerte (EventViewFactory::formValues()): Felder der Veranstaltung,
+ #                 date_rows, price_rows, linked, avatar, avatar_src; leer beim Anlegen sowie
+ #                 bei fremden oder unbekannten Veranstaltungen (Entscheidung E39)
+ #   formats       Veranstaltungsformate der SE-KulturTage
+ #   current_year  laufendes Jahr
+ #   date_min, date_max  Grenzen des Datepickers (ISO-Datum) oder null
+ #
+ # Der Formularversand läuft über js/eventform.js an die Routen kulturnetz_profil_anlegen
+ # und kulturnetz_profil_aendern; Endpunkte, Seiten und Datumsformat stehen als
+ # data-Attribute im Element .eventform-settings, die Vorschlagsfelder tragen ihren
+ # Endpunkt selbst. Das REQUEST_TOKEN liefert der Formularrahmen.
+ #
+ # Blöcke für die Unterschiede der Veranstaltungsarten (Standard: Veranstaltungen):
+ #   header_add, header_edit   Kopf des Formulars
+ #   avatar_info               Hinweis zum Titelbild
+ #   format_field              Auswahl des Veranstaltungsformats (SE-KulturTage)
+ #   advertising               Fieldset "Werbemittel" (SE-KulturTage)
+ #   date_year                 Jahr hinter dem Datumsfeld (SE-KulturTage)
+ #   consent_label             Text der Einwilligung
+ #}
+{% extends '@Contao/kulturnetz/form/_shell.html.twig' %}
+
+{% set is_sekevents = 'sekevents' == event_type %}
+{% set is_edit = 'edit' == form_mode %}
+{% set form_action = is_edit ? path('kulturnetz_profil_aendern', {typ: event_type}) : path('kulturnetz_profil_anlegen', {typ: event_type}) %}
+{% set help_key = (is_sekevents ? 'sekevent_' : 'event_') ~ form_mode %}
+
+{% block header %}
+	{% if is_edit %}{% block header_edit %}{% endblock %}{% else %}{% block header_add %}{% endblock %}{% endif %}
+{% endblock %}
+
+{% block fields %}
+	<div class="eventform-settings" hidden
+		data-detail-url="{{ kulturnetz_page_url(event_type ~ '.detail', '__alias__') }}"
+		data-overview-url="{{ kulturnetz_page_url('own_events') }}"
+		{%- if is_edit %} data-alias="{{ values.alias }}"{% endif %}
+		data-date-type="{{ is_sekevents ? 'yearless' : 'year' }}"
+		{%- if date_min %} data-date-min="{{ date_min }}"{% endif %}
+		{%- if date_max %} data-date-max="{{ date_max }}"{% endif %}></div>
+
+	{# Vorlagen für neue Zeilen (eventform.js), unabhängig von den vorhandenen Zeilen #}
+	<template class="eventform-price-template">
+		{{ include('@Contao/kulturnetz/event/_form_price_row.html.twig', {row: {pricetag: '', price: ''}, first: false}, with_context: false) }}
+	</template>
+	<template class="eventform-date-template">
+		{{ include('@Contao/kulturnetz/event/_form_date_row.html.twig', {row: {date: '', start: '', end: '', comment: ''}, first: false, required: is_edit, year_suffix: is_sekevents ? current_year : ''}, with_context: false) }}
+	</template>
+
+	<fieldset>
+		<legend>Allgemeine Daten</legend>
+
+		{% if is_edit %}
+		<input type="hidden" name="id" value="{{ values.id }}">
+		{% endif %}
+
+		<figure class="avatar">
+			<img src="{{ asset(values.avatar_src) }}">
+			<div class="actions">
+				<a href="#" class="upload"><i class="fa-solid fa-cloud-arrow-up"></i></a>
+				{% if is_edit %}
+				<a href="#" class="edit"><i class="fa-solid fa-pen-to-square"></i></a>
+				<a href="#" class="delete"><i class="fa-solid fa-trash-can"></i></a>
+				{% endif %}
+			</div>
+		</figure>
+
+		<input type="hidden" name="avatar" value="{{ values.avatar }}">
+
+		<div class="event-form-info">
+			<div class="info">
+				<strong>Event-Titelbild</strong><br>
+				{% block avatar_info %}Das Titelbild Ihrer Veranstaltung wird auf unserer Webseite dargestellt. Wir bitten Sie daher, ein aussagekräftiges Foto mit einer Auflösung von mindestens 1000 x 1000 Pixeln zu verwenden. Außerdem müssen die Bildrechte vorhanden sein - Fotograf*in oder Urheber*in muss angegeben werden.{% endblock %}
+			</div>
+		</div>
+
+		<div class="widget widget-text">
+			<label class="mandatory">Name der Veranstaltung<span class="mandatory">*</span></label>
+			<input type="text" name="name" required value="{{ values.name }}">
+		</div>
+
+		<div class="widget widget-text">
+			<label class="mandatory">Kulturform(en)<span class="mandatory">*</span></label>
+			<input type="hidden" name="sparten" value="{{ values.sparten }}">
+			<span class="spartenselector" data-value="{{ values.sparten }}" data-options="{{ kulturnetz_profile_categories()|filter((label, value) => 'Alle' != value)|keys|json_encode }}"></span>
+		</div>
+
+		{% block format_field %}{% endblock %}
+
+		<div class="widget widget-text">
+			<label class="mandatory">Zielgruppe(n)<span class="mandatory">*</span></label>
+			<input type="hidden" name="zielgruppen" value="{{ values.zielgruppen }}">
+			<span class="zielgruppenselector" data-value="{{ values.zielgruppen }}" data-options="{{ ['für Erwachsene', 'für Jugendliche', 'für Kinder', 'für Familien']|json_encode }}"></span>
+		</div>
+
+		<div class="widget widget-text ui-widget">
+			<label class="mandatory">Teilnehmende/r Künstler*in(nen)<span class="mandatory">*</span></label>
+			<input type="text" name="artists" value="{{ values.artists }}" data-endpoint-search="{{ path('kulturnetz_suche_profile', {typ: 'artists'}) }}" data-profile-url="{{ kulturnetz_page_url('artists.detail', '__alias__') }}">
+
+			<div class="linked_artists">
+			{{ include('@Contao/kulturnetz/event/_form_linked.html.twig', {profiles: values.linked.artists, page_key: 'artists.detail'}, with_context: false) }}
+			</div>
+			<input type="hidden" name="linked_artists" value="{{ values.linked_artists }}">
+		</div>
+
+	</fieldset>
+
+	{% block advertising %}{% endblock %}
+
+	<fieldset id="price-items">
+		<legend>Eintritt &amp; Anmeldung</legend>
+
+		{% set paid = '1' != values.eintrittfrei %}
+		<div class="widget widget-checkbox">
+			<input type="checkbox" id="eintrittfrei" name="eintrittfrei"{% if not paid %} checked{% endif %}>
+			<label for="eintrittfrei">Eintritt frei?</label>
+		</div>
+
+		<div class="toggleeintritt prices{{ paid ? ' is-open' }}">
+			{% for row in values.price_rows %}
+			{{ include('@Contao/kulturnetz/event/_form_price_row.html.twig', {row: row, first: loop.first}, with_context: false) }}
+			{% endfor %}
+		</div>
+
+		<div class="toggleeintritt mb-2{{ paid ? ' is-open' }}">
+			<a href="#" class="btn btn-outline addprice btn-sm"><i class="fa-solid fa-plus"></i> Eintrittspreis hinzufügen</a>
+		</div>
+
+		<div class="widget widget-textarea toggleeintritt{{ paid ? ' is-open' }}">
+			<label>Kommentar zu Eintrittspreisen / ggf. Vorverkaufsstellen</label>
+			<textarea maxlength="1000" name="pricecomment">{{ values.pricecomment }}</textarea>
+		</div>
+
+		<div class="widget widget-checkbox">
+			<input type="checkbox" id="spenden" name="spenden"{% if '1' == values.spenden %} checked{% endif %}>
+			<label for="spenden">Spenden erbeten?</label>
+		</div>
+
+		<div class="widget widget-checkbox">
+			<input type="checkbox" id="anmeldung" name="anmeldung"{% if '1' == values.anmeldung %} checked{% endif %}>
+			<label for="anmeldung">{{ is_edit ? 'Anmeldung erforderlich?' : 'Anmeldung/Reservierung erforderlich?' }}</label>
+		</div>
+
+		<div class="widget widget-text toggleanmeldung{{ '1' == values.anmeldung ? ' is-open' }}">
+			<label class="mandatory">Anmeldestelle<span class="mandatory">*</span></label>
+			<input type="text" name="anmeldestelle" value="{{ values.anmeldestelle }}">
+		</div>
+	</fieldset>
+
+	<fieldset id="events-items">
+		<legend>Termin(e) / Öffnungszeiten</legend>
+
+		{% for row in values.date_rows %}
+		{{ include('@Contao/kulturnetz/event/_form_date_row.html.twig', {row: row, first: loop.first, required: is_edit, year_suffix: is_sekevents ? current_year : ''}, with_context: false) }}
+		{% endfor %}
+
+		<div>
+			<a href="#" class="btn btn-outline addeventdate btn-sm"><i class="fa-solid fa-plus"></i> Terminfelder hinzufügen</a>
+		</div>
+	</fieldset>
+
+	<fieldset>
+		<legend>Veranstaltungsort</legend>
+
+		{% set location_linked = values.linked_locations|length > 2 %}
+		<div class="widget widget-text">
+			<label class="mandatory">Name der Location<span class="mandatory">*</span></label>
+			<input type="text" name="locations"{% if location_linked %} readonly placeholder="Es ist bereits ein Veranstaltungsort ausgewählt"{% elseif values.locations|length > 0 %} value="{{ values.locations }}"{% endif %} data-endpoint-search="{{ path('kulturnetz_suche_profile', {typ: 'locations'}) }}" data-profile-url="{{ kulturnetz_page_url('locations.detail', '__alias__') }}">
+
+			<div class="linked_locations">
+				{{ include('@Contao/kulturnetz/event/_form_linked.html.twig', {profiles: values.linked.locations, page_key: 'locations.detail'}, with_context: false) }}
+			</div>
+			<input type="hidden" name="linked_locations" value="{{ values.linked_locations }}">
+
+		</div>
+
+		<div class="widget widget-text">
+			<label class="mandatory">Straße und Hausnummer<span class="mandatory">*</span></label>
+			<input type="text" name="location_adresse" value="{{ values.location_adresse }}">
+		</div>
+
+		<div class="widget widget-text postal">
+			<label class="mandatory">Postleitzahl<span class="mandatory">*</span></label>
+			<input type="text" name="location_plz" maxlength="5" value="{{ values.location_plz }}">
+		</div>
+
+		<div class="widget widget-text city">
+			<label class="mandatory">Ort<span class="mandatory">*</span></label>
+			<input type="text" name="location_ort" value="{{ values.location_ort }}">
+		</div>
+
+		<div class="widget widget-text">
+			<label>Barrierefreiheit</label>
+			<input type="text" name="location_barrierefreiheit" value="{{ values.location_barrierefreiheit }}">
+		</div>
+
+		<div class="widget widget-text">
+			<label>Telefon- oder Handynummer</label>
+			<input type="tel" name="location_telefon" value="{{ values.location_telefon }}">
+		</div>
+
+		<div class="widget widget-text">
+			<label>E-Mail-Adresse</label>
+			<input type="email" name="location_email" value="{{ values.location_email }}">
+		</div>
+
+		<div class="widget widget-url">
+			<label>Internetseite</label>
+			<input type="text" name="location_website" value="{{ values.location_website }}">
+		</div>
+	</fieldset>
+
+	<fieldset>
+		<legend>Veranstalter*in</legend>
+
+		<div class="widget widget-text">
+			<label class="mandatory">Veranstalter*in<span class="mandatory">*</span></label>
+			<input type="text" name="hosts" value="{{ values.hosts }}" data-endpoint-search="{{ path('kulturnetz_suche_profile', {typ: 'hosts'}) }}" data-profile-url="{{ kulturnetz_page_url('hosts.detail', '__alias__') }}">
+
+			<div class="linked_hosts">
+				{{ include('@Contao/kulturnetz/event/_form_linked.html.twig', {profiles: values.linked.hosts, page_key: 'hosts.detail'}, with_context: false) }}
+			</div>
+			<input type="hidden" name="linked_hosts" value="{{ values.linked_hosts }}">
+
+		</div>
+
+		<div class="widget widget-text">
+			<label class="mandatory">Straße und Hausnummer<span class="mandatory">*</span></label>
+			<input type="text" name="host_adresse" value="{{ values.host_adresse }}">
+		</div>
+
+		<div class="widget widget-text postal">
+			<label class="mandatory">Postleitzahl<span class="mandatory">*</span></label>
+			<input type="text" name="host_plz" maxlength="5" value="{{ values.host_plz }}">
+		</div>
+
+		<div class="widget widget-text city">
+			<label class="mandatory">Ort<span class="mandatory">*</span></label>
+			<input type="text" name="host_ort" value="{{ values.host_ort }}">
+		</div>
+
+		<div class="widget widget-text">
+			<label>Telefon- oder Handynummer</label>
+			<input type="tel" name="host_telefon" value="{{ values.host_telefon }}">
+		</div>
+
+		<div class="widget widget-text">
+			<label>E-Mail-Adresse</label>
+			<input type="email" name="host_email" value="{{ values.host_email }}">
+		</div>
+
+		<div class="widget widget-url">
+			<label>Internetseite</label>
+			<input type="text" name="host_website" value="{{ values.host_website }}">
+		</div>
+	</fieldset>
+
+	<fieldset>
+		<legend>Informationen</legend>
+
+		<div class="widget widget-textarea">
+			<label class="mandatory">Event-Kurzbeschreibung<span class="mandatory">*</span></label>
+			<textarea maxlength="255" name="kurzbeschreibung" class="nobreaks" required>{{ values.kurzbeschreibung }}</textarea>
+		</div>
+
+		<div class="widget widget-textarea">
+			<label class="mandatory">Event-Langbeschreibung<span class="mandatory">*</span></label>
+			<textarea class="textarea useEditorFrontend" name="beschreibung">{{ values.beschreibung|sanitize_html('contao')|e('html') }}</textarea>
+		</div>
+
+		<div class="widget widget-textarea">
+			<label>Kooperationspartner*in(nen)</label>
+			<textarea maxlength="255" name="kooperationspartner" class="nobreaks">{{ values.kooperationspartner }}</textarea>
+		</div>
+
+		<p class="info"><i class="fa-solid fa-images"></i> <strong>Bildergalerie</strong><br>{{ is_edit ? 'Ihre Bildergalerie können Sie direkt in der Detailansicht Ihres Events ansehen und verwalten. Speichern Sie Ihre Angaben und gehen Sie anschließend auf die Detailansicht Ihres Events, um die Galerie zu bearbeiten.' : 'Ihre Bildergalerie können Sie direkt in der Detailansicht Ihres Events anlegen und verwalten. Speichern Sie zunächst Ihre Angaben und gehen Sie anschließend auf die Detailansicht Ihres Events, um die Galerie zu erstellen.' }}</p>
+	</fieldset>
+{% endblock %}
+
+{% block consent_label %}Ich versichere, alle Urheberrechte beachtet zu haben.{% endblock %}
+
+{% block after_form %}
+{% include '@Contao/kulturnetz/form/_editor.html.twig' %}
+{% include '@Contao/kulturnetz/media/_uploader.html.twig' with {upload: 'event'} only %}
+{% add 'kulturnetz_eventform_js' to body %}<script src="{{ asset('js/eventform.js', 'se_kultur_theme') }}" defer></script>{% endadd %}
+{% endblock %}

@@ -1,0 +1,210 @@
+{#
+ # Detailansicht einer Veranstaltung, gemeinsame Basis von kulturnetz_event_detail
+ # und kulturnetz_sekevent_detail. Markup und Texte wie bisher in mod_event.html5
+ # und mod_sekevent.html5.
+ #
+ # Variablen (Controller unter src/Controller/FrontendModule/Event/):
+ #   event              Veranstaltung (Service\Event\EventFormatter) mit kulturroute
+ #   dates              Termine {text, start, end, comment} als Klartext
+ #   prices             Preise {pricetag, price} als Klartext
+ #   event_type         "events" oder "sekevents" (Seitenschlüssel der Links)
+ #   is_owner           angemeldetes Mitglied ist Besitzer:in
+ #   title_image        {src, lightbox_src, alt, title, caption} des Titelbildes
+ #   linked             verknüpfte Profile {locations, artists, hosts} mit name, alias, image
+ #   location_contact   Kontaktblock der Location (address, maps_url, phone, phone_digits, email, website)
+ #   host_contact       Kontaktblock der Veranstalter:in (wie location_contact)
+ #   gallery            Galerie (Service\Gallery\GalleryViewBuilder)
+ #   kulturrouten_url   Seite der KulturRouten (Anker "#route<Nummer>")
+ #
+ # Blöcke für die Unterschiede der SE-KulturTage:
+ #   headline_suffix    Text hinter dem Zurück-Pfeil ("SE-Kultur Event <Jahr>")
+ #   format_badge       Badge des Veranstaltungsformats (nach den Eintrittshinweisen)
+ #   route_hint         Hinweis auf die KulturRoute (nach Kulturform und Zielgruppe)
+ #
+ # Texte liegen im Contao-Format vor; der Contao-Escaper kodiert vorhandene Entities
+ # nicht doppelt. Die Langbeschreibung ist HTML und läuft durch den Contao-Sanitizer.
+ # Skripte (Dateien mit defer): history-back.js für den Zurück-Pfeil; der Uploader
+ # bindet seine Skripte selbst ein.
+ #}
+{% set detail_list_url = kulturnetz_page_url(event_type ~ '.list') %}
+<div class="artist-headline mt-4">
+{% if is_owner %}
+<div class="badges">
+	{% if '1' != event.readonly|default('') %}
+	<a href="{{ kulturnetz_page_url(event_type ~ '.edit', event.alias) }}" class="btn btn-primary btn-sm">
+		<i class="fa-solid fa-pen-to-square"></i><span class="hide-sm hide-xs hide-md"> Event bearbeiten</span>
+	</a>
+	{% else %}
+	<button type="button" class="btn btn-primary btn-sm" disabled aria-label="Bearbeitung durch Admins deaktiviert" role="tooltip">
+		<i class="fa-solid fa-pen-to-square"></i><span class="hide-sm hide-xs hide-md"> Event bearbeiten</span>
+	</button>
+	{% endif %}
+
+	{% if '1' == event.disable|default('') %}
+	<span class="badge bg-error"><i class="fa-solid fa-eye-slash"></i><span class="hide-xs">  Nicht öffentlich</span></span>
+	{% endif %}
+</div>
+{% endif %}
+<h2><a href="{{ detail_list_url }}" data-history-back aria-label="Zurück zur vorigen Seite" role="tooltip"><i class="fa-solid fa-arrow-left-long"></i></a>{% block headline_suffix %}{% endblock %}</h2>
+</div>
+
+<div class="artist-details flex gap-2 space-between mb-4 wrap">
+	<div class="sidebar col-3 col-md-4 col-sm-12">
+		{% set caption_html = title_image.title|e('html') ~ '<br><span class="lightbox-caption-small">© ' ~ title_image.caption|e('html') ~ '</span>' %}
+		<figure class="avatar">
+			<a href="{{ title_image.lightbox_src }}" data-fslightbox data-caption="{{ caption_html|e('html_attr') }}">
+				<img src="{{ title_image.src }}" alt="{{ title_image.alt }}">
+			</a>
+			<figcaption>
+				<span class="title">{{ title_image.title }}</span>
+				<span class="copyright">&copy; {{ title_image.caption }}</span>
+			</figcaption>
+		</figure>
+
+		<h6>{{ event.name }}</h6>
+
+		{% if '1' == event.eintrittfrei|default('') %}
+		<span class="badge">Eintritt frei</span>
+		{% endif %}
+		{% if '1' == event.spenden|default('') %}
+		<span class="badge">Spenden erbeten</span>
+		{% endif %}
+		{% if '1' == event.anmeldung|default('') %}
+		<span class="badge">Anmeldung erforderlich</span>
+		{% endif %}
+		{% block format_badge %}{% endblock %}
+
+		<p class="kurzbeschreibung">{{ event.kurzbeschreibung }}</p>
+		<br>
+
+		<div class="data">
+			Kulturform(en):<br>
+			<span class="sparten">{{ event.sparten|kulturnetz_sparten }}</span>
+			<br><br>
+			Zielgruppe(n):<br>
+			<span class="zielgruppen">{{ event.zielgruppen|kulturnetz_sparten }}</span>
+		</div>
+
+		{% block route_hint %}{% endblock %}
+	</div>
+	<div class="main col-9 col-md-8 col-sm-12">
+		<div class="beschreibung mb-4">{{ event.beschreibung|default('')|sanitize_html('contao') }}</div>
+
+		<div class="termine mb-4">
+			<h6>{{ dates|length > 1 ? 'Termine' : 'Termin' }}</h6>
+			<div class="table-responsive">
+				<table>
+					<thead>
+						<tr>
+							<th></th>
+							<th>Beginn</th>
+							<th>Ende</th>
+							<th>Info</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for d in dates %}
+						<tr>
+							<td class="event-col-date">{{ d.text }}</td>
+							<td>{{ d.start }} Uhr</td>
+							<td>{{ d.end }} Uhr</td>
+							<td>{{ d.comment }}</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+		{% if '1' != event.eintrittfrei|default('') %}
+		<div class="preise mb-4">
+			<h6>Eintritt</h6>
+			<div class="table-responsive">
+				<table>
+					<tbody>
+						{% for p in prices %}
+						<tr>
+							<td class="event-col-price">{{ p.price }}</td>
+							<td><strong>{{ p.pricetag }}</strong></td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+
+			<p>{{ event.pricecomment|default('')|nl2br }}</p>
+		</div>
+		{% endif %}
+
+		{% if '1' == event.anmeldung|default('') %}
+		<div class="anmeldung mb-4">
+			<h6>Anmeldung</h6>
+			{{ event.anmeldestelle }}
+		</div>
+		{% endif %}
+
+		<div class="location mb-4">
+			<h6>Location</h6>
+			{% for d in linked.locations %}
+			<a href="{{ kulturnetz_page_url('locations.detail', d.alias) }}" class="linked-profile"><img src="{{ d.image }}" alt=""> {{ d.name }}</a>
+			{% endfor %}
+			{% if event.locations|length > 0 %}<strong>{{ event.locations }}</strong>{% endif %}
+			<br><br>
+
+			<i class="fa-solid fa-location-dot"></i> <a href="{{ location_contact.maps_url }}" title="Adresse bei Google Maps öffnen" target="_blank">{{ location_contact.address }}</a><br>
+			{% if location_contact.phone|length > 0 %}<i class="fa-solid fa-phone-volume"></i> <a href="tel:{{ location_contact.phone_digits }}" title="Telefonnummer anrufen">{{ location_contact.phone }}</a><br>{% endif %}
+			{% if location_contact.email|length > 0 %}<i class="fa-solid fa-at"></i> <a href="mailto:{{ location_contact.email }}" title="E-Mail schreiben">{{ location_contact.email }}</a><br>{% endif %}
+			{% if location_contact.website|length > 0 %}<i class="fa-solid fa-globe"></i> <a href="{{ location_contact.website|kulturnetz_external_url }}" title="Webseite öffnen" target="_blank">{{ location_contact.website|kulturnetz_url_host }}</a><br>{% endif %}
+			<br>
+
+			{% if event.location_barrierefreiheit|length > 0 %}
+			<strong><i class="fa-solid fa-wheelchair-move"></i> Informationen zur Barrierefreiheit:</strong><br>
+			{{ event.location_barrierefreiheit }}
+			{% endif %}
+		</div>
+
+		<div class="artists mb-4">
+			<h6>Künstler*in(nen)</h6>
+			{% for d in linked.artists %}
+			<a href="{{ kulturnetz_page_url('artists.detail', d.alias) }}" class="linked-profile"><img src="{{ d.image }}" alt=""> {{ d.name }}</a>
+			{% endfor %}
+			{% if event.artists|length > 0 %}<strong>{{ event.artists }}</strong>{% endif %}
+		</div>
+
+		<div class="hosts mb-4">
+			<h6>Veranstalter*in(nen)</h6>
+			{% for d in linked.hosts %}
+			<a href="{{ kulturnetz_page_url('hosts.detail', d.alias) }}" class="linked-profile"><img src="{{ d.image }}" alt=""> {{ d.name }}</a>
+			{% endfor %}
+			{% if event.hosts|length > 0 %}<strong>{{ event.hosts }}</strong>{% endif %}
+			<br><br>
+
+			<i class="fa-solid fa-location-dot"></i> <a href="{{ host_contact.maps_url }}" title="Adresse bei Google Maps öffnen" target="_blank">{{ host_contact.address }}</a><br>
+			{% if host_contact.phone|length > 0 %}<i class="fa-solid fa-phone-volume"></i> <a href="tel:{{ host_contact.phone_digits }}" title="Telefonnummer anrufen">{{ host_contact.phone }}</a><br>{% endif %}
+			{% if host_contact.email|length > 0 %}<i class="fa-solid fa-at"></i> <a href="mailto:{{ host_contact.email }}" title="E-Mail schreiben">{{ host_contact.email }}</a><br>{% endif %}
+			{% if host_contact.website|length > 0 %}<i class="fa-solid fa-globe"></i> <a href="{{ host_contact.website|kulturnetz_external_url }}" title="Webseite öffnen" target="_blank">{{ host_contact.website|kulturnetz_url_host }}</a><br>{% endif %}
+		</div>
+
+		{% if event.kooperationspartner|length > 0 %}
+		<div class="partner mb-4">
+			<h6>Kooperationspartner*in(nen)</h6>
+			<p>{{ event.kooperationspartner }}</p>
+		</div>
+		{% endif %}
+	</div>
+</div>
+
+{% if is_owner %}
+<div class="text-right mb-2 event-gallery-actions">
+	<a href="#" class="btn btn-primary btn-sm galleryupload"><i class="fa-solid fa-cloud-arrow-up"></i> Foto(s) hochladen</a>
+	<a href="#" class="btn btn-outline btn-sm galleryedit"><i class="fa-solid fa-pen-to-square"></i> Fotos verwalten</a>
+</div>
+
+{% include '@Contao/kulturnetz/media/_uploader.html.twig' with {upload: 'gallery', type: event_type, id: event.id} only %}
+{% endif %}
+
+{% include '@Contao/kulturnetz/media/_gallery.html.twig' with {gallery: gallery} only %}
+
+<div class="mt-4 mb-4 text-center"></div>
+
+{% add 'kulturnetz_history_back_js' to body %}<script src="{{ asset('js/history-back.js', 'se_kultur_theme') }}" defer></script>{% endadd %}
