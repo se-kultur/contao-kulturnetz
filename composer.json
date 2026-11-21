@@ -1,12 +1,13 @@
 {
     "name": "se-kultur/contao-kulturnetz",
-    "description": "Contao-Erweiterung zur Vernetzung von Kulturakteur*innen -- Verwaltung von Künstler*innen, Veranstalter*innen, Locations und Veranstaltungen.",
+    "description": "Contao-Erweiterung zur Vernetzung von Kulturakteur*innen: Verwaltung von Künstler*innen, Veranstalter*innen, Locations und Veranstaltungen.",
     "license": "GPL-3.0-or-later",
     "type": "contao-bundle",
     "require": {
         "php": "^8.3",
         "contao/core-bundle": "^5.7",
         "contao/image": "^1.2",
+        "doctrine/dbal": "^3.7 || ^4.3",
         "symfony/config": "^7.4",
         "symfony/dependency-injection": "^7.4",
         "symfony/http-kernel": "^7.4",
