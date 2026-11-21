@@ -10,6 +10,9 @@ $GLOBALS['TL_DCA']['tl_member']['fields']['street']['eval']['mandatory'] = true;
 $GLOBALS['TL_DCA']['tl_member']['fields']['postal']['eval']['mandatory'] = true;
 $GLOBALS['TL_DCA']['tl_member']['fields']['city']['eval']['mandatory'] = true;
 
+// Filter "Wohnort" in der Mitgliederliste (unter Contao 4.13 vorhanden, in Contao 5 vom Core entfernt)
+$GLOBALS['TL_DCA']['tl_member']['fields']['city']['filter'] = true;
+
 /*
  * E-Mail-Adresse als Benutzername (Ersatz für terminal42/contao-mailusername,
  * Logik in src/EventListener/Member/MailUsernameListener.php): Die E-Mail ist

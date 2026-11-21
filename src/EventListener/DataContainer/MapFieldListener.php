@@ -21,11 +21,11 @@ use Twig\Environment;
  *
  * Verhalten wie unter Contao 4.13: Mit gespeicherter Position (Breite > 0)
  * zeigt die Karte diese mit Zoom 13, sonst die Standardansicht (Bad Segeberg,
- * Zoom 9). Die Adresssuche liest in allen Tabellen die Felder location_adresse,
- * location_plz und location_ort. In den Profilen (Künstler, Veranstalter,
- * Locations) heißen die Adressfelder aber adresse, plz und ort; dort fand die
- * Suche schon unter 4.13 nichts (gemeldete Beobachtung, Korrektur ist eine
- * Entscheidung der Redaktion).
+ * Zoom 9). Die Adresssuche liest die Felder Straße, Postleitzahl und Ort aus der
+ * Konfiguration je Tabelle: Das DCA-Feld "map" nennt sie in eval.addressFields (in
+ * den Profilen adresse, plz, ort; in den Veranstaltungen location_adresse,
+ * location_plz, location_ort). Unter 4.13 las die Suche in allen Tabellen die
+ * Veranstaltungsfelder und fand in den Profilen deshalb nichts.
  */
 #[AsCallback(table: 'tl_artists', target: 'fields.map.input_field')]
 #[AsCallback(table: 'tl_hosts', target: 'fields.map.input_field')]
@@ -39,8 +39,6 @@ final class MapFieldListener
     private const DEFAULT_ZOOM = 9;
 
     private const POSITION_ZOOM = 13;
-
-    private const ADDRESS_FIELDS = ['location_adresse', 'location_plz', 'location_ort'];
 
     public function __construct(
         private readonly Environment $twig,
@@ -59,6 +57,13 @@ final class MapFieldListener
         $suffix = substr((string) $dc->inputName, \strlen((string) $dc->field));
         $assetPackage = $this->config->getAssetPackage();
 
+        // Adressfelder dieser Tabelle (Straße, Postleitzahl, Ort), siehe eval.addressFields
+        $addressFields = $GLOBALS['TL_DCA'][$dc->table]['fields'][$dc->field]['eval']['addressFields'] ?? [];
+
+        if (3 !== \count($addressFields)) {
+            throw new \LogicException(\sprintf('Das Feld "%s" in "%s" braucht eval.addressFields mit Straße, Postleitzahl und Ort.', $dc->field, $dc->table));
+        }
+
         return $this->twig->render('@Contao/backend/kulturnetz/map_field.html.twig', [
             'suffix' => $suffix,
             'leaflet_css' => $this->packages->getUrl('vendor/leaflet/leaflet.css', $assetPackage),
@@ -73,7 +78,7 @@ final class MapFieldListener
                 'latField' => 'ctrl_lat'.$suffix,
                 'lonField' => 'ctrl_lon'.$suffix,
                 'locateButton' => 'getLocationData'.$suffix,
-                'addressFields' => array_map(static fn (string $field): string => 'ctrl_'.$field.$suffix, self::ADDRESS_FIELDS),
+                'addressFields' => array_map(static fn (string $field): string => 'ctrl_'.$field.$suffix, array_values($addressFields)),
             ],
         ]);
     }

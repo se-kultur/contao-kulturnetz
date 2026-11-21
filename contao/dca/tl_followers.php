@@ -5,8 +5,6 @@ use Contao\DC_Table;
 $GLOBALS['TL_DCA']['tl_followers'] = [
     'config' => [        
         'dataContainer' => DC_Table::class,
-        //'ctable' => ['tl_parts'],
-        //'enableVersioning' => true,
         'sql' => [
             'keys' => [
                 'id' => 'primary',

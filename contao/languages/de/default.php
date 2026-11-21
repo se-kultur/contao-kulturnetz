@@ -1,13 +1,19 @@
 <?php
 
-$GLOBALS['TL_LANG']['tl_artists']['personal_legend'] = 'Allgemeine Daten';
-$GLOBALS['TL_LANG']['tl_artists']['web_legend'] = 'Web & Social Media';
-$GLOBALS['TL_LANG']['tl_artists']['contact_legend'] = 'Kontaktdaten';
-$GLOBALS['TL_LANG']['tl_artists']['infos_legend'] = 'Informationen';
+/*
+ * Die Legenden und Feldbezeichnungen der fünf Bundle-Tabellen stehen in den
+ * Sprachdateien der jeweiligen Tabelle (tl_artists.php usw.).
+ */
+
+/*
+ * Die E-Mail-Adresse dient als Benutzername (MailUsernameListener, DCA tl_member):
+ * Das Anmeldeformular und die Registrierung beschriften das Feld "username" mit
+ * "E-Mail-Adresse" statt "Benutzername".
+ */
+$GLOBALS['TL_LANG']['MSC']['username'] = 'E-Mail-Adresse';
 
 /*
  * Das Metadatenfeld "caption" der Dateiverwaltung führt auf dieser Website das
- * Copyright eines Bildes (Ausgabe als "© ..." in den Templates). Die Bezeichnung
- * stand bisher in contao/dca/tl_files.php.
+ * Copyright eines Bildes (Ausgabe als "© ..." in den Templates).
  */
 $GLOBALS['TL_LANG']['MSC']['aw_caption'] = 'Copyright';

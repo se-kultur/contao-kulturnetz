@@ -5,8 +5,11 @@ use Contao\CoreBundle\DataContainer\PaletteManipulator;
 /**
  * Zusätzliches Stoppdatum für die SE-KulturTage-Anmeldelinks.
  *
- * Steuert ausschließlich die Sichtbarkeit der Anmeldelinks in Navigation und
- * Footer (ausgewertet im Theme-Template fe_page.html5). Ist das Feld leer,
+ * Steuert ausschließlich die Sichtbarkeit der Anmeldelinks im Mobilmenü und in
+ * der Fußzeile: ausgewertet von SignupWindowChecker über die Twig-Funktion
+ * kulturnetz_signup_open(), die das Layout page/layout/se-kultur.html.twig
+ * aufruft; page/se-kultur/_navigation_mobile.html.twig und _footer.html.twig
+ * blenden die Links damit ein oder aus. Ist das Feld leer,
  * greift das reguläre System-Stoppdatum der Seite. Die Seite selbst bleibt
  * über ihre normale Veröffentlichung erreichbar, damit Nachzügler den
  * Direktlink weiter nutzen können.

@@ -10,28 +10,28 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
 
 /**
- * Spaltenauswahl der Listen "Veranstaltungen" und "Events" nach der Sortierung
- * (bisher addPanelData() in tl_events.php und tl_sekevents.php, Panel
- * "testpanel").
+ * Spaltenauswahl der Listen "Veranstaltungen" und "Events" nach der Sortierung.
  *
  * Ohne gewählte Sortierung zeigt die Liste Eventname, Mitglied, E-Mail,
  * Erstellt am und Bearbeitet am. Hat die Redaktion eine andere Sortierung als
  * "Eventname" gewählt, steht nach der E-Mail nur die Spalte, nach der sortiert
- * wird (z. B. "Location Ort"). Das Panel selbst gibt nichts aus; der Rückruf
- * läuft vor dem Aufbau der Liste.
+ * wird (z. B. "Location Ort"). Der Rückruf läuft beim Laden des
+ * Datencontainers, vor dem Aufbau der Liste, und liest die Sortierung aus der
+ * Backend-Sitzung; der Wechsel der Sortierung lädt die Liste neu, die Spalten
+ * folgen dann beim nächsten Aufruf.
  *
  * Die Spalten stehen im DCA ($GLOBALS['TL_DCA']); eine Änderung zur Laufzeit
  * geht in Contao 5.7 und 6.0 nur dort (so auch die Listener des Contao-Kerns).
  */
-#[AsCallback(table: 'tl_events', target: 'list.sorting.panel_callback.testpanel')]
-#[AsCallback(table: 'tl_sekevents', target: 'list.sorting.panel_callback.testpanel')]
+#[AsCallback(table: 'tl_events', target: 'config.onload')]
+#[AsCallback(table: 'tl_sekevents', target: 'config.onload')]
 final class EventPanelListener
 {
     public function __construct(private readonly RequestStack $requestStack)
     {
     }
 
-    public function __invoke(DataContainer $dc): string
+    public function __invoke(DataContainer $dc): void
     {
         $table = $dc->table;
         $sorting = $this->getSessionSorting($table);
@@ -39,8 +39,6 @@ final class EventPanelListener
         if (null !== $sorting && 'name' !== $sorting) {
             $GLOBALS['TL_DCA'][$table]['list']['label']['fields'] = ['name', 'member_id', 'email', $sorting];
         }
-
-        return '';
     }
 
     /**

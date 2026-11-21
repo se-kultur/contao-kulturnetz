@@ -8,12 +8,15 @@ use Contao\DC_Table;
  * src/EventListener/DataContainer/ (Alias, Listenbeschriftung, Mitgliederinfo,
  * Karte, Freischaltungsmail). Der CSV-Export ist eine Backend-Route
  * (src/Controller/Backend/ExportController.php).
+ *
+ * Die Textareas ohne Editor tragen die Klasse "kulturnetz-textarea" (ohne eigene
+ * Stile): Contao 5.7 ruft im Widget TextArea str_contains() mit der Klasse auf und
+ * löst eine PHP-Deprecation aus, wenn weder eine Klasse noch "mandatory" gesetzt ist.
  */
 
 $GLOBALS['TL_DCA']['tl_locations'] = [
     'config' => [        
         'dataContainer' => DC_Table::class,
-        //'ctable' => ['tl_parts'],
         'enableVersioning' => true,
         'sql' => [
             'keys' => [
@@ -50,22 +53,9 @@ $GLOBALS['TL_DCA']['tl_locations'] = [
 		),
 		'operations' => array
 		(
-			'edit' => array
-			(
-				'href'                => 'act=edit',
-				'icon'                => 'edit.svg'
-			),
-			'delete' => array
-			(
-				'href'                => 'act=delete',
-				'icon'                => 'delete.svg',
-				'attributes'          => 'data-action="contao--scroll-offset#store" onclick="if(!confirm(\'' . ($GLOBALS['TL_LANG']['MSC']['deleteConfirm'] ?? null) . '\'))return false"'
-			),
-			'toggle' => array
-			(
-				'href'                => 'act=toggle&amp;field=disable',
-				'icon'                => 'visible.svg'
-			)
+			'edit',
+			'!delete',
+			'toggle',
 		)
 	),
     
@@ -74,7 +64,6 @@ $GLOBALS['TL_DCA']['tl_locations'] = [
 	// PHP-Deprecation, die Contao für Palettenfelder ohne inputType auslöst.
 	'palettes' => array
 	(
-		//'__selector__'                => array('login', 'assignDir'),
 		'default'                     => '{personal_legend},name,alias,avatar,themen;
 		{web_legend},website,facebook,instagram,tiktok,linkedin,xing;
 		{contact_legend},email,telefon,adresse,plz,ort,map,lat,lon;
@@ -92,7 +81,7 @@ $GLOBALS['TL_DCA']['tl_locations'] = [
         ],
 		'member_id' => [
             'sql' => [
-				'type' => 'integer', 'unsigned' => true, 'default' => 0 //'index' => true
+				'type' => 'integer', 'unsigned' => true, 'default' => 0
 			],
         ],
         'created' => [
@@ -123,7 +112,6 @@ $GLOBALS['TL_DCA']['tl_locations'] = [
 			'exclude'                 => true,
 			'search'                  => true,
 			'inputType'               => 'text',
-			//'eval'                    => array('rgxp'=>'folderalias', 'doNotCopy'=>true, 'maxlength'=>255, 'tl_class'=>'w50'),
 			'eval'                    => array('mandatory'=>true, 'maxlength'=>255, 'tl_class'=>'w50'),
 			'sql'                     => "varchar(255) BINARY NOT NULL default ''",
 		],
@@ -135,7 +123,6 @@ $GLOBALS['TL_DCA']['tl_locations'] = [
                 'fieldType' 	=> 'radio',
                 'filesOnly' 	=> true,
                 'extensions' 	=> '%contao.image.valid_extensions%',
-                //'mandatory' 	=> true,
             ],
             'sql' => ['type' => 'binary', 'length' => 16, 'notnull' => false, 'fixed' => true]
         ],
@@ -169,59 +156,70 @@ $GLOBALS['TL_DCA']['tl_locations'] = [
 		'map' => [
             'exclude' => false,
             'label'         		=> ['Position auf Karte', ''],
+            // Felder für "Adresse auf Karte bestimmen": Straße, Postleitzahl, Ort (MapFieldListener)
+            'eval'          		=> ['addressFields' => ['adresse', 'plz', 'ort']],
         ],
 		'themen' => [
 			'exclude' => false,
 			'label'					=> ['Themenschwerpunkte', ''],
 			'inputType'               => 'text',
+			'eval'                    => array('maxlength'=>255),
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'website' => [
 			'exclude' => false,
 			'label'					=> ['Webseite', ''],
 			'inputType'               => 'text',
-			'sql'                     => "varchar(255) NOT NULL default ''"
+			'eval'                    => array('maxlength'=>1024),
+			'sql'                     => "varchar(1024) NOT NULL default ''"
 		],
 		'facebook' => [
 			'exclude' => false,
 			'label'					=> ['Facebook-URL', ''],
 			'inputType'               => 'text',
-			'sql'                     => "varchar(255) NOT NULL default ''"
+			'eval'                    => array('maxlength'=>1024),
+			'sql'                     => "varchar(1024) NOT NULL default ''"
 		],
 		'instagram' => [
 			'exclude' => false,
 			'label'					=> ['Instagram-URL', ''],
 			'inputType'               => 'text',
-			'sql'                     => "varchar(255) NOT NULL default ''"
+			'eval'                    => array('maxlength'=>1024),
+			'sql'                     => "varchar(1024) NOT NULL default ''"
 		],
 		'tiktok' => [
 			'exclude' => false,
 			'label'					=> ['TikTok-URL', ''],
 			'inputType'               => 'text',
-			'sql'                     => "varchar(255) NOT NULL default ''"
+			'eval'                    => array('maxlength'=>1024),
+			'sql'                     => "varchar(1024) NOT NULL default ''"
 		],
 		'linkedin' => [
 			'exclude' => false,
 			'label'					=> ['LinkedIn-URL', ''],
 			'inputType'               => 'text',
-			'sql'                     => "varchar(255) NOT NULL default ''"
+			'eval'                    => array('maxlength'=>1024),
+			'sql'                     => "varchar(1024) NOT NULL default ''"
 		],
 		'xing' => [
 			'exclude' => false,
 			'label'					=> ['Xing-URL', ''],
 			'inputType'               => 'text',
-			'sql'                     => "varchar(255) NOT NULL default ''"
+			'eval'                    => array('maxlength'=>1024),
+			'sql'                     => "varchar(1024) NOT NULL default ''"
 		],
 		'email' => [
 			'exclude' => false,
 			'label'					=> ['E-Mail Adresse', 'Wird öffentlich im Profil angezeigt'],
 			'inputType'               => 'text',
+			'eval'                    => array('maxlength'=>255),
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'telefon' => [
 			'exclude' => false,
 			'label'					=> ['Telefon- oder Handynummer', 'Wird öffentlich im Profil angezeigt'],
 			'inputType'               => 'text',
+			'eval'                    => array('maxlength'=>255),
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'adresse' => [
@@ -252,54 +250,63 @@ $GLOBALS['TL_DCA']['tl_locations'] = [
 			'exclude' => false,
 			'label'					=> ['Barrierefreiheit', 'Informationen zur Barrierefreiheit der Location'],
 			'inputType'               => 'text',
+			'eval'                    => array('maxlength'=>255),
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'auftrittsflaeche' => [
 			'exclude' => false,
 			'label'					=> ['Bühnen-Auftrittsfläche', ''],
 			'inputType'               => 'text',
+			'eval'                    => array('maxlength'=>255),
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'gesamtflaeche' => [
 			'exclude' => false,
 			'label'					=> ['Gesamtfläche', ''],
 			'inputType'               => 'text',
+			'eval'                    => array('maxlength'=>255),
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'buehnentyp' => [
 			'exclude' => false,
 			'label'					=> ['Bühnentyp', ''],
 			'inputType'               => 'text',
+			'eval'                    => array('maxlength'=>255),
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'technik' => [
 			'exclude' => false,
 			'label'					=> ['Technische Ausstattung', ''],
 			'inputType'               => 'text',
+			'eval'                    => array('maxlength'=>255),
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'sitzplaetze' => [
 			'exclude' => false,
 			'label'					=> ['Sitzplätze', ''],
 			'inputType'               => 'text',
+			'eval'                    => array('maxlength'=>255),
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'stehplaetze' => [
 			'exclude' => false,
 			'label'					=> ['Stehplätze', ''],
 			'inputType'               => 'text',
+			'eval'                    => array('maxlength'=>255),
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'zitat' => [
 			'exclude' => false,
 			'label'					=> ['Zitat', 'Persönliches Kultur-Zitat'],
 			'inputType'               => 'text',
+			'eval'                    => array('maxlength'=>255),
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'kurzbeschreibung' => [
 			'exclude' => false,
 			'label'					=> ['Kurzbeschreibung', ''],
 			'inputType'               => 'textarea',
+			'eval'                    => array('class'=>'kulturnetz-textarea'),
 			'sql'                     => "text NULL"
 		],
 		'beschreibung' => [
@@ -321,6 +328,7 @@ $GLOBALS['TL_DCA']['tl_locations'] = [
 			'exclude' => false,
 			'label'					=> ['Kommentar (INTERN)', 'Das Kommentar kann nur über das Backend an dieser Stelle gelesen und verändert werden und dient lediglich der internen Kommunikation / Protokollierung'],
 			'inputType'               => 'textarea',
+			'eval'                    => array('class'=>'kulturnetz-textarea'),
 			'sql'                     => "mediumtext NULL"
 		],
 		'sendmail' => [
@@ -344,7 +352,8 @@ $GLOBALS['TL_DCA']['tl_locations'] = [
 			'label'					=> ['E-Mail Inhalt'],
 			'inputType'				=> 'textarea',
 			'eval'					=> [
-				'doNotSaveEmpty'	=> true
+				'doNotSaveEmpty'	=> true,
+				'class'				=> 'kulturnetz-textarea'
 			],
 		],
 		
