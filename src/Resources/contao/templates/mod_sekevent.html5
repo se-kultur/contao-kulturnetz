@@ -104,7 +104,7 @@ $prices = json_decode($artist->prices, true);
 			<?php endif; ?>			
 	</div>
 	<div class="main col-9 col-md-8 col-sm-12">	
-		<?php if(strlen($artist->zitat) > 0): ?>
+		<?php if(strlen((string) $artist->zitat) > 0): ?>
 		<h3>&bdquo;<?= $artist->zitat ?>&rdquo;</h3>
 		<?php endif; ?>
 		
@@ -170,16 +170,16 @@ $prices = json_decode($artist->prices, true);
 			<?php $linkedAvatar = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize(\SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::avatarPath($d->avatar_file), 120, 120, 'crop') ?: $noavatarSmall; ?>
 			<a href="detailansicht-locationprofil/<?= $d->alias ?>.html" class="linked-profile"><img src="<?= $linkedAvatar ?>" alt=""> <?= $d->name ?></a>
 			<?php endforeach; endif; ?>
-			<?php if(strlen($artist->locations) > 0): echo '<strong>'.$artist->locations.'</strong>'; endif; ?>
+			<?php if(strlen((string) $artist->locations) > 0): echo '<strong>'.$artist->locations.'</strong>'; endif; ?>
 			<br><br>
 			
 			<i class="fa-solid fa-location-dot"></i> <a href="https://www.google.de/maps/place/<?= urlencode($artist->location_adresse.', '.$artist->location_plz.' '.$artist->location_ort) ?>" title="Adresse bei Google Maps öffnen" target="_blank"><?= $artist->location_adresse.', '.$artist->location_plz.' '.$artist->location_ort ?></a><br>
-			<?php if(strlen($artist->location_telefon) > 0): ?><i class="fa-solid fa-phone-volume"></i> <a href="tel:<?= preg_replace('/[^0-9]+/', '', $artist->location_telefon) ?>" title="Telefonnummer anrufen"><?= $artist->location_telefon ?></a><br><?php endif; ?>
-			<?php if(strlen($artist->location_email) > 0): ?><i class="fa-solid fa-at"></i> <a href="mailto:<?= $artist->location_email ?>" title="E-Mail schreiben"><?= $artist->location_email ?></a><br><?php endif; ?>
-			<?php if(strlen($artist->location_website) > 0): ?><i class="fa-solid fa-globe"></i> <a href="https://<?= $artist->location_website ?>" title="Webseite öffnen" target="_blank"><?php $url = parse_url('https://'.$artist->location_website); echo $url['host'] ?></a><br><?php endif; ?>
+			<?php if(strlen((string) $artist->location_telefon) > 0): ?><i class="fa-solid fa-phone-volume"></i> <a href="tel:<?= preg_replace('/[^0-9]+/', '', $artist->location_telefon) ?>" title="Telefonnummer anrufen"><?= $artist->location_telefon ?></a><br><?php endif; ?>
+			<?php if(strlen((string) $artist->location_email) > 0): ?><i class="fa-solid fa-at"></i> <a href="mailto:<?= $artist->location_email ?>" title="E-Mail schreiben"><?= $artist->location_email ?></a><br><?php endif; ?>
+			<?php if(strlen((string) $artist->location_website) > 0): ?><i class="fa-solid fa-globe"></i> <a href="https://<?= $artist->location_website ?>" title="Webseite öffnen" target="_blank"><?php $url = parse_url('https://'.$artist->location_website); echo $url['host'] ?></a><br><?php endif; ?>
 			<br>
 			
-			<?php if(strlen($artist->location_barrierefreiheit) > 0): ?>
+			<?php if(strlen((string) $artist->location_barrierefreiheit) > 0): ?>
 			<strong><i class="fa-solid fa-wheelchair-move"></i> Informationen zur Barrierefreiheit:</strong><br>
 			<?= $artist->location_barrierefreiheit ?>
 			<?php endif; ?>
@@ -191,7 +191,7 @@ $prices = json_decode($artist->prices, true);
 			<?php $linkedAvatar = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize(\SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::avatarPath($d->avatar_file), 120, 120, 'crop') ?: $noavatarSmall; ?>
 			<a href="detailansicht-kuenstlerprofil/<?= $d->alias ?>.html" class="linked-profile"><img src="<?= $linkedAvatar ?>" alt=""> <?= $d->name ?></a>
 			<?php endforeach; endif; ?>
-			<?php if(strlen($artist->artists) > 0): echo '<strong>'.$artist->artists.'</strong>'; endif; ?>
+			<?php if(strlen((string) $artist->artists) > 0): echo '<strong>'.$artist->artists.'</strong>'; endif; ?>
 		</div>
 		
 		<div class="hosts mb-4">
@@ -200,16 +200,16 @@ $prices = json_decode($artist->prices, true);
 			<?php $linkedAvatar = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize(\SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::avatarPath($d->avatar_file), 120, 120, 'crop') ?: $noavatarSmall; ?>
 			<a href="detailansicht-veranstalterprofil/<?= $d->alias ?>.html" class="linked-profile"><img src="<?= $linkedAvatar ?>" alt=""> <?= $d->name ?></a>
 			<?php endforeach; endif; ?>
-			<?php if(strlen($artist->hosts) > 0): echo '<strong>'.$artist->hosts.'</strong>'; endif; ?>
+			<?php if(strlen((string) $artist->hosts) > 0): echo '<strong>'.$artist->hosts.'</strong>'; endif; ?>
 			<br><br>
 			
 			<i class="fa-solid fa-location-dot"></i> <a href="https://www.google.de/maps/place/<?= urlencode($artist->host_adresse.', '.$artist->host_plz.' '.$artist->host_ort) ?>" title="Adresse bei Google Maps öffnen" target="_blank"><?= $artist->host_adresse.', '.$artist->host_plz.' '.$artist->host_ort ?></a><br>
-			<?php if(strlen($artist->host_telefon) > 0): ?><i class="fa-solid fa-phone-volume"></i> <a href="tel:<?= preg_replace('/[^0-9]+/', '', $artist->host_telefon) ?>" title="Telefonnummer anrufen"><?= $artist->host_telefon ?></a><br><?php endif; ?>
-			<?php if(strlen($artist->host_email) > 0): ?><i class="fa-solid fa-at"></i> <a href="mailto:<?= $artist->host_email ?>" title="E-Mail schreiben"><?= $artist->host_email ?></a><br><?php endif; ?>
-			<?php if(strlen($artist->host_website) > 0): ?><i class="fa-solid fa-globe"></i> <a href="https://<?= $artist->host_website ?>" title="Webseite öffnen" target="_blank"><?php $url = parse_url('https://'.$artist->host_website); echo $url['host'] ?></a><br><?php endif; ?>
+			<?php if(strlen((string) $artist->host_telefon) > 0): ?><i class="fa-solid fa-phone-volume"></i> <a href="tel:<?= preg_replace('/[^0-9]+/', '', $artist->host_telefon) ?>" title="Telefonnummer anrufen"><?= $artist->host_telefon ?></a><br><?php endif; ?>
+			<?php if(strlen((string) $artist->host_email) > 0): ?><i class="fa-solid fa-at"></i> <a href="mailto:<?= $artist->host_email ?>" title="E-Mail schreiben"><?= $artist->host_email ?></a><br><?php endif; ?>
+			<?php if(strlen((string) $artist->host_website) > 0): ?><i class="fa-solid fa-globe"></i> <a href="https://<?= $artist->host_website ?>" title="Webseite öffnen" target="_blank"><?php $url = parse_url('https://'.$artist->host_website); echo $url['host'] ?></a><br><?php endif; ?>
 		</div>
 		
-		<?php if(strlen($artist->kooperationspartner) > 0): ?>
+		<?php if(strlen((string) $artist->kooperationspartner) > 0): ?>
 		<div class="partner mb-4">
 			<h6>Kooperationspartner*in(nen)</h6>
 			<p><?= $artist->kooperationspartner ?></p>
@@ -228,8 +228,8 @@ $prices = json_decode($artist->prices, true);
 {{file::se-kultur-de/fileuploader.php?upload=gallery&alias=<?= $artist->alias ?>&type=sekevents&id=<?= $artist->id ?>}}
 <?php endif; ?>
 
-<?php if($artist->orderSRC != NULL && $artist->orderSRC != 'a:0:{}' && $imgs = \Contao\FilesModel::findMultipleByUuids(deserialize($artist->orderSRC, true))): ?>
-<?php //$imgs = \Contao\FilesModel::findMultipleByUuids(deserialize($artist->orderSRC, true));  ?>
+<?php if($artist->orderSRC != NULL && $artist->orderSRC != 'a:0:{}' && $imgs = \Contao\FilesModel::findMultipleByUuids(\Contao\StringUtil::deserialize($artist->orderSRC, true))): ?>
+<?php //$imgs = \Contao\FilesModel::findMultipleByUuids(\Contao\StringUtil::deserialize($artist->orderSRC, true));  ?>
 <?php //var_dump($imgs); exit; ?>
 <div class="ce_gallery" id="galerie">
 	<div class="swiper">

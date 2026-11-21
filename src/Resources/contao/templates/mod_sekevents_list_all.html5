@@ -232,7 +232,7 @@ $GLOBALS['FOOTERJS'][] ='<script type="text/javascript" src="files/se-kultur.de/
 				<?php if($artist->anmeldung == '1'): ?>
 				<span class="badge">Anmeldung erforderlich</span>
 				<?php endif; ?>
-				<?php if(strlen($artist->zielgruppen) > 0): ?>
+				<?php if(strlen((string) $artist->zielgruppen) > 0): ?>
 				<?php foreach(explode(',', $artist->zielgruppen) as $z): ?>
 				<span class="badge bg-kulturtage"><?= $z ?></span>
 				<?php endforeach; ?>

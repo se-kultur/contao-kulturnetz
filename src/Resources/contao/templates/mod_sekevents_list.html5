@@ -74,7 +74,7 @@ $tage = [
 				<?php if($event->anmeldung == '1'): ?>
 				<span class="badge">Anmeldung erforderlich</span>
 				<?php endif; ?>
-				<?php if(strlen($event->zielgruppen) > 0): ?>
+				<?php if(strlen((string) $event->zielgruppen) > 0): ?>
 				<?php foreach(explode(',', $event->zielgruppen) as $z): ?>
 				<span class="badge bg-kulturtage"><?= $z ?></span>
 				<?php endforeach; ?>
@@ -152,7 +152,7 @@ $tage = [
 				<?php if($event->anmeldung == '1'): ?>
 				<span class="badge">Anmeldung erforderlich</span>
 				<?php endif; ?>
-				<?php if(strlen($event->zielgruppen) > 0): ?>
+				<?php if(strlen((string) $event->zielgruppen) > 0): ?>
 				<?php foreach(explode(',', $event->zielgruppen) as $z): ?>
 				<span class="badge bg-kulturtage"><?= $z ?></span>
 				<?php endforeach; ?>

@@ -9,6 +9,7 @@ $GLOBALS['FOOTERJS'][] ='<script src="files/se-kultur.de/vendor/jquery.dirty.js"
 $GLOBALS['TL_JAVASCRIPT'][] ='files/se-kultur.de/js/eventform.js';  
 $GLOBALS['FOOTERJS'][] ='<script src="files/se-kultur.de/js/fileuploader.js"></script>';  
 
+$avatar_uuid = '';
 if($objFile = \Contao\FilesModel::findByUuid($artist->avatar)) {
 	$imgPath = $objFile->path;
 	$imgMeta = ($objFile->meta != NULL) ? unserialize($objFile->meta)['de'] : false;
@@ -202,7 +203,7 @@ if($objFile = \Contao\FilesModel::findByUuid($artist->avatar)) {
 		
 		<div class="widget widget-text">
 			<label class="mandatory">Name der Location<span class="mandatory">*</span></label>
-			<input type="text" name="locations"<?php if(strlen($artist->linked_locations) > 2): ?> readonly placeholder="Es ist bereits ein Veranstaltungsort ausgewählt"<?php elseif(strlen($artist->locations) > 0): ?> value="<?= $artist->locations ?>" <?php endif; ?>>
+			<input type="text" name="locations"<?php if(strlen((string) $artist->linked_locations) > 2): ?> readonly placeholder="Es ist bereits ein Veranstaltungsort ausgewählt"<?php elseif(strlen((string) $artist->locations) > 0): ?> value="<?= $artist->locations ?>" <?php endif; ?>>
 			
 			<div class="linked_locations">
 				<?php foreach($artist->linked_locations_data as $linked): ?>

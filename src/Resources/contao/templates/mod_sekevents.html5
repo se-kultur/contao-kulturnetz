@@ -50,14 +50,14 @@ if($this->member_id == $artist->member_id) {
 		
 		<div class="data">
 			<span class="sparten"><?= trim(strtoupper(str_replace(',',' | ',$artist->sparten))) ?></span>
-			<?php if(strlen($artist->location_ort) > 0): ?><span class="ort"><?= trim($artist->location_plz.' '.$artist->location_ort) ?></span><?php endif; ?>
-			<?php if(strlen($artist->location_adresse) > 0): ?><span class="adresse"><?= $artist->location_adresse ?></span><?php endif; ?>
+			<?php if(strlen((string) $artist->location_ort) > 0): ?><span class="ort"><?= trim($artist->location_plz.' '.$artist->location_ort) ?></span><?php endif; ?>
+			<?php if(strlen((string) $artist->location_adresse) > 0): ?><span class="adresse"><?= $artist->location_adresse ?></span><?php endif; ?>
 			<br><br>
 			
 		</div>
 	</div>
 	<div class="main col-9">	
-		<?php if(strlen($artist->zitat) > 0): ?>
+		<?php if(strlen((string) $artist->zitat) > 0): ?>
 		<h3>&bdquo;<?= $artist->zitat ?>&rdquo;</h3>
 		<?php endif; ?>
 		
@@ -77,7 +77,7 @@ if($this->member_id == $artist->member_id) {
 <?php endif; ?>
 
 <?php if($artist->orderSRC != NULL && $artist->orderSRC != 'a:0:{}'): ?>
-<?php $imgs = \Contao\FilesModel::findMultipleByUuids(deserialize($artist->orderSRC, true));  ?>
+<?php $imgs = \Contao\FilesModel::findMultipleByUuids(\Contao\StringUtil::deserialize($artist->orderSRC, true));  ?>
 <div class="ce_gallery">
 	<div class="swiper">
 	  <div class="swiper-wrapper">
