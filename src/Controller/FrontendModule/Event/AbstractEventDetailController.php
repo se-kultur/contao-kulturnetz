@@ -61,7 +61,7 @@ abstract class AbstractEventDetailController extends AbstractEventController
         $template->set('linked', $this->viewFactory->linkedProfiles($event));
         $template->set('location_contact', $this->viewFactory->contact($event, 'location'));
         $template->set('host_contact', $this->viewFactory->contact($event, 'host'));
-        $template->set('gallery', $this->galleryViewBuilder->buildForRecord($type->value, (int) $event['id'], $isOwner));
+        $template->set('gallery', $this->viewFactory->protectGallery($this->galleryViewBuilder->buildForRecord($type->value, (int) $event['id'], $isOwner)));
         $template->set('kulturrouten_url', $this->config->getKulturroutenUrl());
 
         return $template->getResponse();

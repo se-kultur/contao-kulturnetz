@@ -6,6 +6,8 @@ namespace SeKultur\ContaoKulturnetzBundle\Controller\FrontendModule\Event;
 
 use SeKultur\ContaoKulturnetzBundle\Service\Event\EventFormatter;
 use SeKultur\ContaoKulturnetzBundle\Service\Event\EventType;
+use SeKultur\ContaoKulturnetzBundle\Service\Gallery\Value\GallerySlide;
+use SeKultur\ContaoKulturnetzBundle\Service\Gallery\Value\GalleryView;
 use SeKultur\ContaoKulturnetzBundle\Service\Image\FigureFactory;
 use SeKultur\ContaoKulturnetzBundle\Service\Image\ImageSize;
 use SeKultur\ContaoKulturnetzBundle\Service\Text\TextNormalizer;
@@ -45,6 +47,29 @@ final class EventViewFactory
     public function encodeInsertTags(string $value): string
     {
         return str_replace(['{{', '}}'], ['&#123;&#123;', '&#125;&#125;'], $value);
+    }
+
+    /**
+     * Galerie mit kodierten Insert-Tag-Klammern in Titel und Copyright der Folien. Der
+     * GalleryViewBuilder liefert beide als Klartext; das Partial gibt sie aus, und Contao
+     * ersetzt Insert-Tags in der fertigen Seite. Die Kodierung ist wiederholbar
+     * (kodierte Werte enthalten keine Klammern mehr).
+     */
+    public function protectGallery(GalleryView $gallery): GalleryView
+    {
+        $slides = array_map(
+            fn (GallerySlide $slide): GallerySlide => new GallerySlide(
+                $slide->imageUrl,
+                $slide->lightboxUrl,
+                $this->encodeInsertTags($slide->title),
+                $this->encodeInsertTags($slide->caption),
+                $slide->figure,
+                $slide->uuid,
+            ),
+            $gallery->slides,
+        );
+
+        return new GalleryView($slides, $gallery->isExample, $gallery->imageCount);
     }
 
     /**
