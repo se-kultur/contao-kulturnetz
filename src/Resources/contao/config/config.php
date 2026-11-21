@@ -6,6 +6,7 @@ use SeKultur\ContaoKulturnetzBundle\Models\EventsModel;
 use SeKultur\ContaoKulturnetzBundle\Models\SekEventsModel;
 use SeKultur\ContaoKulturnetzBundle\Models\FollowersModel;
 use SeKultur\ContaoKulturnetzBundle\Models\PostingsModel;
+use SeKultur\ContaoKulturnetzBundle\Elements\TestElement;
 //use SeKultur\ContaoKulturnetzBundle\EventListener\StoreFormDataListener;
 
 // Models registrieren
@@ -19,7 +20,7 @@ $GLOBALS['TL_MODELS']['tl_postings'] = PostingsModel::class;
 
 
 // Frontend-Elemente registrieren
-$GLOBALS['TL_CTE']['texts']['testelement'] = '\SeKultur\ContaoKulturnetzBundle\Elements\TestElement';
+$GLOBALS['TL_CTE']['texts']['testelement'] = TestElement::class;
 
 // Backend-Module registrieren
 $GLOBALS['BE_MOD']['KulturNetz']['Kuenstler'] = [

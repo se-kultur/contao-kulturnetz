@@ -1,9 +1,13 @@
 <?php
 namespace SeKultur\ContaoKulturnetzBundle\Elements;
 
+use Contao\BackendTemplate;
+use Contao\ContentElement;
+use SeKultur\ContaoKulturnetzBundle\Helper\RequestContext;
+
 //use SeKultur\ContaoKulturnetzBundle\ArtistModel;
 
-class TestElement extends \ContentElement
+class TestElement extends ContentElement
 {
     protected $strTemplate = 'ce_test';
 
@@ -14,9 +18,9 @@ class TestElement extends \ContentElement
      */
     public function generate()
     {
-        if (TL_MODE == 'BE') {
-            $template = new \BackendTemplate('be_wildcard');
-            $template->wildcard = '### '.utf8_strtoupper($GLOBALS['TL_LANG']['CTE']['testelement'][0]).' ###';
+        if (RequestContext::isBackendRequest()) {
+            $template = new BackendTemplate('be_wildcard');
+            $template->wildcard = '### '.mb_strtoupper($GLOBALS['TL_LANG']['CTE']['testelement'][0]).' ###';
 
             return $template->parse();
         }
