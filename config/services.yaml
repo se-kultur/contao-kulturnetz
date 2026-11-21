@@ -1,0 +1,29 @@
+# Service-Konfiguration des KulturNetz-Bundles.
+#
+# Alle Klassen unter src/ werden verzeichnisbasiert registriert, mit Autowiring
+# und Autokonfiguration. Contao-Attribute (AsFrontendModule, AsContentElement,
+# AsCallback, AsHook), Symfony-Attribute (AsEventListener, Route über das
+# Manager-Plugin) und Schnittstellen wie MigrationInterface werden dadurch ohne
+# weitere Einträge erkannt. Neue Klassen in eigenen Verzeichnissen brauchen
+# keine Änderung an dieser Datei.
+#
+# Ausgenommen sind Dateien, die keine Services sind:
+#   - die Bundle-Klasse und das Manager-Plugin,
+#   - reine Wertobjekte in Unterordnern namens Value/ (z. B. src/Service/Profile/Value/),
+#   - die Legacy-Klassen unter Models/, Module/ und Helper/. Legacy, Ausschluss
+#     entfernt abschluss: Sie werden statisch bzw. über $GLOBALS benutzt und von
+#     den Modulpaketen abgelöst.
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    SeKultur\ContaoKulturnetzBundle\:
+        resource: ../src/
+        exclude:
+            - ../src/ContaoKulturnetzBundle.php
+            - ../src/ContaoManager/
+            - ../src/**/Value/
+            - ../src/Models/
+            - ../src/Module/
+            - ../src/Helper/
