@@ -37,7 +37,10 @@ class ImageHelper
         try {
             $container = System::getContainer();
             $rootDir = $container->getParameter('kernel.project_dir');
-            $imageFactory = $container->get('contao.image.image_factory');
+            // Seit Contao 5 heißt der Dienst contao.image.factory; die alte
+            // ID contao.image.image_factory existiert nicht mehr (auch nicht
+            // als Alias).
+            $imageFactory = $container->get('contao.image.factory');
 
             // ResizeConfiguration statt Array, damit ImageFactory die
             // ResizeOptions nicht überschreibt (siehe ImageFactory Zeile 120)
