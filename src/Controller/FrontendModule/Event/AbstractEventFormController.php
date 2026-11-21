@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace SeKultur\ContaoKulturnetzBundle\Controller\FrontendModule\Event;
 
+use Contao\CoreBundle\Exception\PageNotFoundException;
 use Contao\CoreBundle\Twig\FragmentTemplate;
 use Contao\ModuleModel;
 use Psr\Clock\ClockInterface;
+use SeKultur\ContaoKulturnetzBundle\Config\KulturnetzConfig;
 use SeKultur\ContaoKulturnetzBundle\Service\Event\EventRepository;
+use SeKultur\ContaoKulturnetzBundle\Service\Event\EventType;
 use SeKultur\ContaoKulturnetzBundle\Service\Member\FrontendMemberProvider;
 use SeKultur\ContaoKulturnetzBundle\Service\Page\AutoItemResolver;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,10 +22,14 @@ use Symfony\Component\HttpFoundation\Response;
  * Module\ModuleEventAdd usw.). Die konkreten Controller legen die Art der
  * Veranstaltung und den Modus (Anlegen oder Bearbeiten) fest.
  *
- * Beim Bearbeiten lädt der Controller die Veranstaltung per Alias aus der URL. Ist
- * sie unbekannt oder gehört sie einem anderen Mitglied, zeigt das Formular wie
- * bisher leere Felder (Entscheidung E39); gespeichert wird immer serverseitig mit
- * Besitzprüfung (Route kulturnetz_profil_aendern).
+ * Beim Bearbeiten lädt der Controller die Veranstaltung per Alias aus der URL. Fehlt
+ * der Alias, ist er unbekannt oder gehört die Veranstaltung einem anderen Mitglied,
+ * antwortet die Seite mit 404 (Seite "Nicht gefunden" der Website), noch bevor ein
+ * Formular oder eine URL erzeugt wird; fremde Veranstaltungen verraten so nicht, ob
+ * es sie gibt. Bisher lieferte Contao 4.13 in diesen Fällen ein leeres Formular, das
+ * sich nicht speichern ließ. Gespeichert wird zusätzlich immer serverseitig mit
+ * Besitzprüfung (Route kulturnetz_profil_aendern). Das Anlegen (ohne Alias) bleibt
+ * unverändert.
  */
 abstract class AbstractEventFormController extends AbstractEventController
 {
@@ -30,19 +37,13 @@ abstract class AbstractEventFormController extends AbstractEventController
 
     public const MODE_EDIT = 'edit';
 
-    /**
-     * Monat der SE-KulturTage: Der Datepicker des Formulars erlaubt nur Termine
-     * im September des laufenden Jahres (bisher fest in sekeventform.js). Eine
-     * Konfiguration dafür steht noch aus (Hinweis in OFFENE-FRAGEN.md).
-     */
-    private const FESTIVAL_MONTH = 9;
-
     public function __construct(
         private readonly EventRepository $repository,
         private readonly AutoItemResolver $autoItemResolver,
         private readonly FrontendMemberProvider $memberProvider,
         private readonly EventViewFactory $viewFactory,
         private readonly ClockInterface $clock,
+        private readonly KulturnetzConfig $config,
     ) {
     }
 
@@ -60,10 +61,10 @@ abstract class AbstractEventFormController extends AbstractEventController
 
         if (self::MODE_EDIT === $mode) {
             $alias = $this->autoItemResolver->resolve($request);
-            $found = null !== $alias ? $this->repository->findByAliasOrId($type, $alias) : null;
+            $event = null !== $alias ? $this->repository->findByAliasOrId($type, $alias) : null;
 
-            if (null !== $found && $memberId > 0 && $memberId === (int) $found['member_id']) {
-                $event = $found;
+            if (null === $event || $memberId < 1 || $memberId !== (int) $event['member_id']) {
+                throw new PageNotFoundException(\sprintf('%s zum Bearbeiten nicht gefunden: %s', EventType::Events === $type ? 'Veranstaltung' : 'SE-Kultur-Event', $alias ?? '(ohne Alias)'));
             }
         }
 
@@ -77,9 +78,20 @@ abstract class AbstractEventFormController extends AbstractEventController
         $year = (int) $now->format('Y');
         $template->set('current_year', $year);
 
-        // Termine der SE-KulturTage haben kein Jahr; das Formular begrenzt sie auf den Festivalmonat.
-        $template->set('date_min', $type->datesStoredWithoutYear() ? \sprintf('%d-%02d-01', $year, self::FESTIVAL_MONTH) : null);
-        $template->set('date_max', $type->datesStoredWithoutYear() ? (new \DateTimeImmutable(\sprintf('%d-%02d-01', $year, self::FESTIVAL_MONTH)))->modify('last day of this month')->format('Y-m-d') : null);
+        // Termine der SE-KulturTage haben kein Jahr; das Formular begrenzt sie auf den Festivalmonat
+        // (Konfiguration kulturnetz.sekevents.festival_month). sekeventform bzw. eventform.js lesen
+        // die Grenzen aus den data-Attributen des Templates.
+        $dateMin = null;
+        $dateMax = null;
+
+        if ($type->datesStoredWithoutYear()) {
+            $firstDay = new \DateTimeImmutable(\sprintf('%d-%02d-01', $year, $this->config->getFestivalMonth()));
+            $dateMin = $firstDay->format('Y-m-d');
+            $dateMax = $firstDay->modify('last day of this month')->format('Y-m-d');
+        }
+
+        $template->set('date_min', $dateMin);
+        $template->set('date_max', $dateMax);
 
         return $template->getResponse();
     }

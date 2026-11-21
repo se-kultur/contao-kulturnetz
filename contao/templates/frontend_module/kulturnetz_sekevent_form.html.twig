@@ -21,8 +21,10 @@
 {% block header_edit %}
 	<div class="bg-kulturnetz p-4 mb-1">
 		<h3>SE-KulturTage &mdash; Event bearbeiten</h3>
-		<a href="{{ kulturnetz_page_url('sekevents.detail', values.alias) }}" class="btn btn-primary">Event ansehen</a>
-		<a href="{{ kulturnetz_page_url('sekevents.detail', values.alias) }}#galerie" class="btn btn-outline">Fotos verwalten</a>
+		{% if values.alias %}
+			<a href="{{ kulturnetz_page_url('sekevents.detail', values.alias) }}" class="btn btn-primary">Event ansehen</a>
+			<a href="{{ kulturnetz_page_url('sekevents.detail', values.alias) }}#galerie" class="btn btn-outline">Fotos verwalten</a>
+		{% endif %}
 		<a href="{{ kulturnetz_page_url('own_events') }}" class="btn btn-outline">Zurück zur Übersicht</a>
 	</div>
 {% endblock %}

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace SeKultur\ContaoKulturnetzBundle\Controller\FrontendModule\Profile;
 
+use Contao\CoreBundle\Exception\PageNotFoundException;
 use Contao\CoreBundle\Twig\FragmentTemplate;
 use Contao\ModuleModel;
 use SeKultur\ContaoKulturnetzBundle\Service\Member\FrontendMemberProvider;
@@ -20,10 +21,13 @@ use Symfony\Component\HttpFoundation\Response;
  * ModuleLocationEdit).
  *
  * Anlegen zeigt das leere Formular. Bearbeiten füllt es mit dem Profil aus der URL
- * (auto_item), sofern es dem angemeldeten Mitglied gehört; bei einem fremden oder
- * unbekannten Profil bleibt das Formular wie bisher leer, ohne Fehlermeldung
- * (Entscheidung E39). Der Schutz liegt beim Speichern: Der Endpunkt
- * kulturnetz_profil_aendern prüft Mitglied, Besitz und Token selbst.
+ * (auto_item), sofern es dem angemeldeten Mitglied gehört. Fehlt der Alias, ist er
+ * unbekannt oder gehört das Profil einem anderen Mitglied, antwortet die Seite mit
+ * 404 (Seite "Nicht gefunden" der Website), noch bevor ein Formular oder eine URL
+ * erzeugt wird; fremde Profile verraten so nicht, ob es sie gibt. Bisher lieferte
+ * Contao 4.13 in diesen Fällen ein leeres Formular, das sich nicht speichern ließ.
+ * Zusätzlich prüft der Endpunkt kulturnetz_profil_aendern Mitglied, Besitz und
+ * Token beim Speichern selbst.
  *
  * Die Zugriffsregel "nur für angemeldete Mitglieder" liegt wie bisher an der
  * Seite (geschützt), nicht im Modul.
@@ -56,7 +60,7 @@ abstract class AbstractProfileFormController extends AbstractProfileController
     {
         $type = $this->getProfileType();
         $mode = $this->getMode();
-        $record = ProfileFormMode::Edit === $mode ? $this->findOwnProfile($type, $request) : [];
+        $record = ProfileFormMode::Edit === $mode ? $this->getOwnProfile($type, $request) : [];
 
         $template->set('mode', $mode->value);
         $template->set('profile_type', $type->value);
@@ -70,23 +74,23 @@ abstract class AbstractProfileFormController extends AbstractProfileController
     }
 
     /**
-     * Das Profil aus der URL, wenn es dem angemeldeten Mitglied gehört, sonst ein
-     * leerer Datensatz (leeres Formular).
+     * Das Profil aus der URL, wenn es dem angemeldeten Mitglied gehört.
      *
      * @return array<string, mixed>
+     *
+     * @throws PageNotFoundException wenn der Alias fehlt oder unbekannt ist oder das Profil einem anderen Mitglied gehört
      */
-    private function findOwnProfile(ProfileType $type, Request $request): array
+    private function getOwnProfile(ProfileType $type, Request $request): array
     {
         $alias = $this->autoItem->resolve($request);
         $memberId = $this->memberProvider->getMemberId();
+        $profile = null !== $alias ? $this->profiles->findByAliasOrId($type, $alias) : null;
 
-        if (null === $alias || $memberId < 1) {
-            return [];
+        if (null === $profile || $memberId < 1 || $memberId !== (int) $profile['member_id']) {
+            throw new PageNotFoundException(\sprintf('%s zum Bearbeiten nicht gefunden: %s', $type->label(), $alias ?? '(ohne Alias)'));
         }
 
-        $profile = $this->profiles->findByAliasOrId($type, $alias);
-
-        return null !== $profile && $memberId === (int) $profile['member_id'] ? $profile : [];
+        return $profile;
     }
 
     private function getHelpKey(ProfileType $type, ProfileFormMode $mode): string

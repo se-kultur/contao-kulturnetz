@@ -25,7 +25,7 @@
 
 {% set is_edit = mode == 'edit' %}
 {% set own_profiles_url = kulturnetz_page_url('own_profiles') %}
-{% set detail_url = is_edit ? kulturnetz_page_url(profile_type ~ '.detail', record.alias|default('')) : null %}
+{% set detail_url = is_edit and record.alias|default ? kulturnetz_page_url(profile_type ~ '.detail', record.alias) : null %}
 
 {% set form_action = path(is_edit ? 'kulturnetz_profil_aendern' : 'kulturnetz_profil_anlegen', {typ: profile_type}) %}
 {% set form_mode = mode %}
@@ -35,8 +35,10 @@
 
 {% block header_content %}
 	{% if is_edit %}
-		<a href="{{ detail_url }}" class="btn btn-primary">Profil ansehen</a>
-		<a href="{{ detail_url }}#galerie" class="btn btn-outline">Fotos verwalten</a>
+		{% if detail_url %}
+			<a href="{{ detail_url }}" class="btn btn-primary">Profil ansehen</a>
+			<a href="{{ detail_url }}#galerie" class="btn btn-outline">Fotos verwalten</a>
+		{% endif %}
 		<a href="{{ own_profiles_url }}" class="btn btn-outline">Zurück zur Profilübersicht</a>
 	{% else %}
 		<p>Im nachfolgenden Formular können Sie Ihr {{ profile_label }} für das SE-KulturNetz eingeben. Versuchen Sie, dabei möglichst alle Felder auszufüllen. Aber keine Angst, falls Sie etwas vergessen haben – Sie können Ihr Profil jederzeit bearbeiten.</p>
@@ -46,7 +48,7 @@
 {% endblock %}
 
 {% block fields %}
-	<span class="profile-form-data" hidden data-url-overview="{{ own_profiles_url }}"{% if is_edit %} data-url-detail="{{ detail_url }}"{% endif %}></span>
+	<span class="profile-form-data" hidden data-url-overview="{{ own_profiles_url }}"{% if detail_url %} data-url-detail="{{ detail_url }}"{% endif %}></span>
 
 	{% block profile_fields %}{% endblock %}
 {% endblock %}

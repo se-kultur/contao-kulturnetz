@@ -33,8 +33,12 @@ use Symfony\Contracts\Service\ResetInterface;
  *
  * Fehlt eine Seite (z. B. gelöscht) oder lässt sich keine Route erzeugen, liefern
  * die Methoden null und protokollieren den Fehler im Contao-Systemlog; die Seite,
- * die den Link ausgibt, bleibt erreichbar. Ein unbekannter Seitenschlüssel ist
- * ein Programmierfehler und wirft eine \InvalidArgumentException.
+ * die den Link ausgibt, bleibt erreichbar. Verlangt eine Seite einen Datensatz
+ * ("Auto-Item erforderlich", tl_page.requireItem) und kommt kein Parameter, ist das
+ * ein Aufruffehler und keine Störung des Betriebs: Es gibt dann null zurück und
+ * schreibt nur eine Debug-Zeile in die Dateilogs, nicht ins Contao-Systemlog. Ein
+ * unbekannter Seitenschlüssel ist ein Programmierfehler und wirft eine
+ * \InvalidArgumentException.
  */
 final class PageUrlResolver implements ResetInterface
 {
@@ -53,6 +57,7 @@ final class PageUrlResolver implements ResetInterface
         private readonly KulturnetzConfig $config,
         #[Autowire(service: 'monolog.logger.contao.error')]
         private readonly LoggerInterface $logger,
+        private readonly LoggerInterface $debugLogger,
     ) {
     }
 
@@ -132,7 +137,20 @@ final class PageUrlResolver implements ResetInterface
             return null;
         }
 
-        $parameters = null !== $parameter && '' !== $parameter ? ['parameters' => '/'.$parameter] : [];
+        $hasParameter = null !== $parameter && '' !== $parameter;
+
+        // Eine Seite mit erforderlichem Auto-Item hat ohne Datensatz keine URL (Aufruffehler des
+        // Aufrufers, z. B. Link auf einen Datensatz ohne Alias). Bewusst über den allgemeinen Logger
+        // (Kanal app) statt über den Contao-Fehlerkanal protokolliert: Der Contao-Kanal schreibt jede
+        // Zeile als ERROR ins Systemlog (tl_log). Die Routenerzeugung wird gar nicht erst versucht,
+        // echte Fehler darin bleiben unverändert als ERROR sichtbar.
+        if (!$hasParameter && $page->requireItem) {
+            $this->debugLogger->debug(\sprintf('KulturNetz: Seite "%s" (Schlüssel "%s") verlangt einen Datensatz, es wurde keiner übergeben; kein Link.', $page->alias, $pageKey));
+
+            return null;
+        }
+
+        $parameters = $hasParameter ? ['parameters' => '/'.$parameter] : [];
 
         try {
             return $this->urlGenerator->generate($page, $parameters, $referenceType);
