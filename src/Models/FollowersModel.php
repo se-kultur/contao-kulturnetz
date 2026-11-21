@@ -32,6 +32,8 @@ class FollowersModel extends Model
 		$data = static::findAll($arrOptions);
 		if($data != null) {
 			foreach($data as &$d) {
+				// Profil je Durchlauf zurücksetzen, sonst wirkt das Profil des Vorgängers nach.
+				$profile = null;
 				if($d->follower_type == 'tl_artists') {
 					$profile = ArtistsModel::findById($d->follower_id);
 				} elseif($d->follower_type == 'tl_hosts') {
@@ -66,6 +68,8 @@ class FollowersModel extends Model
 		$data = static::findAll($arrOptions);
 		if($data != null) {
 			foreach($data as &$d) {
+				// Profil je Durchlauf zurücksetzen, sonst wirkt das Profil des Vorgängers nach.
+				$profile = null;
 				if($d->following_type == 'tl_artists') {
 					$profile = ArtistsModel::findById($d->following_id);
 				} elseif($d->following_type == 'tl_hosts') {
@@ -98,6 +102,8 @@ class FollowersModel extends Model
 		$data = static::findAll($arrOptions);
 		if($data != null) {
 			foreach($data as &$d) {
+				// Profil je Durchlauf zurücksetzen, sonst wirkt das Profil des Vorgängers nach.
+				$profile = null;
 				if($d->following_type == 'tl_artists') {
 					$profile = ArtistsModel::findById($d->following_id);
 				} elseif($d->following_type == 'tl_hosts') {

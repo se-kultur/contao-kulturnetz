@@ -21,8 +21,9 @@ class LocationsModel extends Model
 	}
 	
 	protected static function formatData($data) {
-		$avatar = \Contao\FilesModel::findByUuid($data->avatar);
-		$data->avatar_file = $avatar;
+		// Ohne Titelbild keine Dateisuche: findByUuid(null) löst in PHP 8.5 eine
+		// Deprecation aus. avatar_file bleibt wie bisher null.
+		$data->avatar_file = $data->avatar ? \Contao\FilesModel::findByUuid($data->avatar) : null;
 		
 		return $data;
 	}
@@ -89,11 +90,17 @@ class LocationsModel extends Model
 	// Contao\Model::findById() ist seit Contao 5 eine echte Methode (in 4.13
 	// lief der Aufruf über __callStatic). Die Signatur muss deshalb
 	// kompatibel sein, sonst bricht PHP schon beim Laden der Klasse ab.
-	public static function findById($intId, array $arrOptions = array())
+	// Der Rückgabetyp ?static entspricht dem @return der Elternmethode.
+	public static function findById($intId, array $arrOptions = array()): ?static
 	{
 		$rawdata = parent::findById($intId, $arrOptions);
-		$data = static::formatData($rawdata);
-		
-		return $data;
+
+		// Ohne Datensatz (z. B. gelöschtes Profil) gibt es nichts zu formatieren;
+		// Aufrufer prüfen auf null. Sonst bricht formatData() mit einem Error ab.
+		if (null === $rawdata) {
+			return null;
+		}
+
+		return static::formatData($rawdata);
 	}
 }

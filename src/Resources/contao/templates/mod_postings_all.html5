@@ -1,5 +1,6 @@
 
 	<?php foreach($this->postings as $post): ?>
+	<?php if(!$post['profile']) continue; ?>
 	<?php if($post['profile_type'] == 'tl_artists'): $aliaslink = 'kuenstlerprofil'; elseif($post['profile_type'] == 'tl_hosts'): $aliaslink = 'veranstalterprofil'; elseif($post['profile_type'] == 'tl_locations'): $aliaslink = 'locationprofil'; endif; ?>
 
 	<div class="posting shadow">

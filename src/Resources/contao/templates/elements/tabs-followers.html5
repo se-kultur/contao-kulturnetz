@@ -7,7 +7,7 @@ $followersCount = 0;
 <?php if(!empty($this->followers['followings']) && is_array($this->followers['followings'])): ?>
 <ul class="followers-list">
 	<?php foreach($this->followers['followings'] as $key => $follower): $type = explode('-', $key)[0];  ?>
-	<?php if($follower->profile->disable == 1) continue; ?>
+	<?php if(!$follower->profile || $follower->profile->disable == 1) continue; ?>
 	<?php if($type == 'tl_artists'): $aliaslink = 'kuenstlerprofil'; elseif($type == 'tl_hosts'): $aliaslink = 'veranstalterprofil'; elseif($type == 'tl_locations'): $aliaslink = 'locationprofil'; endif; ?>
 	<li>
 		<a href="detailansicht-<?= $aliaslink ?>/<?= $follower->profile->alias ?>.html">
@@ -42,7 +42,7 @@ Aktuell folgt <?= $artist->name ?> keinem anderen Profil im KulturNetz.
 <?php if(!empty($this->followers['followers']) && is_array($this->followers['followers'])): ?>
 <ul class="followers-list">
 	<?php foreach($this->followers['followers'] as $key => $follower): $type = explode('-', $key)[0]; ?>
-	<?php if($follower->profile->disable == 1) continue; ?>
+	<?php if(!$follower->profile || $follower->profile->disable == 1) continue; ?>
 	<?php if($type == 'tl_artists'): $aliaslink = 'kuenstlerprofil'; elseif($type == 'tl_hosts'): $aliaslink = 'veranstalterprofil'; elseif($type == 'tl_locations'): $aliaslink = 'locationprofil'; endif; ?>
 	<li>
 		<a href="detailansicht-<?= $aliaslink ?>/<?= $follower->profile->alias ?>.html">

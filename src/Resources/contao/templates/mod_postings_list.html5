@@ -9,7 +9,7 @@ $GLOBALS['FOOTERJS'][] ='<script src="files/se-kultur.de/js/posting.js"></script
 	</div>
 
 	<?php foreach($this->postings as $post): ?>
-	<?php if($post['profile']->disable == 1 && $this->member_id != $post['member_id']) continue; ?>
+	<?php if(!$post['profile'] || ($post['profile']->disable == 1 && $this->member_id != $post['member_id'])) continue; ?>
 	<?php if($post['profile_type'] == 'tl_artists'): $aliaslink = 'kuenstlerprofil'; elseif($post['profile_type'] == 'tl_hosts'): $aliaslink = 'veranstalterprofil'; elseif($post['profile_type'] == 'tl_locations'): $aliaslink = 'locationprofil'; endif; ?>
 
 	<div class="posting shadow" data-security="<?= sha1($post['id'].$post['member_id']) ?>" data-id="<?= $post['id'] ?>" data-mid="<?= $post['member_id'] ?>" data-pid="<?= $post['profile_id'] ?>" data-ptype="<?= $post['profile_type'] ?>">

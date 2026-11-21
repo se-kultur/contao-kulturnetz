@@ -103,36 +103,37 @@ class EventsModel extends Model
 	
 	protected static function formatData($data) {
 		//$avatar = static::getAvatar($data->avatar); 
-		$avatar = \Contao\FilesModel::findByUuid($data->avatar);
-		$data->avatar_file = $avatar;
+		// Ohne Titelbild keine Dateisuche: findByUuid(null) löst in PHP 8.5 eine
+		// Deprecation aus. avatar_file bleibt wie bisher null.
+		$data->avatar_file = $data->avatar ? \Contao\FilesModel::findByUuid($data->avatar) : null;
 		//var_dump($data);
 		//exit;
 		
 		$artists = [];
-		$linked_artists = json_decode($data->linked_artists,true);
+		$linked_artists = json_decode((string) $data->linked_artists, true) ?: [];
 		foreach($linked_artists as $id) {
 			if($a = ArtistsModel::findById($id)) {
-				$a->avatar_file = \Contao\FilesModel::findByUuid($a->avatar);
+				$a->avatar_file = $a->avatar ? \Contao\FilesModel::findByUuid($a->avatar) : null;
 				$artists[] = $a;
 			}
 		} 
 		$data->linked_artists_data = $artists;
 		
 		$locations = [];
-		$linked_locations = json_decode($data->linked_locations,true);
+		$linked_locations = json_decode((string) $data->linked_locations, true) ?: [];
 		foreach($linked_locations as $id) {
 			if($l = LocationsModel::findById($id)) {
-				$l->avatar_file = \Contao\FilesModel::findByUuid($l->avatar);
+				$l->avatar_file = $l->avatar ? \Contao\FilesModel::findByUuid($l->avatar) : null;
 				$locations[] = $l;
 			}
 		} 
 		$data->linked_locations_data = $locations;
 		
 		$hosts = [];
-		$linked_hosts = json_decode($data->linked_hosts,true);
+		$linked_hosts = json_decode((string) $data->linked_hosts, true) ?: [];
 		foreach($linked_hosts as $id) {
 			if($h = HostsModel::findById($id)) {
-				$h->avatar_file = \Contao\FilesModel::findByUuid($h->avatar);
+				$h->avatar_file = $h->avatar ? \Contao\FilesModel::findByUuid($h->avatar) : null;
 				$hosts[] = $h;
 			}
 		} 
