@@ -7,6 +7,11 @@
  # Für die Besitzerin bzw. den Besitzer erscheint das Formular für neue Beiträge
  # mit Endpunkt und Request-Token als data-Attribute; das einbindende Template lädt
  # dann js/posting.js.
+ #
+ # maxlength="500" ist die Grenze, die Mitglieder beim Schreiben schon in 4.13
+ # hatten. Der Server prüft unabhängig davon die größere Grenze
+ # kulturnetz.postings.max_length (Standard 10.000 Zeichen), die auch für das
+ # Bearbeiten gilt und die Spalte tl_postings.content schützt.
  #}
 {% set profile_href = kulturnetz_page_url(profile_type ~ '.detail', profile.alias) %}
 

@@ -6,6 +6,7 @@ namespace SeKultur\ContaoKulturnetzBundle\Service\Write;
 
 use Contao\CoreBundle\Monolog\ContaoContext;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\DBAL\ParameterType;
 use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
@@ -21,7 +22,8 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  *
  * Anlegen: Mitglied aus der Sitzung (nicht aus dem Formular), disable "1"
  * (Freischaltung durch die Redaktion), created und tstamp, eindeutiger Alias über
- * AliasGenerator (E32), danach die Hinweismail an die Redaktion. Ein Fehler beim
+ * AliasGenerator (E32; bei gleichzeitiger Anlage desselben Namens neuer Versuch
+ * mit dem nächsten Zähler), danach die Hinweismail an die Redaktion. Ein Fehler beim
  * Mailversand wird protokolliert; der Datensatz ist dann schon gespeichert, das
  * Anlegen gilt deshalb als erfolgreich.
  *
@@ -31,6 +33,11 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  */
 final class RecordWriter
 {
+    /**
+     * Versuche beim Einfügen, wenn der Alias inzwischen vergeben ist.
+     */
+    private const MAX_INSERT_ATTEMPTS = 5;
+
     public function __construct(
         private readonly Connection $connection,
         private readonly RecordInputMapper $mapper,
@@ -68,36 +75,43 @@ final class RecordWriter
      * @param array<string, mixed> $input POST-Daten
      *
      * @throws RecordValidationException
+     * @throws RecordConflictException wenn der Alias auch nach mehreren Versuchen vergeben ist
      */
     public function create(RecordSchema $schema, array $input, int $memberId): CreatedRecord
     {
         $values = $this->mapper->map($schema, $input, $memberId);
         $now = $this->clock->now()->getTimestamp();
-        $alias = $this->aliasGenerator->generate($schema->type, (string) ($values[$schema->nameField] ?? ''));
+        $name = (string) ($values[$schema->nameField] ?? '');
 
-        $row = [
-            'member_id' => $memberId,
-            'alias' => $alias,
-            'tstamp' => $now,
-            'created' => $now,
-            'disable' => '1',
-            ...$values,
-        ];
+        // AliasGenerator prüft vor dem Einfügen, ohne Sperre. Legt eine gleichzeitige
+        // Anfrage (z. B. doppeltes Absenden) denselben Alias zuerst an, scheitert das
+        // INSERT am UNIQUE-Index; der nächste Versuch sieht deren Datensatz und wählt
+        // den nächsten Zähler.
+        for ($attempt = 1; ; ++$attempt) {
+            $alias = $this->aliasGenerator->generate($schema->type, $name);
 
-        $columns = array_keys($row);
+            try {
+                $id = $this->insert($schema, [
+                    'member_id' => $memberId,
+                    'alias' => $alias,
+                    'tstamp' => $now,
+                    'created' => $now,
+                    'disable' => '1',
+                    ...$values,
+                ]);
 
-        $this->connection->executeStatement(
-            \sprintf(
-                'INSERT INTO %s (%s) VALUES (%s)',
-                $schema->table(),
-                implode(', ', array_map($this->quote(...), $columns)),
-                implode(', ', array_fill(0, \count($columns), '?')),
-            ),
-            array_values($row),
-            $this->types($row),
-        );
+                break;
+            } catch (UniqueConstraintViolationException $exception) {
+                if ($attempt >= self::MAX_INSERT_ATTEMPTS) {
+                    $this->errorLogger->error(
+                        \sprintf('KulturNetz: Neuer Datensatz (%s) nach %d Versuchen ohne eindeutigen Alias: %s', $schema->type, $attempt, $exception->getMessage()),
+                        ['contao' => new ContaoContext(__METHOD__, ContaoContext::ERROR), 'exception' => $exception],
+                    );
 
-        $id = (int) $this->connection->lastInsertId();
+                    throw new RecordConflictException($exception);
+                }
+            }
+        }
 
         return new CreatedRecord($id, $alias, $this->notify($schema->type, $alias));
     }
@@ -126,6 +140,31 @@ final class RecordWriter
             [...array_values($values), (int) $current['id']],
             [...$this->types($values), ParameterType::INTEGER],
         );
+    }
+
+    /**
+     * Fügt die Zeile ein und liefert die neue ID.
+     *
+     * @param array<string, string|int|null> $row
+     *
+     * @throws UniqueConstraintViolationException
+     */
+    private function insert(RecordSchema $schema, array $row): int
+    {
+        $columns = array_keys($row);
+
+        $this->connection->executeStatement(
+            \sprintf(
+                'INSERT INTO %s (%s) VALUES (%s)',
+                $schema->table(),
+                implode(', ', array_map($this->quote(...), $columns)),
+                implode(', ', array_fill(0, \count($columns), '?')),
+            ),
+            array_values($row),
+            $this->types($row),
+        );
+
+        return (int) $this->connection->lastInsertId();
     }
 
     private function notify(string $type, string $alias): bool

@@ -8,11 +8,14 @@ use SeKultur\ContaoKulturnetzBundle\Http\JsonErrorResponse;
 use SeKultur\ContaoKulturnetzBundle\Security\CsrfRequestValidator;
 use SeKultur\ContaoKulturnetzBundle\Security\OwnershipChecker;
 use SeKultur\ContaoKulturnetzBundle\Service\Member\FrontendMemberProvider;
+use SeKultur\ContaoKulturnetzBundle\Service\Write\RecordConflictException;
+use SeKultur\ContaoKulturnetzBundle\Service\Write\RecordCreationLimiter;
 use SeKultur\ContaoKulturnetzBundle\Service\Write\RecordSchemaRegistry;
 use SeKultur\ContaoKulturnetzBundle\Service\Write\RecordValidationException;
 use SeKultur\ContaoKulturnetzBundle\Service\Write\RecordWriter;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -28,7 +31,9 @@ use Symfony\Component\Routing\Attribute\Route;
  * Antworten: {"success":true} wie bisher; Fehler als JSON
  * {"success":false,"error":"..."} mit 401 (kein Mitglied), 403 (Token ungültig,
  * fremder oder schreibgeschützter Datensatz), 404 (Datensatz unbekannt), 422
- * (Eingabe ungültig, zusätzlich "fields" mit Formularfeldname => Meldung). Ein
+ * (Eingabe ungültig, zusätzlich "fields" mit Formularfeldname => Meldung), beim
+ * Anlegen außerdem 409 (Alias trotz Wiederholung vergeben, erneut absenden) und
+ * 429 mit Retry-After (Ratenlimit je Mitglied, RecordCreationLimiter). Ein
  * unbekannter Typ passt auf keine Route (404 der Website).
  *
  * Der Contao-RequestTokenListener ist für die Routen abgeschaltet
@@ -45,12 +50,15 @@ final class RecordWriteController
 
     public const MESSAGE_READONLY = 'Dieser Eintrag kann nicht mehr bearbeitet werden.';
 
+    public const MESSAGE_TOO_MANY = 'Sie haben in kurzer Zeit sehr viele Einträge angelegt. Bitte versuchen Sie es später noch einmal.';
+
     public function __construct(
         private readonly FrontendMemberProvider $memberProvider,
         private readonly CsrfRequestValidator $csrfValidator,
         private readonly OwnershipChecker $ownershipChecker,
         private readonly RecordSchemaRegistry $schemas,
         private readonly RecordWriter $writer,
+        private readonly RecordCreationLimiter $creationLimiter,
     ) {
     }
 
@@ -67,11 +75,21 @@ final class RecordWriteController
             return $error;
         }
 
+        $memberId = $this->memberProvider->getMemberId();
+
+        if (null !== $blockedUntil = $this->creationLimiter->getBlockedUntil($memberId)) {
+            return $this->tooManyRequests($blockedUntil);
+        }
+
         try {
-            $this->writer->create($this->schemas->get($typ), $request->request->all(), $this->memberProvider->getMemberId());
+            $this->writer->create($this->schemas->get($typ), $request->request->all(), $memberId);
         } catch (RecordValidationException $exception) {
             return JsonErrorResponse::unprocessable($exception->getMessage(), ['fields' => $exception->getFieldErrors()]);
+        } catch (RecordConflictException $exception) {
+            return new JsonErrorResponse($exception->getMessage(), Response::HTTP_CONFLICT);
         }
+
+        $this->creationLimiter->hit($memberId);
 
         return new JsonResponse(['success' => true]);
     }
@@ -118,6 +136,17 @@ final class RecordWriteController
         }
 
         return new JsonResponse(['success' => true]);
+    }
+
+    /**
+     * 429 mit Retry-After (Sekunden bis zum nächsten möglichen Eintrag).
+     */
+    private function tooManyRequests(\DateTimeImmutable $blockedUntil): JsonErrorResponse
+    {
+        $response = new JsonErrorResponse(self::MESSAGE_TOO_MANY, Response::HTTP_TOO_MANY_REQUESTS);
+        $response->headers->set('Retry-After', (string) max(1, $blockedUntil->getTimestamp() - time()));
+
+        return $response;
     }
 
     /**

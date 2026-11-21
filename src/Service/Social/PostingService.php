@@ -13,6 +13,7 @@ use SeKultur\ContaoKulturnetzBundle\Security\OwnershipChecker;
 use SeKultur\ContaoKulturnetzBundle\Service\Profile\ProfileRepository;
 use SeKultur\ContaoKulturnetzBundle\Service\Profile\ProfileType;
 use SeKultur\ContaoKulturnetzBundle\Service\Text\TextNormalizer;
+use SeKultur\ContaoKulturnetzBundle\Service\Write\ColumnLimits;
 
 /**
  * Beiträge der Profile (Tabelle tl_postings) über Doctrine DBAL.
@@ -34,6 +35,11 @@ final class PostingService
      */
     public const MIN_CONTENT_BYTES = 11;
 
+    /**
+     * Meldung bei zu langem Beitrag (Stil der Meldung zur Mindestlänge).
+     */
+    public const MESSAGE_CONTENT_TOO_LONG = 'Der Beitrag ist zu lang. Verwenden Sie bitte höchstens %d Zeichen.';
+
     public function __construct(
         private readonly Connection $connection,
         private readonly ProfileRepository $profileRepository,
@@ -41,6 +47,7 @@ final class PostingService
         private readonly TextNormalizer $textNormalizer,
         private readonly KulturnetzConfig $config,
         private readonly ClockInterface $clock,
+        private readonly ColumnLimits $columnLimits,
     ) {
     }
 
@@ -121,6 +128,7 @@ final class PostingService
     public function create(int $memberId, string $profileTypeOrTable, int $profileId, string $content): int
     {
         $this->assertContentLength($content);
+        $normalized = $this->normalizeContent($content);
 
         $type = ProfileType::tryFromTypeOrTable($profileTypeOrTable);
 
@@ -135,7 +143,7 @@ final class PostingService
                     'profile_id' => $profileId,
                     'profile_type' => $type->table(),
                     'member_id' => $memberId,
-                    'content' => $this->textNormalizer->normalize($content),
+                    'content' => $normalized,
                     'tstamp' => $this->clock->now()->getTimestamp(),
                 ],
                 [
@@ -165,10 +173,12 @@ final class PostingService
 
         $this->assertOwnPosting($memberId, $postingId, SocialActionException::MESSAGE_EDIT_DENIED);
 
+        $normalized = $this->normalizeContent($content);
+
         try {
             $this->connection->update(
                 'tl_postings',
-                ['content' => $this->textNormalizer->normalize($content)],
+                ['content' => $normalized],
                 ['id' => $postingId],
                 ['id' => ParameterType::INTEGER],
             );
@@ -201,6 +211,29 @@ final class PostingService
         if (\strlen($content) < self::MIN_CONTENT_BYTES) {
             throw SocialActionException::invalid(SocialActionException::MESSAGE_CONTENT_TOO_SHORT);
         }
+    }
+
+    /**
+     * Beitragstext im Speicherformat, höchstens postings.max_length Zeichen (gezählt
+     * nach der Normalisierung, weil Sonderzeichen dort als Entities länger werden)
+     * und passend zur Spalte tl_postings.content (TEXT, Grenze in Byte).
+     *
+     * Das Formular für neue Beiträge begrenzt wie in 4.13 auf 500 Zeichen
+     * (maxlength); die Grenze hier schützt vor 500er-Fehlern und gilt auch für das
+     * Bearbeiten, das im Browser keine Grenze hat.
+     *
+     * @throws SocialActionException
+     */
+    private function normalizeContent(string $content): string
+    {
+        $normalized = $this->textNormalizer->normalize($content);
+        $maxLength = $this->config->getPostingMaxLength();
+
+        if (mb_strlen($normalized, 'UTF-8') > $maxLength || !$this->columnLimits->fits('tl_postings', 'content', $normalized)) {
+            throw SocialActionException::invalid(\sprintf(self::MESSAGE_CONTENT_TOO_LONG, $maxLength));
+        }
+
+        return $normalized;
     }
 
     /**

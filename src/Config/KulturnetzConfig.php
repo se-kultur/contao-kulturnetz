@@ -270,6 +270,39 @@ final class KulturnetzConfig
     }
 
     /**
+     * Höchstlänge eines Beitrags in Zeichen, gezählt im Speicherformat (nach
+     * TextNormalizer::normalize()).
+     */
+    public function getPostingMaxLength(): int
+    {
+        return $this->config['postings']['max_length'];
+    }
+
+    /**
+     * Höchstzahl der Terminzeilen einer Veranstaltung beim Anlegen und Bearbeiten.
+     */
+    public function getRecordMaxDates(): int
+    {
+        return $this->config['records']['max_dates'];
+    }
+
+    /**
+     * Höchstzahl der Preiszeilen einer Veranstaltung beim Anlegen und Bearbeiten.
+     */
+    public function getRecordMaxPrices(): int
+    {
+        return $this->config['records']['max_prices'];
+    }
+
+    /**
+     * Monat der SE-KulturTage (1 bis 12).
+     */
+    public function getFestivalMonth(): int
+    {
+        return $this->config['sekevents']['festival_month'];
+    }
+
+    /**
      * Größte zulässige Uploaddatei in Byte; null heißt keine eigene Grenze
      * (dann gelten upload_max_filesize und post_max_size von PHP).
      */

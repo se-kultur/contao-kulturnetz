@@ -20,7 +20,9 @@ use SeKultur\ContaoKulturnetzBundle\Service\Write\Value\RecordSchema;
  *    "eventdate[]" usw. für dates).
  *
  * Pflichtangaben wie im Formular-JS (Sparte bei Künstler*innen und
- * Veranstaltungen, Beschreibung mit mindestens 30 Zeichen) und im DCA (Name).
+ * Veranstaltungen, Beschreibung mit mindestens 30 Zeichen) und im DCA (Name, auch
+ * nicht nur aus Leerzeichen); bei Veranstaltungen mindestens ein Termin
+ * (RecordInputMapper::mapDates()).
  * Die Meldungstexte sind wortgleich zu den Formular-JS-Dateien.
  */
 final class RecordSchemaRegistry
@@ -41,9 +43,13 @@ final class RecordSchemaRegistry
         'facebook', 'website',
     ];
 
-    private const LOCATION_FIELDS = [
-        'barrierefreiheit', 'auftrittsflaeche', 'gesamtflaeche', 'buehnentyp', 'technik', 'sitzplaetze', 'stehplaetze',
-    ];
+    private const LOCATION_FIELDS = ['barrierefreiheit', 'buehnentyp', 'technik'];
+
+    /**
+     * Maße und Plätze der Locations: im Formular type="number"
+     * (kulturnetz/profile/_form_location.html.twig), gespeichert als Text.
+     */
+    private const LOCATION_NUMBER_FIELDS = ['auftrittsflaeche', 'gesamtflaeche', 'sitzplaetze', 'stehplaetze'];
 
     private const EVENT_LOCATION_FIELDS = [
         'location_adresse', 'location_plz', 'location_ort', 'location_barrierefreiheit', 'location_telefon',
@@ -101,6 +107,7 @@ final class RecordSchemaRegistry
                 FieldDefinition::text('name', null, self::MESSAGE_NAME),
                 $this->description(),
                 ...$this->texts([...self::CONTACT_FIELDS, 'themen', 'zitat', ...self::LOCATION_FIELDS]),
+                ...array_map(FieldDefinition::number(...), self::LOCATION_NUMBER_FIELDS),
                 FieldDefinition::avatar(),
             ],
             'events' => $this->eventFields(false),

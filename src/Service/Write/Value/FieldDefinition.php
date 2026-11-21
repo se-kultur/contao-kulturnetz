@@ -52,6 +52,11 @@ final class FieldDefinition
         return new self($column, $column, FieldKind::Integer);
     }
 
+    public static function number(string $column): self
+    {
+        return new self($column, $column, FieldKind::Number);
+    }
+
     public static function avatar(): self
     {
         return new self('avatar', 'avatar', FieldKind::Avatar);
@@ -70,5 +75,17 @@ final class FieldDefinition
     public static function dates(): self
     {
         return new self('dates', 'eventdate', FieldKind::Dates);
+    }
+
+    /**
+     * Name des Formularfeldes, unter dem eine Meldung erscheint: bei Preisen und
+     * Terminen das Listenfeld ("price[]", "eventdate[]"), sonst der Feldname.
+     */
+    public function formName(): string
+    {
+        return match ($this->kind) {
+            FieldKind::Prices, FieldKind::Dates => $this->requestName.'[]',
+            default => $this->requestName,
+        };
     }
 }

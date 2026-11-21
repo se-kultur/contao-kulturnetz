@@ -6,6 +6,7 @@ namespace SeKultur\ContaoKulturnetzBundle\Service\Write;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
+use SeKultur\ContaoKulturnetzBundle\Config\KulturnetzConfig;
 use SeKultur\ContaoKulturnetzBundle\Security\OwnershipChecker;
 use SeKultur\ContaoKulturnetzBundle\Service\Text\HtmlSanitizer;
 use SeKultur\ContaoKulturnetzBundle\Service\Text\TextNormalizer;
@@ -31,6 +32,10 @@ use SeKultur\ContaoKulturnetzBundle\Service\Write\Value\RecordSchema;
  *  - Checkboxen "1" oder leer, Zahlen als Ganzzahl,
  *  - avatar binär oder NULL, verknüpfte Profile als ["12","34"].
  *
+ * Prüfungen über die Spaltenlängen hinaus: Pflichtfelder ohne bloßen Leerraum,
+ * Zahlenfelder der Locations, Preis- und Terminzeilen (mapPrices(), mapDates()).
+ * Meldungen stehen unter dem Formularfeldnamen (FieldDefinition::formName()).
+ *
  * Beim Bearbeiten bleiben Text-, Zahlen-, Bild- und Verknüpfungsfelder, die die
  * Anfrage nicht enthält, unverändert. Checkboxen, Preise und Termine werden immer
  * geschrieben, weil ein Formular sie bei "aus" bzw. ohne Zeilen nicht sendet.
@@ -43,6 +48,18 @@ final class RecordInputMapper
 
     public const MESSAGE_TOO_LONG_CHARACTERS = 'Die Eingabe ist zu lang (höchstens %d Zeichen).';
 
+    public const MESSAGE_NOT_A_NUMBER = 'Bitte geben Sie eine Zahl ein.';
+
+    public const MESSAGE_DATES_MISSING = 'Bitte geben Sie mindestens einen Termin an.';
+
+    public const MESSAGE_DATE_MISSING = 'Bitte geben Sie für jeden Termin ein Datum an.';
+
+    public const MESSAGE_TOO_MANY_DATES = 'Bitte geben Sie höchstens %d Termine an.';
+
+    public const MESSAGE_PRICETAG_MISSING = 'Bitte geben Sie für jeden Preis einen Titel an.';
+
+    public const MESSAGE_TOO_MANY_PRICES = 'Bitte geben Sie höchstens %d Preise an.';
+
     private const UINT_MAX = 4294967295;
 
     public function __construct(
@@ -52,6 +69,7 @@ final class RecordInputMapper
         private readonly LinkedProfileFilter $linkedProfiles,
         private readonly ColumnLimits $limits,
         private readonly Connection $connection,
+        private readonly KulturnetzConfig $config,
     ) {
     }
 
@@ -74,7 +92,8 @@ final class RecordInputMapper
             try {
                 $result = $this->mapField($schema, $field, $input, $memberId, $current);
             } catch (\UnexpectedValueException $exception) {
-                $errors[$field->requestName] = $exception->getMessage();
+                $formName = $exception instanceof FieldValueException ? $exception->formName : null;
+                $errors[$formName ?? $field->formName()] = $exception->getMessage();
 
                 continue;
             }
@@ -116,7 +135,7 @@ final class RecordInputMapper
 
         return match ($field->kind) {
             FieldKind::Checkbox => [$present ? '1' : ''],
-            FieldKind::Prices => [$this->checkLength($schema, $field, $this->mapPrices($input))],
+            FieldKind::Prices => [$this->checkLength($schema, $field, $this->mapPrices($input, \array_key_exists('eintrittfrei', $input)))],
             FieldKind::Dates => [$this->checkLength($schema, $field, $this->mapDates($input))],
             default => match (true) {
                 $present => [$this->mapValue($schema, $field, $raw, $memberId, $current)],
@@ -141,6 +160,7 @@ final class RecordInputMapper
             FieldKind::Text => $this->mapText($schema, $field, $raw),
             FieldKind::Html => $this->mapHtml($schema, $field, $raw),
             FieldKind::Integer => $this->mapInteger($raw),
+            FieldKind::Number => $this->mapNumber($schema, $field, $raw),
             FieldKind::Avatar => $this->mapAvatar($raw, $memberId, $current['avatar'] ?? null),
             FieldKind::LinkedIds => $this->checkLength($schema, $field, $this->mapLinkedIds($field, $raw, $memberId, $current)),
             default => throw new \LogicException(\sprintf('Feldart %s wird hier nicht behandelt.', $field->kind->name)),
@@ -167,12 +187,35 @@ final class RecordInputMapper
 
     private function mapText(RecordSchema $schema, FieldDefinition $field, string $raw): string
     {
-        // Pflichtfelder wie im Formular: leer ist ungültig (das JS prüft die Länge 0)
-        if (null !== $field->requiredMessage && '' === $raw) {
-            throw new \UnexpectedValueException($field->requiredMessage);
+        $value = $this->normalizer->normalize($raw);
+
+        // Pflichtfelder (Name, Sparten): ohne Leerraum am Rand gespeichert, nur
+        // Leerzeichen gelten wie ein leeres Feld als fehlend.
+        if (null !== $field->requiredMessage) {
+            $value = self::trimText($value);
+
+            if ('' === $value) {
+                throw new \UnexpectedValueException($field->requiredMessage);
+            }
         }
 
-        return $this->checkLength($schema, $field, $this->normalizer->normalize($raw));
+        return $this->checkLength($schema, $field, $value);
+    }
+
+    /**
+     * Zahl eines Formularfeldes type="number" in einer Textspalte. Leer ist
+     * erlaubt; sonst eine nicht negative Zahl, höchstens zwei Nachkommastellen mit
+     * Punkt (Browser) oder Komma.
+     */
+    private function mapNumber(RecordSchema $schema, FieldDefinition $field, string $raw): string
+    {
+        $value = self::trimText($raw);
+
+        if ('' !== $value && 1 !== preg_match('/^\d{1,9}(?:[.,]\d{1,2})?$/', $value)) {
+            throw new \UnexpectedValueException(self::MESSAGE_NOT_A_NUMBER);
+        }
+
+        return $this->checkLength($schema, $field, $value);
     }
 
     private function mapHtml(RecordSchema $schema, FieldDefinition $field, string $raw): string
@@ -245,19 +288,42 @@ final class RecordInputMapper
      * Preiszeilen wie bisher: je Eintrag in price[] die Bezeichnung aus pricetag[]
      * mit gleichem Index.
      *
+     * Zeilen ohne Titel und ohne Preis werden verworfen (sie zeigen nichts an). Eine
+     * Zeile mit Preis braucht einen Titel (im Formular als Pflichtfeld markiert),
+     * außer bei freiem Eintritt: Dann sind die Preise ausgeblendet und werden wie
+     * bisher unverändert gespeichert. Höchstens records.max_prices Zeilen.
+     *
      * @param array<string, mixed> $input
      */
-    private function mapPrices(array $input): string
+    private function mapPrices(array $input, bool $freeEntry): string
     {
         $prices = $this->arrayInput($input, 'price');
         $tags = $this->arrayInput($input, 'pricetag');
+        $max = $this->config->getRecordMaxPrices();
+
+        if (\count($prices) > $max) {
+            throw new FieldValueException(\sprintf(self::MESSAGE_TOO_MANY_PRICES, $max));
+        }
+
         $rows = [];
 
         foreach ($prices as $index => $price) {
-            $rows[] = [
+            $row = [
                 'pricetag' => $this->stringItem($tags[$index] ?? ''),
                 'price' => $this->stringItem($price),
             ];
+
+            if (self::isBlank($row['pricetag'])) {
+                if (self::isBlank($row['price'])) {
+                    continue;
+                }
+
+                if (!$freeEntry) {
+                    throw new FieldValueException(self::MESSAGE_PRICETAG_MISSING, 'pricetag[]');
+                }
+            }
+
+            $rows[] = $row;
         }
 
         return $this->normalizer->encodeJson($rows);
@@ -267,6 +333,11 @@ final class RecordInputMapper
      * Terminzeilen wie bisher: je Eintrag in eventdate[] Beginn, Ende und Hinweis
      * mit gleichem Index. Das Datum bleibt im eingegebenen Format.
      *
+     * Vollständig leere Zeilen werden verworfen, jede übrige Zeile braucht ein
+     * Datum, und mindestens ein Termin ist Pflicht (im Formular als Pflichtfeld
+     * markiert; das Anlegen-Formular sendet die erste Zeile auch leer). Höchstens
+     * records.max_dates Zeilen.
+     *
      * @param array<string, mixed> $input
      */
     private function mapDates(array $input): string
@@ -275,15 +346,35 @@ final class RecordInputMapper
         $starts = $this->arrayInput($input, 'eventtimestart');
         $ends = $this->arrayInput($input, 'eventtimeend');
         $comments = $this->arrayInput($input, 'eventcomment');
+        $max = $this->config->getRecordMaxDates();
+
+        if (\count($dates) > $max) {
+            throw new FieldValueException(\sprintf(self::MESSAGE_TOO_MANY_DATES, $max));
+        }
+
         $rows = [];
 
         foreach ($dates as $index => $date) {
-            $rows[] = [
+            $row = [
                 'date' => $this->stringItem($date),
                 'start' => $this->stringItem($starts[$index] ?? ''),
                 'end' => $this->stringItem($ends[$index] ?? ''),
                 'comment' => $this->stringItem($comments[$index] ?? ''),
             ];
+
+            if (self::isBlank($row['date'])) {
+                if (self::isBlank($row['start'].$row['end'].$row['comment'])) {
+                    continue;
+                }
+
+                throw new FieldValueException(self::MESSAGE_DATE_MISSING);
+            }
+
+            $rows[] = $row;
+        }
+
+        if ([] === $rows) {
+            throw new FieldValueException(self::MESSAGE_DATES_MISSING);
         }
 
         return $this->normalizer->encodeJson($rows);
@@ -312,6 +403,19 @@ final class RecordInputMapper
         }
 
         return $value;
+    }
+
+    /**
+     * Entfernt Leerraum am Rand, auch geschützte und andere Unicode-Leerzeichen.
+     */
+    private static function trimText(string $value): string
+    {
+        return preg_replace('/^[\s\p{Z}]+|[\s\p{Z}]+$/u', '', $value) ?? trim($value);
+    }
+
+    private static function isBlank(string $value): bool
+    {
+        return '' === self::trimText($value);
     }
 
     private function checkLength(RecordSchema $schema, FieldDefinition $field, string $value): string

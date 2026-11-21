@@ -8,6 +8,10 @@ use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\Storage\CacheStorage;
+
+use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 
 /**
  * Bundle-Klasse des KulturNetz-Bundles.
@@ -152,6 +156,54 @@ final class ContaoKulturnetzBundle extends AbstractBundle
                     ->end()
                 ->end()
             ->end()
+            ->arrayNode('postings')
+                ->info('Beiträge der Profile.')
+                ->addDefaultsIfNotSet()
+                ->children()
+                    ->integerNode('max_length')
+                        ->info('Höchstlänge eines Beitrags in Zeichen, gezählt im Speicherformat (nach TextNormalizer::normalize()). Höchstens 16383, damit der Text auch aus lauter 4-Byte-Zeichen in die TEXT-Spalte (65.535 Byte) passt.')
+                        ->defaultValue(10000)
+                        ->min(11)
+                        ->max(16383)
+                    ->end()
+                ->end()
+            ->end()
+            ->arrayNode('records')
+                ->info('Grenzen der Anlegen- und Bearbeiten-Formulare für Profile und Veranstaltungen.')
+                ->addDefaultsIfNotSet()
+                ->children()
+                    ->integerNode('max_dates')->info('Höchstzahl der Terminzeilen einer Veranstaltung.')->defaultValue(100)->min(1)->end()
+                    ->integerNode('max_prices')->info('Höchstzahl der Preiszeilen einer Veranstaltung.')->defaultValue(100)->min(1)->end()
+                    ->arrayNode('create_rate_limit')
+                        ->info('Neue Einträge je Mitglied über alle Typen zusammen (gleitendes Zeitfenster). Jede Anlage sendet eine Redaktionsmail.')
+                        ->addDefaultsIfNotSet()
+                        ->children()
+                            ->integerNode('limit')->defaultValue(20)->min(1)->end()
+                            ->scalarNode('interval')
+                                ->info('Zeitfenster im Format von DateInterval::createFromDateString(), z. B. "1 hour" oder "30 minutes".')
+                                ->defaultValue('1 hour')
+                                ->cannotBeEmpty()
+                                ->validate()
+                                    ->ifTrue(static fn (mixed $value): bool => !self::isValidInterval($value))
+                                    ->thenInvalid('Ungültiges Zeitfenster %s, erwartet wird z. B. "1 hour".')
+                                ->end()
+                            ->end()
+                        ->end()
+                    ->end()
+                ->end()
+            ->end()
+            ->arrayNode('sekevents')
+                ->info('SE-KulturTage.')
+                ->addDefaultsIfNotSet()
+                ->children()
+                    ->integerNode('festival_month')
+                        ->info('Monat der SE-KulturTage (1 bis 12); begrenzt die Terminauswahl im Anmeldeformular auf diesen Monat.')
+                        ->defaultValue(9)
+                        ->min(1)
+                        ->max(12)
+                    ->end()
+                ->end()
+            ->end()
             ->arrayNode('upload')
                 ->addDefaultsIfNotSet()
                 ->children()
@@ -180,6 +232,53 @@ final class ContaoKulturnetzBundle extends AbstractBundle
         ;
 
         $container->import('../config/services.yaml');
+
+        // Ratenlimit für neue Einträge (RecordCreationLimiter). Der Limiter wird hier
+        // und nicht über framework.rate_limiter angelegt, weil seine Werte aus der
+        // Bundle-Konfiguration stammen, die beim Vorbelegen der Framework-Konfiguration
+        // noch nicht verarbeitet ist. Aufbau wie die Limiter des Contao-Cores
+        // (Speicher im Cache-Pool cache.rate_limiter, Sperre über lock.factory).
+        $rateLimit = $config['records']['create_rate_limit'];
+
+        $container->services()
+            ->set('kulturnetz.rate_limiter.storage', CacheStorage::class)
+                ->args([service('cache.rate_limiter')])
+            ->set('kulturnetz.rate_limiter.record_create', RateLimiterFactory::class)
+                ->args([
+                    [
+                        'id' => 'kulturnetz_record_create',
+                        'policy' => 'sliding_window',
+                        'limit' => $rateLimit['limit'],
+                        'interval' => $rateLimit['interval'],
+                    ],
+                    service('kulturnetz.rate_limiter.storage'),
+                    service('lock.factory')->nullOnInvalid(),
+                ])
+        ;
+    }
+
+    /**
+     * Prüft ein Zeitfenster so, wie der RateLimiterFactory es später liest.
+     */
+    private static function isValidInterval(mixed $value): bool
+    {
+        if (!\is_string($value) || '' === trim($value)) {
+            return false;
+        }
+
+        try {
+            $interval = @\DateInterval::createFromDateString($value);
+        } catch (\Throwable) {
+            return false;
+        }
+
+        if (!$interval instanceof \DateInterval) {
+            return false;
+        }
+
+        $now = new \DateTimeImmutable('@0');
+
+        return $now->add($interval)->getTimestamp() > 0;
     }
 
     public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void

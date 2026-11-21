@@ -32,6 +32,12 @@ enum FieldKind
     case Integer;
 
     /**
+     * Nicht negative Zahl in einer Textspalte (Maße und Plätze der Locations,
+     * Formularfeld type="number"); leer bleibt leer, gespeichert wie eingegeben.
+     */
+    case Number;
+
+    /**
      * Titelbild: UUID einer Datei im Mitgliedsordner, sonst NULL.
      */
     case Avatar;
