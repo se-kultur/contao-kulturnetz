@@ -7,10 +7,13 @@
  #   event_type  "events" oder "sekevents"
  #   member_id   angemeldetes Mitglied oder 0
  #   past        vergangene Veranstaltung (blass, ohne nächsten Termin)
+ #
+ # CSS (Theme-LESS elements/maps.less): event-past und event-next-date wie in
+ # kulturnetz/event/_card_list.html.twig.
  #}
 {% set weekdays = {Monday: 'Montag', Tuesday: 'Dienstag', Wednesday: 'Mittwoch', Thursday: 'Donnerstag', Friday: 'Freitag', Saturday: 'Samstag', Sunday: 'Sonntag'} %}
 {% set detail_href = kulturnetz_page_url(event_type ~ '.detail', event.alias) %}
-<div class="artist"{% if past %} style="opacity: 0.6; filter: grayscale(1);"{% endif %}>
+<div class="artist{{ past ? ' event-past' }}">
 	<a href="{{ detail_href }}">
 		<figure class="avatar">
 			<img src="{{ event.image.src }}" alt="{{ event.image.alt }}" loading="lazy">
@@ -41,7 +44,7 @@
 		<a href="{{ detail_href }}"><h6>{{ event.name }}</h6></a>
 		<p class="beschreibung">
 			{% if not past %}
-			<span style="font-weight: bold;"><i class="fa-regular fa-clock"></i>
+			<span class="event-next-date"><i class="fa-regular fa-clock"></i>
 			Nächster Termin am {{ weekdays[event.nextdate|date('l')] }}, {{ event.nextdate|date('d.m.Y - H:i') }} Uhr
 			</span><br><br>
 			{% endif %}

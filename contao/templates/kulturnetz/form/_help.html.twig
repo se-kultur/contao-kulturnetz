@@ -8,6 +8,9 @@
       help_key   Formularschlüssel: artist_add, artist_edit, host_add, host_edit,
                  location_add, location_edit, event_add, event_edit, sekevent_add,
                  sekevent_edit (andere Werte: nur Einleitung, Telefon und Ansprechpartnerin)
+
+    CSS (Theme-LESS): event-terms-link (elements/maps.less), form-help-required-icon
+    (elements/formbody.less).
 #}
 {% set help_key = help_key|default('') %}
 {% set terms_url = kulturnetz_page_url('terms') %}
@@ -22,12 +25,12 @@
 			<p>Schön, dass Sie ein Künstler*innenprofil anlegen und sich am SE-KulturNetz beteiligen möchten!</p>
 			{% elseif help_key == 'sekevent_add' %}
 			<p>Schön, dass Sie ein Event für die SE-KulturTage anlegen möchten!</p>
-			<p>Bitte beachten Sie unsere <a href="{{ terms_url }}" target="_blank" style="text-decoration: underline">Teilnahmebedingungen</a> und den <a href="{{ terms_url }}#awareness-konsens" target="_blank" style="text-decoration: underline">Awareness-Konsens</a>.</p>
+			<p>Bitte beachten Sie unsere <a href="{{ terms_url }}" class="event-terms-link" target="_blank">Teilnahmebedingungen</a> und den <a href="{{ terms_url }}#awareness-konsens" class="event-terms-link" target="_blank">Awareness-Konsens</a>.</p>
 			{% endif %}
 			
 			<p class="hide-xs hide-sm hide-md">An dieser Stelle zeigen wir Ihnen wichtige Hinweise zur Eingabe im Formular. Klicken Sie dazu einfach in eines der Texteingabefelder im Formular und der Hilfetext in diesem blauen Kasten ändert sich entsprechend.</p>
 			
-			<p><strong>Wichtig:</strong> Alle Felder, die mit einem <strong>roten Kreissymbol <span style="color: Red;"><i class="fa-solid fa-circle-exclamation"></i></span></strong> markiert sind, sind Pflichtfelder und somit unbedingt auszufüllen!</p>
+			<p><strong>Wichtig:</strong> Alle Felder, die mit einem <strong>roten Kreissymbol <span class="form-help-required-icon"><i class="fa-solid fa-circle-exclamation"></i></span></strong> markiert sind, sind Pflichtfelder und somit unbedingt auszufüllen!</p>
 		</div>
 		
 		{% if help_key in ['host_add', 'host_edit'] %}

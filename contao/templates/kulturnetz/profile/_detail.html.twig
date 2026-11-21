@@ -12,7 +12,8 @@
       profile_type   Typschlüssel ("artists", "hosts", "locations")
       profile_label  Beschriftung, z. B. "Künstler*innenprofil"
       profile        Profilzeile (Tabelle tl_<typ>)
-      avatar         Titelbild: src, lightbox_src, alt, title, caption (Klartext)
+      avatar         Titelbild: src, lightbox_src, alt, title, caption (Contao-Eingabeformat,
+                     Insert-Tag-Klammern kodiert, siehe Service\Text\TemplateTextEncoder)
       social         Daten der Reiter und des Folgen-Dialogs (SocialViewFactory),
                      enthält member_id und is_owner
       gallery        GalleryView der Bildergalerie
@@ -24,8 +25,8 @@
 {% set is_owner = social.is_owner %}
 {% set member_id = social.member_id %}
 {% set list_url = kulturnetz_page_url(profile_type ~ '.list') %}
-{# Lightbox-Beschriftung: HTML, dessen Texte vorab maskiert sind, danach als Attributwert maskiert (e('html_attr') meldet unter PHP 8.5 bei Nicht-ASCII-Zeichen wie dem Copyright-Zeichen eine Deprecation aus dem Core) #}
-{% set caption_html = avatar.title|e('html') ~ "<br><span style='font-size:0.8em;'>© " ~ avatar.caption|e('html') ~ '</span>' %}
+{# Lightbox-Beschriftung: HTML, dessen Texte vorab maskiert sind, danach als Attributwert maskiert (e('html_attr') meldet unter PHP 8.5 bei Nicht-ASCII-Zeichen wie dem Copyright-Zeichen eine Deprecation aus dem Core); Schriftgröße der Urheberangabe über die Klasse lightbox-caption-small #}
+{% set caption_html = avatar.title|e('html') ~ '<br><span class="lightbox-caption-small">© ' ~ avatar.caption|e('html') ~ '</span>' %}
 
 <div class="artist-headline mt-4">
 {% if is_owner %}

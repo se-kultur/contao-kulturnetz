@@ -10,20 +10,27 @@
       anchor_id       ID des Containers (Standard 'galerie', Ziel der Links "Fotos verwalten")
       lightbox_group  Wert von data-lightbox (Standard 'lb419' wie bisher)
 
-    Bildbeschreibung und Copyright sind Klartext. Die Lightbox setzt data-caption als
-    HTML ein; die Texte werden deshalb zuerst für HTML und der gesamte Wert dann für
-    das Attribut maskiert (gespeichertes XSS über Bildtitel ausgeschlossen, E26).
+    Bildbeschreibung und Copyright liegen im Contao-Eingabeformat vor (Sonderzeichen und
+    Insert-Tag-Klammern als Entities, Service\Text\TemplateTextEncoder); der Contao-Escaper
+    kodiert sie nicht doppelt, Contao wertet keine Insert-Tags aus Bildtiteln aus.
+
+    Die Lightbox setzt data-caption als HTML ein; die Texte werden deshalb zuerst für HTML
+    und der gesamte Wert dann noch einmal für das Attribut maskiert (gespeichertes XSS über
+    Bildtitel ausgeschlossen, E26). Beide Male mit |e('html'), nicht 'html_attr': Der
+    Attribut-Escaper des Contao-Cores ruft ord() auf mehrbyteigen Zeichen wie "©" auf und
+    löst unter PHP 8.5 je Folie eine Deprecation aus. Die Schriftgröße der Urheberangabe in
+    der Lightbox setzt die Klasse lightbox-caption-small (Theme-LESS image_container.less).
 #}
 {% if gallery is defined and gallery and not gallery.isEmpty %}
 <div class="ce_gallery" id="{{ anchor_id|default('galerie') }}">
 	<div class="swiper">
 	  <div class="swiper-wrapper">
 	  {% for slide in gallery.slides %}
-		{% set caption_html = slide.title|e('html') ~ "<br><span style='font-size:0.8em;'>© " ~ slide.caption|e('html') ~ '</span>' %}
+		{% set caption_html = slide.title|e('html') ~ '<br><span class="lightbox-caption-small">© ' ~ slide.caption|e('html') ~ '</span>' %}
 		<div class="swiper-slide">
 			<div class="swiper-carousel-animate-opacity">
 				<figure class="image_container">
-					<a data-fslightbox data-caption="{{ caption_html|e('html_attr') }}" href="{{ slide.lightboxUrl }}" title="{{ slide.title }}" data-lightbox="{{ lightbox_group|default('lb419') }}">
+					<a data-fslightbox data-caption="{{ caption_html|e('html') }}" href="{{ slide.lightboxUrl }}" title="{{ slide.title }}" data-lightbox="{{ lightbox_group|default('lb419') }}">
 						<img src="{{ slide.imageUrl }}" alt="">
 					</a>
 					<figcaption>
