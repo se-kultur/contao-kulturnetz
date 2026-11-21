@@ -9,6 +9,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use SeKultur\ContaoKulturnetzBundle\Config\KulturnetzConfig;
 use SeKultur\ContaoKulturnetzBundle\Service\Profile\Value\ProfileFilter;
+use SeKultur\ContaoKulturnetzBundle\Service\Search\SuggestionTerm;
 
 /**
  * Lesezugriff auf die Profile (tl_artists, tl_hosts, tl_locations) über Doctrine
@@ -28,6 +29,7 @@ final class ProfileRepository
     public function __construct(
         private readonly Connection $connection,
         private readonly KulturnetzConfig $config,
+        private readonly SuggestionTerm $searchTerm,
     ) {
     }
 
@@ -122,8 +124,10 @@ final class ProfileRepository
      * Filter wie bisher in den Models: Kategorie (nur Profilarten mit
      * Kategorie-Filter, Wert ungleich "Alle") als Teiltreffer in "sparten",
      * Volltext als Teiltreffer in "name" oder "ort". Die Suchbegriffe werden wie
-     * bisher unverändert in das LIKE-Muster übernommen (gebunden, aber ohne
-     * Maskierung von "%" und "_"), damit die Trefferliste gleich bleibt.
+     * bei der Vorschlagssuche (SuggestionTerm::containsPattern()) in das
+     * Speicherformat gebracht, damit z. B. "awa's" oder "(Pari)" die gespeicherten
+     * Entities "&#39;" bzw. "&#40;" trifft; "%" und "_" wirken wörtlich wie in der
+     * Veranstaltungssuche.
      *
      * @return list<array<string, mixed>>
      */
@@ -142,15 +146,15 @@ final class ProfileRepository
 
         if ($type->hasCategoryFilter() && $filter->hasCategory()) {
             $qb
-                ->andWhere('sparten LIKE :category')
-                ->setParameter('category', '%'.$filter->category.'%')
+                ->andWhere("sparten LIKE :category ESCAPE '".SuggestionTerm::ESCAPE_CHAR."'")
+                ->setParameter('category', $this->searchTerm->containsPattern((string) $filter->category))
             ;
         }
 
         if ($filter->hasText()) {
             $qb
-                ->andWhere('(name LIKE :text OR ort LIKE :text)')
-                ->setParameter('text', '%'.$filter->text.'%')
+                ->andWhere("(name LIKE :text ESCAPE '".SuggestionTerm::ESCAPE_CHAR."' OR ort LIKE :text ESCAPE '".SuggestionTerm::ESCAPE_CHAR."')")
+                ->setParameter('text', $this->searchTerm->containsPattern((string) $filter->text))
             ;
         }
 
