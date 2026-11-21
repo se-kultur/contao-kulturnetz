@@ -1,5 +1,7 @@
 <?php
 
+use Contao\Backend;
+
 $GLOBALS['TL_DCA']['tl_member']['fields']['street']['label'] = ['Straße und Hausnummer', ''];
 $GLOBALS['TL_DCA']['tl_member']['fields']['street']['eval']['mandatory'] = true;
 $GLOBALS['TL_DCA']['tl_member']['fields']['postal']['eval']['mandatory'] = true;

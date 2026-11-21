@@ -1,8 +1,16 @@
 <?php
 
+use Contao\Backend;
+use Contao\DataContainer;
+use Contao\DC_Table;
+use Contao\Email;
+use Contao\Environment;
+use Contao\Idna;
+use Contao\System;
+
 $GLOBALS['TL_DCA']['tl_sekevents'] = [
     'config' => [        
-        'dataContainer' => 'Table',
+        'dataContainer' => DC_Table::class,
         //'ctable' => ['tl_parts'],
         'enableVersioning' => true,
         'sql' => [

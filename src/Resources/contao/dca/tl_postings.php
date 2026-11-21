@@ -1,8 +1,12 @@
 <?php
 
+use Contao\Backend;
+use Contao\DataContainer;
+use Contao\DC_Table;
+
 $GLOBALS['TL_DCA']['tl_postings'] = [
     'config' => [        
-        'dataContainer' => 'Table',
+        'dataContainer' => DC_Table::class,
         //'ctable' => ['tl_parts'],
         //'enableVersioning' => true,
         'sql' => [
