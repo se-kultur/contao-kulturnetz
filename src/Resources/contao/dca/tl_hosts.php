@@ -372,7 +372,7 @@ class tl_hosts extends Backend {
 	/**
 	 * Gleicht orderSRC beim Speichern mit multiSRC ab.
 	 *
-	 * Contao 5 kennt eval.orderField nicht mehr; die Reihenfolge der Galerie
+	 * Contao 5 kennt kein separates Reihenfolgefeld mehr; die Reihenfolge der Galerie
 	 * steht jetzt direkt in multiSRC (isSortable). Die Frontend-Templates des
 	 * Bundles und die Ajax-Skripte unter files/se-kultur.de/code lesen die
 	 * Reihenfolge weiterhin aus orderSRC. Eine geleerte Galerie ergibt wie unter
