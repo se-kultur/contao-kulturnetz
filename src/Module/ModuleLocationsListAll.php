@@ -50,11 +50,25 @@ class ModuleLocationsListAll extends Module
 		$memberId = RequestContext::getMemberId();
 		$this->Template->member_id = $memberId;
 
+		// $_GET wird ungeprüft vom Frontend befüllt. Nur die vom Model
+		// ausgewerteten Filterschlüssel übernehmen und jeden Wert auf einen
+		// String reduzieren, Arrays verwerfen. Ohne diese Normalisierung führt
+		// z. B. ?text[]=x unter PHP 8 zu einem TypeError (strlen() mit Array).
+		// Für normale Parameter bleiben Treffer und Reihenfolge unverändert.
+		// Dieselben Werte versorgen das Suchformular im Template.
+		$searchArr = [];
+		foreach (['text'] as $key) {
+			if (isset($_GET[$key]) && is_string($_GET[$key])) {
+				$searchArr[$key] = $_GET[$key];
+			}
+		}
+		$this->Template->search = $searchArr;
+
 		if($objPage->id == 7) { // Übersichtsseite SE-KulturNetz
 			$locations = LocationsModel::findAllLocations(3);
 			$this->Template->locations = $locations;	
 		} else {
-			$locations = LocationsModel::findAllLocations(100, @$_GET);
+			$locations = LocationsModel::findAllLocations(100, $searchArr);
 			$this->Template->locations = $locations;	
 			$filter = true;
 		}

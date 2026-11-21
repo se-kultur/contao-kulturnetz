@@ -4,27 +4,27 @@
 	<div class="widget widget-select">
 		<label>Kategorie</label>
 		<select name="kategorie">
-			<option value="Alle"<?= (@$_GET['kategorie'] == 'Alle') ? ' selected' : '' ?>>Alle Kategorien</option>
-			<option<?= (@$_GET['kategorie'] == 'Literatur') ? ' selected' : '' ?>>Literatur</option>
-			<option<?= (@$_GET['kategorie'] == 'Musik') ? ' selected' : '' ?>>Musik</option>
-			<option<?= (@$_GET['kategorie'] == 'Theater') ? ' selected' : '' ?>>Theater</option>
-			<option<?= (@$_GET['kategorie'] == 'Tanz') ? ' selected' : '' ?>>Tanz</option>
-			<option<?= (@$_GET['kategorie'] == 'Bildende Kunst') ? ' selected' : '' ?>>Bildende Kunst</option>
-			<option<?= (@$_GET['kategorie'] == 'Film') ? ' selected' : '' ?>>Film</option>
-			<option<?= (@$_GET['kategorie'] == 'Fotografie') ? ' selected' : '' ?>>Fotografie</option>
-			<option<?= (@$_GET['kategorie'] == 'Multimedial') ? ' selected' : '' ?>>Multimedial</option>
-			<option<?= (@$_GET['kategorie'] == 'Performance') ? ' selected' : '' ?>>Performance</option>
-			<option<?= (@$_GET['kategorie'] == 'Sonstiges') ? ' selected' : '' ?>>Sonstiges</option>
+			<option value="Alle"<?= (($this->search['kategorie'] ?? '') == 'Alle') ? ' selected' : '' ?>>Alle Kategorien</option>
+			<option<?= (($this->search['kategorie'] ?? '') == 'Literatur') ? ' selected' : '' ?>>Literatur</option>
+			<option<?= (($this->search['kategorie'] ?? '') == 'Musik') ? ' selected' : '' ?>>Musik</option>
+			<option<?= (($this->search['kategorie'] ?? '') == 'Theater') ? ' selected' : '' ?>>Theater</option>
+			<option<?= (($this->search['kategorie'] ?? '') == 'Tanz') ? ' selected' : '' ?>>Tanz</option>
+			<option<?= (($this->search['kategorie'] ?? '') == 'Bildende Kunst') ? ' selected' : '' ?>>Bildende Kunst</option>
+			<option<?= (($this->search['kategorie'] ?? '') == 'Film') ? ' selected' : '' ?>>Film</option>
+			<option<?= (($this->search['kategorie'] ?? '') == 'Fotografie') ? ' selected' : '' ?>>Fotografie</option>
+			<option<?= (($this->search['kategorie'] ?? '') == 'Multimedial') ? ' selected' : '' ?>>Multimedial</option>
+			<option<?= (($this->search['kategorie'] ?? '') == 'Performance') ? ' selected' : '' ?>>Performance</option>
+			<option<?= (($this->search['kategorie'] ?? '') == 'Sonstiges') ? ' selected' : '' ?>>Sonstiges</option>
 		</select>
 	</div>
 	<div class="widget widget-text">
 		<label>Volltextsuche</label>
-		<input name="text" type="text" placeholder="Namen oder Ort eingeben" value="<?= @$_GET['text'] ?>">
+		<input name="text" type="text" placeholder="Namen oder Ort eingeben" value="<?= $this->search['text'] ?? '' ?>">
 	</div>
 	
 	<div>
 		<button type="submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i><span class="hide-xs hide-sm hide-md"> Suchen</span></button>
-		<?php if(isset($_GET['text'])): ?>
+		<?php if(isset($this->search['text'])): ?>
 		<a href="<?= $objPage->alias ?>.html" class="btn btn-outline"><i class="fa-solid fa-xmark"></i><span class="hide-xs hide-sm hide-md">  Zurücksetzen</span></a>
 		<?php endif; ?>
 	</div>
@@ -33,11 +33,11 @@
 
 <div class="artists-list">
 	<?php $noavatarList = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize('files/se-kultur.de/img/noavatar.jpg', 272, 272, 'crop') ?: 'files/se-kultur.de/img/noavatar.jpg'; ?>
-	<?php foreach ($this->artists as $artist): ?>
+	<?php foreach ($this->artists ?? [] as $artist): ?>
 	<?php
-	if($objFile = \Contao\FilesModel::findByUuid($artist->avatar)) {
+	if($artist->avatar && ($objFile = \Contao\FilesModel::findByUuid($artist->avatar))) {
 		$imgPath = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($objFile->path, 272, 272, 'crop') ?: $objFile->path;
-		$imgMeta = ($objFile->meta != NULL) ? unserialize($objFile->meta)['de'] : false;
+		$imgMeta = \Contao\StringUtil::deserialize($objFile->meta, true)['de'] ?? false;
 	} else {
 		$imgPath = $noavatarList;
 	}

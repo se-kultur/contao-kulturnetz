@@ -3,12 +3,12 @@
 <form method="get" id="search" class="formbody">
 	<div class="widget widget-text">
 		<label>Volltextsuche</label>
-		<input name="text" type="text" placeholder="Namen oder Ort eingeben" value="<?= @$_GET['text'] ?>">
+		<input name="text" type="text" placeholder="Namen oder Ort eingeben" value="<?= $this->search['text'] ?? '' ?>">
 	</div>
 	
 	<div>
 		<button type="submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i><span class="hide-xs hide-sm hide-md"> Suchen</span></button>
-		<?php if(isset($_GET['text'])): ?>
+		<?php if(isset($this->search['text'])): ?>
 		<a href="<?= $objPage->alias ?>.html" class="btn btn-outline"><i class="fa-solid fa-xmark"></i><span class="hide-xs hide-sm hide-md">  Zurücksetzen</span></a>
 		<?php endif; ?>
 	</div>
@@ -17,11 +17,11 @@
 
 <div class="artists-list">
 	<?php $noavatarList = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize('files/se-kultur.de/img/noavatar.jpg', 272, 272, 'crop') ?: 'files/se-kultur.de/img/noavatar.jpg'; ?>
-	<?php foreach ($this->hosts as $artist): ?>
+	<?php foreach ($this->hosts ?? [] as $artist): ?>
 	<?php
-	if($objFile = \Contao\FilesModel::findByUuid($artist->avatar)) {
+	if($artist->avatar && ($objFile = \Contao\FilesModel::findByUuid($artist->avatar))) {
 		$imgPath = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($objFile->path, 272, 272, 'crop') ?: $objFile->path;
-		$imgMeta = ($objFile->meta != NULL) ? unserialize($objFile->meta)['de'] : false;
+		$imgMeta = \Contao\StringUtil::deserialize($objFile->meta, true)['de'] ?? false;
 	} else {
 		$imgPath = $noavatarList;
 	}

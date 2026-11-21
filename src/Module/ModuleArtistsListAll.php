@@ -51,11 +51,26 @@ class ModuleArtistsListAll extends Module
 		$memberId = RequestContext::getMemberId();
 		$this->Template->member_id = $memberId;
 
+		// $_GET wird ungeprüft vom Frontend befüllt. Nur die vom Model
+		// ausgewerteten Filterschlüssel übernehmen und jeden Wert auf einen
+		// String reduzieren, Arrays verwerfen. Ohne diese Normalisierung führt
+		// z. B. ?text[]=x unter PHP 8 zu einem TypeError (strlen() mit Array),
+		// ?kategorie[]=x zu "Array to string conversion". Für normale
+		// Parameter bleiben Treffer und Reihenfolge unverändert. Dieselben
+		// Werte versorgen das Suchformular im Template.
+		$searchArr = [];
+		foreach (['kategorie', 'text'] as $key) {
+			if (isset($_GET[$key]) && is_string($_GET[$key])) {
+				$searchArr[$key] = $_GET[$key];
+			}
+		}
+		$this->Template->search = $searchArr;
+
 		if($objPage->id == 7) { // Übersichtsseite SE-KulturNetz
 			$artists = ArtistsModel::findAllArtists(3);
 			$this->Template->artists = $artists;	
 		} else {
-			$artists = ArtistsModel::findAllArtists(100, @$_GET);
+			$artists = ArtistsModel::findAllArtists(100, $searchArr);
 			$this->Template->artists = $artists;	
 			$filter = true;
 		}		
