@@ -1,0 +1,73 @@
+# Benannte Bildgrößen des KulturNetz-Bundles (Contao-Konfiguration contao.image.sizes).
+#
+# Abgeleitet aus allen bisherigen Aufrufen von Helper\ImageHelper::resize() in den
+# Bundle-Templates: gleiche Maße, "proportional" als "box" (ImageHelper rechnete
+# bereits mit box), Ausgabe immer als WebP mit Qualität 80 wie ImageHelper. SVG-Dateien
+# verarbeitet der Bild-Service ohne Größe (Originaldatei wie bisher).
+#
+# Verwendung: Service\Image\ImageSize, in Twig figure(uuid, '_kulturnetz_<name>') bzw.
+# kulturnetz_figure(quelle, '<name>'). Jede Größe nennt Format und Qualität selbst,
+# damit sie nicht von "_defaults" der Projektkonfiguration abhängt.
+
+parameters:
+    # Ersatzbild für Profile und Veranstaltungen ohne Titelbild (Pfad relativ zum
+    # Projektverzeichnis, bisher Standardwert von ImageHelper::avatarPath()). In der
+    # Projektkonfiguration überschreibbar.
+    kulturnetz.image.placeholder: 'files/se-kultur.de/img/noavatar.jpg'
+
+contao:
+    image:
+        sizes:
+            # 272 x 272, crop: Vorschaubilder in Listen und Verzeichnissen
+            kulturnetz_list:
+                width: 272
+                height: 272
+                resize_mode: crop
+                lazy_loading: false
+                formats: &kulturnetz_webp_formats
+                    jpg: [webp]
+                    jpeg: [webp]
+                    png: [webp]
+                    gif: [webp]
+                    webp: [webp]
+                    avif: [webp]
+                    bmp: [webp]
+                    tif: [webp]
+                    tiff: [webp]
+                imagine_options: &kulturnetz_webp_options
+                    webp_quality: 80
+
+            # 700 x 700, crop: Titelbild in der Seitenleiste der Detailansichten
+            kulturnetz_detail:
+                width: 700
+                height: 700
+                resize_mode: crop
+                lazy_loading: false
+                formats: *kulturnetz_webp_formats
+                imagine_options: *kulturnetz_webp_options
+
+            # Breite 1400, box: Lightbox (Titelbild und Galerie)
+            kulturnetz_lightbox:
+                width: 1400
+                resize_mode: box
+                lazy_loading: false
+                formats: *kulturnetz_webp_formats
+                imagine_options: *kulturnetz_webp_options
+
+            # 620 x 465, box: Galeriebilder im Slider der Detailansichten
+            kulturnetz_gallery:
+                width: 620
+                height: 465
+                resize_mode: box
+                lazy_loading: false
+                formats: *kulturnetz_webp_formats
+                imagine_options: *kulturnetz_webp_options
+
+            # 120 x 120, crop: kleine Profilbilder (Beiträge, Follower, verknüpfte Profile)
+            kulturnetz_avatar:
+                width: 120
+                height: 120
+                resize_mode: crop
+                lazy_loading: false
+                formats: *kulturnetz_webp_formats
+                imagine_options: *kulturnetz_webp_options
