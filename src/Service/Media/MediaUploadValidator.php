@@ -17,7 +17,9 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
  *   Bundle-Konfiguration (kulturnetz.upload.max_file_size, 0 = nur PHP-Grenzen),
  *   MIME-Typ am Inhalt erkannt (fileinfo) und in kulturnetz.upload.mime_types
  *   enthalten, Bildkopf lesbar (getimagesize) und vom selben Typ. Die Endung der
- *   gespeicherten Datei folgt dem erkannten Typ, nicht dem Dateinamen.
+ *   gespeicherten Datei folgt dem erkannten Typ, nicht dem Dateinamen. Daten
+ *   hinter dem Bildende (JPEG EOI, PNG IEND, GIF-Trailer, WebP-RIFF-Länge) werden
+ *   ohne Neukodierung abgeschnitten; fehlt das Ende, wird die Datei abgelehnt.
  * - Zuschnitt (Titelbilder): Data-URL "data:image/png;base64,…", gültiges
  *   Base64, ein vollständig lesbares PNG mit genau CROP_SIZE x CROP_SIZE Pixeln
  *   (vom Contao-Bilddienst geöffnet).
@@ -45,6 +47,11 @@ final class MediaUploadValidator
     ];
 
     private const CROP_DATA_URL_PREFIX = 'data:image/png;base64,';
+
+    /**
+     * Bildende fehlt oder Aufbau defekt (Stil der übrigen Upload-Meldungen).
+     */
+    public const MESSAGE_DAMAGED = 'Die gewählte Datei ist beschädigt oder unvollständig. Bitte wählen Sie eine andere Datei aus.';
 
     public function __construct(
         private readonly KulturnetzConfig $config,
@@ -93,6 +100,8 @@ final class MediaUploadValidator
             throw MediaException::unprocessable(MediaException::MESSAGE_INVALID_FILE_TYPE);
         }
 
+        $this->truncateTrailingData($path, $mimeType);
+
         return new ValidatedImage($path, $mimeType, $extension);
     }
 
@@ -118,6 +127,9 @@ final class MediaUploadValidator
         if (false === $info || \IMAGETYPE_PNG !== $info[2] || self::CROP_SIZE !== $info[0] || self::CROP_SIZE !== $info[1]) {
             throw MediaException::unprocessable(MediaException::MESSAGE_INVALID_INPUT);
         }
+
+        // Daten hinter dem PNG-Ende gehören nicht zum Bild.
+        $binary = substr($binary, 0, $this->findImageEnd($binary, 'image/png'));
 
         // Vollständig lesbar? (Kopf allein beweist kein gültiges Bild.)
         try {
@@ -173,6 +185,263 @@ final class MediaUploadValidator
     public function getAllowedMimeTypes(): array
     {
         return array_values(array_filter($this->config->getUploadMimeTypes(), $this->isAllowedMimeType(...)));
+    }
+
+    /**
+     * Schneidet Daten hinter dem Ende des Bildes ab (z. B. angehängter PHP-Code
+     * oder ein Archiv). Das Bild selbst bleibt Byte für Byte erhalten, also auch
+     * Pixel, EXIF-Daten und Orientierung; neu kodiert wird nichts.
+     *
+     * Abschneiden statt Ablehnen, weil auch harmlose Dateien Anhänge tragen
+     * (Bewegungsfotos mancher Smartphones hängen ein Video an, MPO-Dateien ein
+     * zweites Bild); Mitglieder sollen solche Fotos weiter hochladen können.
+     *
+     * @throws MediaException 422, wenn das Bildende fehlt oder der Aufbau defekt ist
+     */
+    private function truncateTrailingData(string $path, string $mimeType): void
+    {
+        $data = file_get_contents($path);
+
+        if (false === $data) {
+            throw MediaException::unprocessable(MediaException::MESSAGE_INVALID_INPUT);
+        }
+
+        $end = $this->findImageEnd($data, $mimeType);
+
+        if ($end === \strlen($data)) {
+            return;
+        }
+
+        $handle = fopen($path, 'r+b');
+
+        if (false === $handle) {
+            throw new \RuntimeException(\sprintf('Upload "%s" konnte nicht zum Kürzen geöffnet werden.', $path));
+        }
+
+        try {
+            if (!ftruncate($handle, $end)) {
+                throw new \RuntimeException(\sprintf('Upload "%s" konnte nicht gekürzt werden.', $path));
+            }
+        } finally {
+            fclose($handle);
+            clearstatcache(true, $path);
+        }
+    }
+
+    /**
+     * Länge des Bildes in Byte bis einschließlich seiner Endmarke.
+     *
+     * @throws MediaException 422, wenn das Bildende fehlt oder der Aufbau defekt ist
+     */
+    private function findImageEnd(string $data, string $mimeType): int
+    {
+        $end = match ($mimeType) {
+            'image/jpeg' => $this->findJpegEnd($data),
+            'image/png' => $this->findPngEnd($data),
+            'image/gif' => $this->findGifEnd($data),
+            'image/webp' => $this->findWebpEnd($data),
+            default => null,
+        };
+
+        if (null === $end) {
+            throw MediaException::unprocessable(self::MESSAGE_DAMAGED);
+        }
+
+        return $end;
+    }
+
+    /**
+     * JPEG: Segmente ab SOI bis EOI (FFD9). Nach SOS folgen Bilddaten, in denen FF
+     * nur maskiert (FF00) oder als Restart-Marke (FFD0 bis FFD7) vorkommt; die
+     * nächste andere Marke beendet sie. Eingebettete Vorschaubilder liegen in
+     * APP-Segmenten mit Längenangabe und werden übersprungen.
+     */
+    private function findJpegEnd(string $data): int|null
+    {
+        $length = \strlen($data);
+
+        if ($length < 4 || "\xFF\xD8" !== substr($data, 0, 2)) {
+            return null;
+        }
+
+        $pos = 2;
+
+        while ($pos < $length) {
+            if ("\xFF" !== $data[$pos]) {
+                return null;
+            }
+
+            // Füllbytes FF vor der Marke
+            while ($pos + 1 < $length && "\xFF" === $data[$pos + 1]) {
+                ++$pos;
+            }
+
+            if ($pos + 1 >= $length) {
+                return null;
+            }
+
+            $marker = \ord($data[$pos + 1]);
+
+            if (0xD9 === $marker) {
+                return $pos + 2;
+            }
+
+            if (0x01 === $marker || ($marker >= 0xD0 && $marker <= 0xD7)) {
+                $pos += 2;
+
+                continue;
+            }
+
+            if (0x00 === $marker || 0xD8 === $marker || $pos + 4 > $length) {
+                return null;
+            }
+
+            $segmentLength = unpack('n', $data, $pos + 2)[1];
+
+            if ($segmentLength < 2 || $pos + 2 + $segmentLength > $length) {
+                return null;
+            }
+
+            $pos += 2 + $segmentLength;
+
+            if (0xDA !== $marker) {
+                continue;
+            }
+
+            // Bilddaten nach SOS bis zur nächsten Marke
+            while (true) {
+                $next = strpos($data, "\xFF", $pos);
+
+                if (false === $next || $next + 1 >= $length) {
+                    return null;
+                }
+
+                $byte = \ord($data[$next + 1]);
+
+                if (0x00 === $byte || ($byte >= 0xD0 && $byte <= 0xD7)) {
+                    $pos = $next + 2;
+
+                    continue;
+                }
+
+                if (0xFF === $byte) {
+                    $pos = $next + 1;
+
+                    continue;
+                }
+
+                $pos = $next;
+
+                break;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * PNG: Signatur, dann Chunks (Länge, Typ, Daten, CRC) bis einschließlich IEND.
+     */
+    private function findPngEnd(string $data): int|null
+    {
+        $length = \strlen($data);
+
+        if ("\x89PNG\r\n\x1A\n" !== substr($data, 0, 8)) {
+            return null;
+        }
+
+        $pos = 8;
+
+        while ($pos + 12 <= $length) {
+            $chunkLength = unpack('N', $data, $pos)[1];
+            $chunkEnd = $pos + 12 + $chunkLength;
+
+            if ($chunkLength > 0x7FFFFFFF || $chunkEnd > $length) {
+                return null;
+            }
+
+            if ('IEND' === substr($data, $pos + 4, 4)) {
+                return $chunkEnd;
+            }
+
+            $pos = $chunkEnd;
+        }
+
+        return null;
+    }
+
+    /**
+     * GIF: Kopf, globale Farbtabelle, dann Bild- und Erweiterungsblöcke bis zum
+     * Trailer (3B).
+     */
+    private function findGifEnd(string $data): int|null
+    {
+        $length = \strlen($data);
+
+        if ($length < 13 || !\in_array(substr($data, 0, 6), ['GIF87a', 'GIF89a'], true)) {
+            return null;
+        }
+
+        $pos = 13 + $this->gifColorTableSize(\ord($data[10]));
+
+        while ($pos < $length) {
+            $block = \ord($data[$pos]);
+
+            if (0x3B === $block) {
+                return $pos + 1;
+            }
+
+            if (0x2C === $block) {
+                if ($pos + 11 > $length) {
+                    return null;
+                }
+
+                // Bildbeschreibung (10 Byte), lokale Farbtabelle, LZW-Mindestcodegröße
+                $pos += 10 + $this->gifColorTableSize(\ord($data[$pos + 9])) + 1;
+            } elseif (0x21 === $block) {
+                // Erweiterung: Einleitung und Kennung, dann Unterblöcke
+                $pos += 2;
+            } else {
+                return null;
+            }
+
+            // Unterblöcke bis zum Block der Länge 0
+            while (true) {
+                if ($pos >= $length) {
+                    return null;
+                }
+
+                $size = \ord($data[$pos]);
+                ++$pos;
+
+                if (0 === $size) {
+                    break;
+                }
+
+                $pos += $size;
+            }
+        }
+
+        return null;
+    }
+
+    private function gifColorTableSize(int $flags): int
+    {
+        return 0x80 === ($flags & 0x80) ? 3 * (2 ** (($flags & 0x07) + 1)) : 0;
+    }
+
+    /**
+     * WebP: RIFF-Container, dessen Längenangabe das Ende bestimmt.
+     */
+    private function findWebpEnd(string $data): int|null
+    {
+        if (\strlen($data) < 12 || 'RIFF' !== substr($data, 0, 4) || 'WEBP' !== substr($data, 8, 4)) {
+            return null;
+        }
+
+        $end = 8 + unpack('V', $data, 4)[1];
+
+        return $end <= \strlen($data) ? $end : null;
     }
 
     private function isAllowedMimeType(string $mimeType): bool
