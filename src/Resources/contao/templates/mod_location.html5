@@ -194,8 +194,7 @@ if($this->member_id == $artist->member_id) {
 {{file::se-kultur-de/fileuploader.php?upload=gallery&alias=<?= $artist->alias ?>&type=locations&id=<?= $artist->id ?>}}
 <?php endif; ?>
 
-<?php if($artist->orderSRC != NULL && $artist->orderSRC != 'a:0:{}'): ?>
-<?php $imgs = \Contao\FilesModel::findMultipleByUuids(\Contao\StringUtil::deserialize($artist->orderSRC, true));  ?>
+<?php if($artist->orderSRC != NULL && $artist->orderSRC != 'a:0:{}' && $imgs = \Contao\FilesModel::findMultipleByUuids(\Contao\StringUtil::deserialize($artist->orderSRC, true))): ?>
 <div class="ce_gallery" id="galerie">
 	<div class="swiper">
 	  <div class="swiper-wrapper">

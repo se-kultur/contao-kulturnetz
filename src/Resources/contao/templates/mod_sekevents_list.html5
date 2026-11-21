@@ -21,7 +21,7 @@ $tage = [
 		($event->nextdate > 0)
 	): $eventscount++; ?>
 	<?php
-	if($objFile = \Contao\FilesModel::findByUuid($event->avatar)) {
+	if($event->avatar && ($objFile = \Contao\FilesModel::findByUuid($event->avatar))) {
 		$sekEventimgPath = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($objFile->path, 272, 272, 'crop') ?: $objFile->path;
 		$sekEventimgMeta = ($objFile->meta != NULL) ? unserialize($objFile->meta)['de'] : false;
 	} else {
@@ -102,7 +102,7 @@ $tage = [
 		(($event->disable == 1 && $this->member_id == $event->member_id) || $event->disable !== '1' )
 	): $eventscount++; ?>
 	<?php
-	if($objFile = \Contao\FilesModel::findByUuid($event->avatar)) {
+	if($event->avatar && ($objFile = \Contao\FilesModel::findByUuid($event->avatar))) {
 		$sekEventimgPath = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($objFile->path, 272, 272, 'crop') ?: $objFile->path;
 		$sekEventimgMeta = ($objFile->meta != NULL) ? unserialize($objFile->meta)['de'] : false;
 	} else {

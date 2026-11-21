@@ -128,7 +128,7 @@ $GLOBALS['FOOTERJS'][] ='<script type="text/javascript" src="files/se-kultur.de/
 	$date = false;
 	foreach($this->events as $kdate => $artist):
 
-	if($objFile = \Contao\FilesModel::findByUuid($artist->avatar)) {
+	if($artist->avatar && ($objFile = \Contao\FilesModel::findByUuid($artist->avatar))) {
 		$imgPath = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($objFile->path, 272, 272, 'crop') ?: $objFile->path;
 		$imgMeta = ($objFile->meta != NULL) ? unserialize($objFile->meta)['de'] : false;
 	} else {

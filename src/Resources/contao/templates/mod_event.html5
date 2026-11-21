@@ -2,7 +2,7 @@
 $artist = $this->event; 
 $noavatar = 'files/se-kultur.de/img/noavatar.jpg';
 
-if($objFile = \Contao\FilesModel::findByUuid($artist->avatar)) {
+if($artist->avatar && ($objFile = \Contao\FilesModel::findByUuid($artist->avatar))) {
 	$imgPath = $objFile->path;
 	$imgPathDetail = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($imgPath, 700, 700, 'crop') ?: $imgPath;
 	$imgPathLightbox = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($imgPath, 1400, 0, 'proportional') ?: $imgPath;

@@ -10,7 +10,7 @@ $GLOBALS['TL_JAVASCRIPT'][] ='files/se-kultur.de/js/eventform.js';
 $GLOBALS['FOOTERJS'][] ='<script src="files/se-kultur.de/js/fileuploader.js"></script>';  
 
 $avatar_uuid = '';
-if($objFile = \Contao\FilesModel::findByUuid($artist->avatar)) {
+if($artist->avatar && ($objFile = \Contao\FilesModel::findByUuid($artist->avatar))) {
 	$imgPath = $objFile->path;
 	$imgMeta = ($objFile->meta != NULL) ? unserialize($objFile->meta)['de'] : false;
 	

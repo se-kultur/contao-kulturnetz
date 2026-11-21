@@ -1,6 +1,6 @@
 <?php 
 $artist = $this->event; 
-if($objFile = \Contao\FilesModel::findByUuid($artist->avatar)) {
+if($artist->avatar && ($objFile = \Contao\FilesModel::findByUuid($artist->avatar))) {
 	$imgPath = $objFile->path;
 	$imgPathDetail = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($imgPath, 700, 700, 'crop') ?: $imgPath;
 	$imgPathLightbox = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($imgPath, 1400, 0, 'proportional') ?: $imgPath;
@@ -76,8 +76,7 @@ if($this->member_id == $artist->member_id) {
 {{file::se-kultur-de/fileuploader.php?upload=gallery&alias=<?= $artist->alias ?>&type=sekevents&id=<?= $artist->id ?>}}
 <?php endif; ?>
 
-<?php if($artist->orderSRC != NULL && $artist->orderSRC != 'a:0:{}'): ?>
-<?php $imgs = \Contao\FilesModel::findMultipleByUuids(\Contao\StringUtil::deserialize($artist->orderSRC, true));  ?>
+<?php if($artist->orderSRC != NULL && $artist->orderSRC != 'a:0:{}' && $imgs = \Contao\FilesModel::findMultipleByUuids(\Contao\StringUtil::deserialize($artist->orderSRC, true))): ?>
 <div class="ce_gallery">
 	<div class="swiper">
 	  <div class="swiper-wrapper">
