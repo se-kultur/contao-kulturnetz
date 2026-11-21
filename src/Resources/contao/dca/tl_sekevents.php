@@ -119,6 +119,7 @@ $GLOBALS['TL_DCA']['tl_sekevents'] = [
 			],
         ],
 		'member_id' => [
+			'exclude' => false,
 			'label'					=> ['Mitglied', ''],
 			'inputType'             => 'text',
 			'eval'					=> array('disabled' => true),
@@ -163,12 +164,13 @@ $GLOBALS['TL_DCA']['tl_sekevents'] = [
 			),
 		],
 		'avatar' => [
+            'exclude' => false,
             'inputType' => 'fileTree',
             'eval' => [
                 'tl_class' 		=> 'clr',
                 'fieldType' 	=> 'radio',
                 'filesOnly' 	=> true,
-                'extensions' 	=> \Contao\Config::get('validImageTypes'),
+                'extensions' 	=> '%contao.image.valid_extensions%',
                 //'mandatory' 	=> true,
             ],
             'sql' => ['type' => 'binary', 'length' => 16, 'notnull' => false, 'fixed' => true]
@@ -182,7 +184,7 @@ $GLOBALS['TL_DCA']['tl_sekevents'] = [
 				'fieldType'		=>'checkbox', 
 				'isSortable'	=> true,
 				'files'			=>true,
-				'extensions' 	=> \Contao\Config::get('validImageTypes'),
+				'extensions' 	=> '%contao.image.valid_extensions%',
 			],
 			'sql'                     => "blob NULL",
 		),
@@ -193,18 +195,21 @@ $GLOBALS['TL_DCA']['tl_sekevents'] = [
 		),
 		
 		'lat' => [
+			'exclude' => false,
 			'label'					=> ['Latitude', ''],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(25) NOT NULL",
 			'eval'                    => array('tl_class'=>'w50'),
 		],
 		'lon' => [
+			'exclude' => false,
 			'label'					=> ['Longitude', ''],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(25) NOT NULL",
 			'eval'                    => array('tl_class'=>'w50'),
 		],
 		'map' => [
+            'exclude' => false,
             'label'         		=> ['Position auf Karte', ''],
             'input_field_callback' => [
 				'tl_sekevents', 'latlonmap'
@@ -212,6 +217,7 @@ $GLOBALS['TL_DCA']['tl_sekevents'] = [
         ],
 		
 		'plakatentwurf' => [
+			'exclude' => false,
 			'label'					=> ['Plakatentwurf erbeten?', ''],
 			'inputType'               => 'checkbox',
 			'filter'                  => true,
@@ -220,6 +226,7 @@ $GLOBALS['TL_DCA']['tl_sekevents'] = [
 		
 		
 		'programmhefte' => [
+			'exclude' => false,
 			'label'					=> ['Programmhefte', ''],
 			'inputType'               => 'text',
 			'sql'                     => "int(2) unsigned NOT NULL default 0"
@@ -245,6 +252,7 @@ $GLOBALS['TL_DCA']['tl_sekevents'] = [
 			'sql'                     => "int(2) unsigned NOT NULL default 0"
 		],
 		'wimpelketten' => [
+			'exclude' => false,
 			'label'					=> ['Wimpelketten erbeten?', ''],
 			'inputType'               => 'checkbox',
 			'filter'                  => true,
@@ -252,27 +260,32 @@ $GLOBALS['TL_DCA']['tl_sekevents'] = [
 		],
 		
 		'sparten' => [
+			'exclude' => false,
 			'label'					=> ['Sparten', ''],
 			'inputType'               => 'text',
 			'eval'                    => array('mandatory'=>true, 'maxlength'=>255, 'tl_class'=>'clr'),
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'kulturform' => [
+			'exclude' => false,
 			'label'					=> ['Kulturform', ''],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'zielgruppen' => [
+			'exclude' => false,
 			'label'					=> ['Zielgruppen', ''],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'artists' => [
+			'exclude' => false,
 			'label'					=> ['Künstler:innen', 'Freitextfeld'],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'linked_artists' => [
+			'exclude' => false,
 			'label'					=> ['Verlinkte Künstler:innen', ''],
 			'inputType'             => 'text',
 			'sql'                   => "varchar(255) NOT NULL default ''",
@@ -284,12 +297,14 @@ $GLOBALS['TL_DCA']['tl_sekevents'] = [
 			],
 		],
 		'eintrittfrei' => [
+			'exclude' => false,
 			'label'					=> ['Eintritt frei?', ''],
 			'inputType'               => 'checkbox',
 			'filter'                  => true,
 			'sql'                     => "char(1) NOT NULL default ''",
 		],
 		'prices' => [
+			'exclude' => false,
 			'label'					=> ['Preise', ''],
 			'inputType'               => 'text',
 			'sql'                     => "text NULL",
@@ -301,28 +316,33 @@ $GLOBALS['TL_DCA']['tl_sekevents'] = [
 			],
 		],
 		'pricecomment' => [
+			'exclude' => false,
 			'label'					=> ['Kommentar zu Preisen', ''],
 			'inputType'               => 'text',
 			'sql'                     => "text NULL"
 		],
 		'spenden' => [
+			'exclude' => false,
 			'label'					=> ['Spenden erbeten?', ''],
 			'inputType'               => 'checkbox',
 			'filter'                  => true,
 			'sql'                     => "char(1) NOT NULL default ''",
 		],
 		'anmeldung' => [
+			'exclude' => false,
 			'label'					=> ['Anmeldung notwendig?', ''],
 			'inputType'               => 'checkbox',
 			'filter'                  => true,
 			'sql'                     => "char(1) NOT NULL default ''",
 		],
 		'anmeldestelle' => [
+			'exclude' => false,
 			'label'					=> ['Anmeldestelle(n)', ''],
 			'inputType'               => 'text',
 			'sql'                     => "text NULL"
 		],
 		'dates' => [
+			'exclude' => false,
 			'label'					=> ['Daten und Zeiten', ''],
 			'inputType'               => 'text',
 			'sql'                     => "text NULL",
@@ -334,11 +354,13 @@ $GLOBALS['TL_DCA']['tl_sekevents'] = [
 			],
 		],
 		'locations' => [
+			'exclude' => false,
 			'label'					=> ['Locations', 'Freitextfeld'],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'linked_locations' => [
+			'exclude' => false,
 			'label'					=> ['Verlinkte Location', ''],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''",
@@ -350,18 +372,21 @@ $GLOBALS['TL_DCA']['tl_sekevents'] = [
 			],
 		],
 		'location_adresse' => [
+			'exclude' => false,
 			'label'					=> ['Location Adresse', ''],
 			'inputType'               => 'text',
 			//'search'                  => true,
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'location_plz' => [
+			'exclude' => false,
 			'label'					=> ['Location PLZ', ''],
 			'inputType'               => 'text',
 			'search'                  => true,
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'location_ort' => [
+			'exclude' => false,
 			'label'					=> ['Location Ort', ''],
 			'inputType'               => 'text',
 			'search'                  => true,
@@ -369,32 +394,38 @@ $GLOBALS['TL_DCA']['tl_sekevents'] = [
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'location_barrierefreiheit' => [
+			'exclude' => false,
 			'label'					=> ['Location Barrierefreiheit', ''],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''",
 			'eval'                    => array('tl_class'=>'clr'),
 		],
 		'location_telefon' => [
+			'exclude' => false,
 			'label'					=> ['Location Telefon', ''],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'location_email' => [
+			'exclude' => false,
 			'label'					=> ['Location E-Mail', ''],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'location_website' => [
+			'exclude' => false,
 			'label'					=> ['Location Website', ''],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'hosts' => [
+			'exclude' => false,
 			'label'					=> ['Veranstalter:innen', 'Freitextfeld'],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'linked_hosts' => [
+			'exclude' => false,
 			'label'					=> ['Verlinkte Veranstalter:innen', ''],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''",
@@ -406,38 +437,45 @@ $GLOBALS['TL_DCA']['tl_sekevents'] = [
 			],
 		],
 		'host_adresse' => [
+			'exclude' => false,
 			'label'					=> ['Veranstalter:in Adresse', ''],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'host_plz' => [
+			'exclude' => false,
 			'label'					=> ['Veranstalter:in PLZ', ''],
 			'inputType'               => 'text',
 			'search'                  => true,
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'host_ort' => [
+			'exclude' => false,
 			'label'					=> ['Veranstalter:in Ort', ''],
 			'inputType'               => 'text',
 			'search'                  => true,
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'host_telefon' => [
+			'exclude' => false,
 			'label'					=> ['Veranstalter:in Telefon', ''],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'host_email' => [
+			'exclude' => false,
 			'label'					=> ['Veranstalter:in E-Mail', ''],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'host_website' => [
+			'exclude' => false,
 			'label'					=> ['Veranstalter:in Website', ''],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'kooperationspartner' => [
+			'exclude' => false,
 			'label'					=> ['Kooperationspartner', ''],
 			'inputType'               => 'text',
 			'sql'                     => "text NULL"
@@ -445,11 +483,13 @@ $GLOBALS['TL_DCA']['tl_sekevents'] = [
 		
 		
 		'kurzbeschreibung' => [
+			'exclude' => false,
 			'label'					=> ['Kurzbeschreibung', ''],
 			'inputType'               => 'textarea',
 			'sql'                     => "text NULL"
 		],
 		'beschreibung' => [
+			'exclude' => false,
 			'label'					=> ['Langbeschreibung', ''],
 			'inputType'               => 'textarea',
 			'eval'                    => array('mandatory'=>true, 'rte'=>'tinyMCE', 'helpwizard'=>true),
@@ -480,6 +520,7 @@ $GLOBALS['TL_DCA']['tl_sekevents'] = [
 			'sql'                     => "mediumtext NULL"
 		],
 		'sendmail' => [
+			'exclude' => false,
 			'label'					=> ['E-Mail senden?'],
 			'inputType'				=> 'checkbox',
 			'save_callback'			=> [
@@ -490,6 +531,7 @@ $GLOBALS['TL_DCA']['tl_sekevents'] = [
 			]
 		],
 		'sendmailsubject' => [
+			'exclude' => false,
 			'label'					=> ['E-Mail Betreff'],
 			'inputType'				=> 'text',
 			'save_callback'			=> [
@@ -503,6 +545,7 @@ $GLOBALS['TL_DCA']['tl_sekevents'] = [
 			],
 		],
 		'sendmailtext' => [
+			'exclude' => false,
 			'label'					=> ['E-Mail Inhalt'],
 			'inputType'				=> 'textarea',
 			'save_callback'			=> [
@@ -517,6 +560,7 @@ $GLOBALS['TL_DCA']['tl_sekevents'] = [
 		],
 		
 		'memberinfos' => [
+            'exclude' => false,
             'label'         		=> ['Informationen zum Mitglied', ''],
             'input_field_callback' => [
 				'tl_sekevents', 'memberinfos'

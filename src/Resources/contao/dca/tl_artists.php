@@ -111,6 +111,7 @@ $GLOBALS['TL_DCA']['tl_artists'] = [
 			],
         ],
 		'member_id' => [
+			'exclude' => false,
 			'label'					=> ['Mitglied', ''],
 			'inputType'             => 'text',
 			'eval'					=> array('disabled' => true),
@@ -155,12 +156,13 @@ $GLOBALS['TL_DCA']['tl_artists'] = [
 			),
 		],
 		'avatar' => [
+            'exclude' => false,
             'inputType' => 'fileTree',
             'eval' => [
                 'tl_class' 		=> 'clr',
                 'fieldType' 	=> 'radio',
                 'filesOnly' 	=> true,
-                'extensions' 	=> \Contao\Config::get('validImageTypes'),
+                'extensions' 	=> '%contao.image.valid_extensions%',
                 //'mandatory' 	=> true,
             ],
             'sql' => ['type' => 'binary', 'length' => 16, 'notnull' => false, 'fixed' => true]
@@ -174,7 +176,7 @@ $GLOBALS['TL_DCA']['tl_artists'] = [
 				'fieldType'		=>'checkbox', 
 				'isSortable'	=> true,
 				'files'			=>true,
-				'extensions' 	=> \Contao\Config::get('validImageTypes'),
+				'extensions' 	=> '%contao.image.valid_extensions%',
 			],
 			'sql'                     => "blob NULL",
 		),
@@ -184,80 +186,95 @@ $GLOBALS['TL_DCA']['tl_artists'] = [
 			'sql'                     => "blob NULL"
 		),
 		'lat' => [
+			'exclude' => false,
 			'label'					=> ['Latitude', ''],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(25) NOT NULL",
 			'eval'                    => array('tl_class'=>'w50'),
 		],
 		'lon' => [
+			'exclude' => false,
 			'label'					=> ['Longitude', ''],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(25) NOT NULL",
 			'eval'                    => array('tl_class'=>'w50'),
 		],
 		'map' => [
+            'exclude' => false,
             'label'         		=> ['Position auf Karte', ''],
             'input_field_callback' => [
 				'tl_artists', 'latlonmap'
 			]
         ],
 		'sparten' => [
+			'exclude' => false,
 			'label'					=> ['Sparten', ''],
 			'inputType'               => 'text',
 			'eval'                    => array('mandatory'=>true, 'maxlength'=>255, 'tl_class'=>'clr'),
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'themen' => [
+			'exclude' => false,
 			'label'					=> ['Themenschwerpunkte', ''],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'website' => [
+			'exclude' => false,
 			'label'					=> ['Webseite', ''],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'facebook' => [
+			'exclude' => false,
 			'label'					=> ['Facebook-URL', ''],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'instagram' => [
+			'exclude' => false,
 			'label'					=> ['Instagram-URL', ''],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'tiktok' => [
+			'exclude' => false,
 			'label'					=> ['TikTok-URL', ''],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'linkedin' => [
+			'exclude' => false,
 			'label'					=> ['LinkedIn-URL', ''],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'xing' => [
+			'exclude' => false,
 			'label'					=> ['Xing-URL', ''],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'email' => [
+			'exclude' => false,
 			'label'					=> ['E-Mail Adresse', 'Wird öffentlich im Profil angezeigt'],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'telefon' => [
+			'exclude' => false,
 			'label'					=> ['Telefon- oder Handynummer', 'Wird öffentlich im Profil angezeigt'],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'adresse' => [
+			'exclude' => false,
 			'label'					=> ['Straße und Hausnummer', 'Wird öffentlich im Profil angezeigt'],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'plz' => [
+			'exclude' => false,
 			'label'					=> ['Postleitzahl', 'Wird öffentlich im Profil angezeigt'],
 			'inputType'               => 'text',
 			'sorting'                 => true,
@@ -265,6 +282,7 @@ $GLOBALS['TL_DCA']['tl_artists'] = [
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'ort' => [
+			'exclude' => false,
 			'label'					=> ['Ort', 'Wird öffentlich im Profil angezeigt'],
 			'inputType'               => 'text',
 			'sorting'                 => true,
@@ -272,16 +290,19 @@ $GLOBALS['TL_DCA']['tl_artists'] = [
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'zitat' => [
+			'exclude' => false,
 			'label'					=> ['Zitat', 'Persönliches Kultur-Zitat'],
 			'inputType'               => 'text',
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		],
 		'kurzbeschreibung' => [
+			'exclude' => false,
 			'label'					=> ['Kurzbeschreibung', ''],
 			'inputType'               => 'textarea',
 			'sql'                     => "text NULL"
 		],
 		'beschreibung' => [
+			'exclude' => false,
 			'label'					=> ['Langbeschreibung', ''],
 			'inputType'               => 'textarea',
 			'eval'                    => array('mandatory'=>true, 'rte'=>'tinyMCE', 'helpwizard'=>true),
@@ -297,11 +318,13 @@ $GLOBALS['TL_DCA']['tl_artists'] = [
 			//'save_callback'			  => [['tl_artists', 'sendActivationMail']]
 		],
 		'comment' => [
+			'exclude' => false,
 			'label'					=> ['Kommentar (INTERN)', 'Das Kommentar kann nur über das Backend an dieser Stelle gelesen und verändert werden und dient lediglich der internen Kommunikation / Protokollierung'],
 			'inputType'               => 'textarea',
 			'sql'                     => "mediumtext NULL"
 		],
 		'sendmail' => [
+			'exclude' => false,
 			'label'					=> ['E-Mail senden?'],
 			'inputType'				=> 'checkbox',
 			'save_callback'			=> [
@@ -312,6 +335,7 @@ $GLOBALS['TL_DCA']['tl_artists'] = [
 			]
 		],
 		'sendmailsubject' => [
+			'exclude' => false,
 			'label'					=> ['E-Mail Betreff'],
 			'inputType'				=> 'text',
 			'save_callback'			=> [
@@ -325,6 +349,7 @@ $GLOBALS['TL_DCA']['tl_artists'] = [
 			],
 		],
 		'sendmailtext' => [
+			'exclude' => false,
 			'label'					=> ['E-Mail Inhalt'],
 			'inputType'				=> 'textarea',
 			'save_callback'			=> [
@@ -339,6 +364,7 @@ $GLOBALS['TL_DCA']['tl_artists'] = [
 		],
 		
 		'memberinfos' => [
+            'exclude' => false,
             'label'         		=> ['Informationen zum Mitglied', ''],
             'input_field_callback' => [
 				'tl_artists', 'memberinfos'

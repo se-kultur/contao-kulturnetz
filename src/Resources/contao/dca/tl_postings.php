@@ -84,6 +84,7 @@ $GLOBALS['TL_DCA']['tl_postings'] = [
 			],
         ],
 		'content' => [
+			'exclude' => false,
 			'label'					=> ['Kurzbeschreibung', ''],
 			'inputType'               => 'textarea',
 			'sql'                     => "text NULL"
