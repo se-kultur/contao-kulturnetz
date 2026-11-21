@@ -7,6 +7,7 @@ use Contao\DC_Table;
 use Contao\Email;
 use Contao\Environment;
 use Contao\Idna;
+use Contao\StringUtil;
 use Contao\System;
 
 $GLOBALS['TL_DCA']['tl_locations'] = [
@@ -14,6 +15,10 @@ $GLOBALS['TL_DCA']['tl_locations'] = [
         'dataContainer' => DC_Table::class,
         //'ctable' => ['tl_parts'],
         'enableVersioning' => true,
+        // Galerie-Reihenfolge: orderSRC beim Speichern mit multiSRC abgleichen
+        'onbeforesubmit_callback' => [
+            ['tl_locations', 'syncOrderSRC'],
+        ],
         'sql' => [
             'keys' => [
                 'id' => 'primary',
@@ -165,7 +170,7 @@ $GLOBALS['TL_DCA']['tl_locations'] = [
 			'eval'                    => [
 				'multiple'		=>true, 
 				'fieldType'		=>'checkbox', 
-				'orderField'	=>'orderSRC', 
+				'isSortable'	=> true,
 				'files'			=>true,
 				'extensions' 	=> \Contao\Config::get('validImageTypes'),
 			],
@@ -376,6 +381,25 @@ class tl_locations extends Backend {
 	{
 		parent::__construct();
 		//$this->import(BackendUser::class, 'User');
+	}
+
+	/**
+	 * Gleicht orderSRC beim Speichern mit multiSRC ab.
+	 *
+	 * Contao 5 kennt eval.orderField nicht mehr; die Reihenfolge der Galerie
+	 * steht jetzt direkt in multiSRC (isSortable). Die Frontend-Templates des
+	 * Bundles und die Ajax-Skripte unter files/se-kultur.de/code lesen die
+	 * Reihenfolge weiterhin aus orderSRC. Eine geleerte Galerie ergibt wie unter
+	 * Contao 4.13 ein leeres serialisiertes Array.
+	 */
+	public function syncOrderSRC(array $arrValues, DataContainer $dc): array
+	{
+		if (\array_key_exists('multiSRC', $arrValues))
+		{
+			$arrValues['orderSRC'] = serialize(array_values(StringUtil::deserialize($arrValues['multiSRC'], true)));
+		}
+
+		return $arrValues;
 	}
 	
 	public function downloadButton($arrRow, $href, $label, $title, $icon) {
