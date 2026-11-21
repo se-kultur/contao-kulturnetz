@@ -2,11 +2,11 @@
 $artist = $this->artist; 
 $profiletype = 'kuenstlerprofil';
 $profiletable = 'tl_artists';
-if($objFile = \Contao\FilesModel::findByUuid($artist->avatar)) {
+if($artist->avatar && ($objFile = \Contao\FilesModel::findByUuid($artist->avatar))) {
 	$imgPath = $objFile->path;
 	$imgPathDetail = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($imgPath, 700, 700, 'crop') ?: $imgPath;
 	$imgPathLightbox = \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($imgPath, 1400, 0, 'proportional') ?: $imgPath;
-	$imgMeta = ($objFile->meta != NULL) ? unserialize($objFile->meta)['de'] : false;
+	$imgMeta = \Contao\StringUtil::deserialize($objFile->meta, true)['de'] ?? false;
 } else {
 	$imgPath = 'files/se-kultur.de/img/noavatar.jpg';
 	$imgPathDetail = $imgPath;
@@ -131,7 +131,7 @@ if($this->member_id == $artist->member_id) {
 <?php endif; ?>
 
 <?php if($artist->orderSRC != NULL && $artist->orderSRC != 'a:0:{}'): ?>
-<?php $imgs = \Contao\FilesModel::findMultipleByUuids(deserialize($artist->orderSRC, true));  ?>
+<?php $imgs = \Contao\FilesModel::findMultipleByUuids(\Contao\StringUtil::deserialize($artist->orderSRC, true));  ?>
 <div class="ce_gallery" id="galerie">
 	<div class="swiper">
 	  <div class="swiper-wrapper">
@@ -139,17 +139,17 @@ if($this->member_id == $artist->member_id) {
 		  $loops = [1 => 1,2 => 3,3 => 2,4 => 2];
 		  $loops = (count($imgs) >= 5) ? 1 : $loops[count($imgs)];
 		?>
-	  <?php $a = 0; for($i = 0; $i < $loops; $i++): foreach ($imgs as $img): $meta = unserialize($img->meta)['de'] ?>
+	  <?php $a = 0; for($i = 0; $i < $loops; $i++): foreach ($imgs as $img): $meta = \Contao\StringUtil::deserialize($img->meta, true)['de'] ?? [] ?>
 		  <?php if($a == 5 && count($imgs) < 5) continue; ?>
 		<div class="swiper-slide">
 			<div class="swiper-carousel-animate-opacity">
 				<figure class="image_container">
-					<a data-fslightbox data-caption="<?= $meta['title'] ?><br><span style='font-size:0.8em;'>&copy; <?= $meta['caption'] ?></span>" href="<?= \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($img->path, 1400, 0, 'proportional') ?: $img->path ?>" title="<?= $meta['title'] ?>" data-lightbox="lb419">
+					<a data-fslightbox data-caption="<?= $meta['title'] ?? '' ?><br><span style='font-size:0.8em;'>&copy; <?= $meta['caption'] ?? '' ?></span>" href="<?= \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($img->path, 1400, 0, 'proportional') ?: $img->path ?>" title="<?= $meta['title'] ?? '' ?>" data-lightbox="lb419">
 						<img src="<?= \SeKultur\ContaoKulturnetzBundle\Helper\ImageHelper::resize($img->path, 620, 465, 'proportional') ?: $img->path ?>" alt="">
 					</a>
 					<figcaption>
-						<span class="title"><?= $meta['title'] ?></span>
-						<span class="copyright">&copy; <?= $meta['caption'] ?></span>
+						<span class="title"><?= $meta['title'] ?? '' ?></span>
+						<span class="copyright">&copy; <?= $meta['caption'] ?? '' ?></span>
 					</figcaption>
 				</figure>
 			</div>

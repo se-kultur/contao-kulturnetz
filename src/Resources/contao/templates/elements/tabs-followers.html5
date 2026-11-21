@@ -24,7 +24,7 @@ $followersCount = 0;
 			Location
 			<?php endif; ?>
 			<br>
-			<?= trim(strtoupper(str_replace(',',' | ',$follower->profile->sparten))) ?>
+			<?= trim(strtoupper(str_replace(',',' | ',(string) $follower->profile->sparten))) ?>
 		</div>
 		
 		<a href="detailansicht-<?= $aliaslink ?>/<?= $follower->profile->alias ?>.html" class="arrow"><i class="fa-solid fa-arrow-right-long"></i></a>
@@ -59,7 +59,7 @@ Aktuell folgt <?= $artist->name ?> keinem anderen Profil im KulturNetz.
 			Location
 			<?php endif; ?>
 			<br>
-			<?= trim(strtoupper(str_replace(',',' | ',$follower->profile->sparten))) ?>
+			<?= trim(strtoupper(str_replace(',',' | ',(string) $follower->profile->sparten))) ?>
 		</div>
 		
 		<a href="detailansicht-<?= $aliaslink ?>/<?= $follower->profile->alias ?>.html" class="arrow"><i class="fa-solid fa-arrow-right-long"></i></a>

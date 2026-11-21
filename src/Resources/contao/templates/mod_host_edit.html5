@@ -8,13 +8,14 @@ $GLOBALS['FOOTERJS'][] ='<script src="files/se-kultur.de/vendor/jquery.dirty.js"
 $GLOBALS['TL_JAVASCRIPT'][] ='files/se-kultur.de/js/hostform.js';  
 $GLOBALS['FOOTERJS'][] ='<script src="files/se-kultur.de/js/fileuploader.js"></script>';  
 
-if($objFile = \Contao\FilesModel::findByUuid($artist->avatar)) {
+if($artist->avatar && ($objFile = \Contao\FilesModel::findByUuid($artist->avatar))) {
 	$imgPath = $objFile->path;
-	$imgMeta = ($objFile->meta != NULL) ? unserialize($objFile->meta)['de'] : false;
+	$imgMeta = \Contao\StringUtil::deserialize($objFile->meta, true)['de'] ?? false;
 	
 	$avatar_uuid = preg_replace("/(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})/i", "$1-$2-$3-$4-$5", bin2hex($artist->avatar));
 } else {
 	$imgPath = 'files/se-kultur.de/img/noavatar.jpg';
+	$avatar_uuid = '';
 }
 ?>
 <form class="artistform" method="post" action="files/se-kultur.de/code/insertHost.php" data-type="edit">
