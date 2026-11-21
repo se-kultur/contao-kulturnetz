@@ -1,6 +1,7 @@
 <?php
 
 use Contao\Backend;
+use Contao\CoreBundle\Monolog\ContaoContext;
 use Contao\DataContainer;
 use Contao\DC_Table;
 use Contao\Email;
@@ -653,14 +654,15 @@ class tl_events extends Backend {
 			->execute($dc->activeRecord->member_id);
 			
 			$objEmail = new Email();
-			$objEmail->from = $GLOBALS['TL_ADMIN_EMAIL'];
-			$objEmail->fromName = $GLOBALS['TL_ADMIN_NAME'] ?? null;
+			// Kein eigener Absender: $GLOBALS['TL_ADMIN_EMAIL'] ist nur im Frontend gesetzt,
+			// Email::send() verwendet dann wie unter Contao 4.13 die Systemadresse (adminEmail).
 			$objEmail->subject = $_POST['sendmailsubject'];
 			$objEmail->text = $_POST['sendmailtext'];
 			$objEmail->sendTo($objMember->email);
 			
-			$this->log(
-				'Bestätigungsmail wurde an '.$objMember->email.' gesendet (tl_locations)', __METHOD__, TL_EMAIL
+			System::getContainer()->get('monolog.logger.contao.email')->info(
+				'Bestätigungsmail wurde an '.$objMember->email.' gesendet (tl_locations)',
+				['contao' => new ContaoContext(__METHOD__, ContaoContext::EMAIL)]
 			);
 		}	
 		
