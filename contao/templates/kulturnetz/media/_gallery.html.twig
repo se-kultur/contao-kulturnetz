@@ -1,0 +1,47 @@
+{#
+    Galerie-Karussell der Detailansichten (Profile und Veranstaltungen), Markup wie
+    bisher in mod_artist.html5 usw. Initialisierung durch das Theme-Skript
+    js/theme/80-gallery-swiper.js (Selektor ".ce_gallery > .swiper"), Lightbox über
+    Fullscreen Lightbox (data-fslightbox).
+
+    Variablen:
+      gallery         GalleryView aus Service\Gallery\GalleryViewBuilder (Pflicht);
+                      leere Galerie: keine Ausgabe
+      anchor_id       ID des Containers (Standard 'galerie', Ziel der Links "Fotos verwalten")
+      lightbox_group  Wert von data-lightbox (Standard 'lb419' wie bisher)
+
+    Bildbeschreibung und Copyright sind Klartext. Die Lightbox setzt data-caption als
+    HTML ein; die Texte werden deshalb zuerst für HTML und der gesamte Wert dann für
+    das Attribut maskiert (gespeichertes XSS über Bildtitel ausgeschlossen, E26).
+#}
+{% if gallery is defined and gallery and not gallery.isEmpty %}
+<div class="ce_gallery" id="{{ anchor_id|default('galerie') }}">
+	<div class="swiper">
+	  <div class="swiper-wrapper">
+	  {% for slide in gallery.slides %}
+		{% set caption_html = slide.title|e('html') ~ "<br><span style='font-size:0.8em;'>© " ~ slide.caption|e('html') ~ '</span>' %}
+		<div class="swiper-slide">
+			<div class="swiper-carousel-animate-opacity">
+				<figure class="image_container">
+					<a data-fslightbox data-caption="{{ caption_html|e('html_attr') }}" href="{{ slide.lightboxUrl }}" title="{{ slide.title }}" data-lightbox="{{ lightbox_group|default('lb419') }}">
+						<img src="{{ slide.imageUrl }}" alt="">
+					</a>
+					<figcaption>
+						<span class="title">{{ slide.title }}</span>
+						<span class="copyright">&copy; {{ slide.caption }}</span>
+					</figcaption>
+				</figure>
+			</div>
+		</div>
+	  {% endfor %}
+	  </div>
+
+		<div class="swipe-prev"><i class="fa-solid fa-arrow-left-long"></i></div>
+		<div class="swipe-next"><i class="fa-solid fa-arrow-right-long"></i></div>
+		<div class="swiper-pagination"></div>
+	</div>
+</div>
+{% if gallery.isExample %}
+<p class="info">Diese Bildergalerie können nur Sie sehen - sie dient lediglich als Veranschaulichung. Laden Sie für eine optimale Darstellung fünf oder mehr Fotos hoch.</p>
+{% endif %}
+{% endif %}

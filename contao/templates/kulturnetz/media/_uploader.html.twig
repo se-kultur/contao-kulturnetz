@@ -1,0 +1,93 @@
+{#
+    Uploader und Bildverwaltung der Mitglieder (Profilbild, Event-Titelbild, Galerie).
+    Markup und Klassen wie bisher templates/se-kultur-de/fileuploader.php; Verhalten in
+    files/se-kultur.de/js/fileuploader.js (Cropper.js, jQuery UI sortable).
+
+    Variablen:
+      upload         'avatar' | 'event' | 'gallery' (Standard 'avatar')
+      type           Typschlüssel des Datensatzes (artists, hosts, locations, events,
+                     sekevents); bei 'gallery' Pflicht, sonst optional
+      id             ID des Datensatzes; bei 'gallery' Pflicht, bei Titelbildern nur im
+                     Bearbeiten-Formular
+      form_selector  Formular des Datensatzes mit dem Feld "avatar" und der Vorschau
+                     figure.avatar (Standard '.artistform')
+
+    Die Endpunkte, das Request-Token und gemeinsame Einstellungen stehen als
+    data-Attribute am Element .fileuploader; die Felder member_id, security und alias
+    der früheren Fassung entfallen (der Server ermittelt Mitglied und Besitz selbst).
+    Die nötigen Skripte bindet das Partial selbst ein (defer, je Seite einmal).
+#}
+{% set upload = upload|default('avatar') %}
+{% set is_gallery = upload == 'gallery' %}
+{% set settings = kulturnetz_media_settings() %}
+<div class="fileuploader"
+    data-endpoint-upload="{{ path('kulturnetz_datei_hochladen') }}"
+    data-endpoint-edit="{{ path('kulturnetz_datei_bearbeiten') }}"
+    data-endpoint-fetch="{{ path('kulturnetz_datei_abrufen') }}"
+    data-endpoint-delete="{{ path('kulturnetz_datei_loeschen') }}"
+    data-request-token="{{ contao.request_token }}"
+    data-form-selector="{{ form_selector|default('.artistform') }}"
+    data-crop-size="{{ settings.crop_size }}"
+    data-mime-types="{{ settings.mime_types|join(',') }}"
+    {%- if settings.max_file_size %} data-max-file-size="{{ settings.max_file_size }}"{% endif %}
+    data-files-base="{{ settings.files_base }}"
+    data-placeholder-src="{{ settings.placeholder_src }}">
+	<form class="upload-form formbody" data-upload="{{ upload }}" method="post" enctype="multipart/form-data">
+		<input type="hidden" name="upload" value="{{ upload }}">
+		{% if not is_gallery and type|default %}
+		<input type="hidden" name="type" value="{{ type }}">
+		{% if id|default %}<input type="hidden" name="id" value="{{ id }}">{% endif %}
+		{% endif %}
+		{% if upload == 'avatar' %}
+		<h6>Profilbild hochladen</h6>
+		{% elseif upload == 'event' %}
+		<h6>Event-Titelbild hochladen</h6>
+		{% else %}
+		<h6>Foto(s) zur Galerie hinzufügen</h6>
+		<input type="hidden" name="id" value="{{ id|default }}">
+		<input type="hidden" name="type" value="{{ type|default }}">
+		{% endif %}
+
+		<label for="fileuploader"><i class="fa-solid fa-folder-open fa-2x"></i>{{ upload == 'avatar' ? 'Datei' : 'Datei(en)' }} vom Computer auswählen oder direkt hier hereinschieben...</label>
+		<input id="fileuploader" type="file" name="files[]"{% if is_gallery %} multiple{% endif %}>
+
+		<div class="selected-files"></div>
+
+		<div class="progress"></div>
+
+		<button class="btn btn-primary" type="submit" disabled>Hochladen</button>
+		<button class="btn btn-outline" type="reset">Abbrechen</button>
+
+		<div class="result"></div>
+
+	</form>
+</div>
+
+<div class="fileeditor">
+	<form class="edit-form formbody" method="post">
+		{% if upload == 'avatar' %}
+		<h6>Profilbild bearbeiten</h6>
+		{% elseif upload == 'event' %}
+		<h6>Event-Titelbild bearbeiten</h6>
+		{% else %}
+		<h6>Galerie verwalten</h6>
+		<input type="hidden" name="upload" value="{{ upload }}">
+		<input type="hidden" name="id" value="{{ id|default }}">
+		<input type="hidden" name="type" value="{{ type|default }}">
+
+		<p class="info"><strong>Tipp:</strong> Durch Anklicken und nach oben oder unten ziehen eines Bildes können Sie die Reihenfolge Ihrer Bildergalerie anpassen.</p>
+		{% endif %}
+
+		<div class="selected-files"></div>
+
+		<button class="btn btn-primary" type="submit">Speichern</button>
+		<button class="btn btn-outline" type="reset">Abbrechen</button>
+
+	</form>
+</div>
+
+{% if not is_gallery %}
+	{% add 'kulturnetz_cropper_js' to body %}<script src="{{ kulturnetz_asset('vendor/cropperjs/cropper.min.js') }}" defer></script>{% endadd %}
+{% endif %}
+{% add 'kulturnetz_unsaved_changes_js' to body %}<script src="{{ kulturnetz_asset('js/unsaved-changes.js') }}" defer></script>{% endadd %}
+{% add 'kulturnetz_fileuploader_js' to body %}<script src="{{ kulturnetz_asset('js/fileuploader.js') }}" defer></script>{% endadd %}

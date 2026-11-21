@@ -1,0 +1,72 @@
+{#
+    Formularrahmen der Profil- und Veranstaltungsformulare (Anlegen und Bearbeiten),
+    Markup wie bisher in mod_*_add.html5 und mod_*_edit.html5: Formularkopf,
+    Hilfekasten, Einwilligung, Buttons, Ladeanzeige. Einbindung per
+    {% embed '@Contao/kulturnetz/form/_shell.html.twig' with {…} %} … {% endembed %}
+    oder {% extends %}.
+
+    Variablen:
+      form_action   Ziel des Formulars (Endpunkt-URL aus path(), Pflicht)
+      form_mode     'add' oder 'edit' (data-type, wertet das Formular-JS aus)
+      form_class    Klasse des Formulars (Standard 'artistform', Formular-JS und
+                    Uploader suchen sie)
+      headline      Überschrift im Formularkopf (h3)
+      help_key      Schlüssel des Hilfekastens (siehe _help.html.twig)
+      cancel_url    Ziel von "Abbrechen & zurück" (Standard: Seite "Eigene Profile")
+
+    Blöcke:
+      header          ganzer Formularkopf (Standard: ein Kasten mit headline und header_content)
+      header_content  Inhalt unter der Überschrift (Einleitung bzw. Buttons beim Bearbeiten)
+      fields          Fieldsets des Formulars
+      help            rechte Spalte (Standard: Hilfekasten)
+      consent_label   Text der Pflicht-Einwilligung (Standard: Urheberrechte)
+      after_form      nach dem Formular, z. B. Editor- und Uploader-Partial
+
+    Das Formular trägt data-unsaved-changes (Warnung beim Verlassen mit ungespeicherten
+    Änderungen, js/unsaved-changes.js) und das Feld REQUEST_TOKEN für den Endpunkt.
+#}
+<form class="{{ form_class|default('artistform') }}" method="post" action="{{ form_action }}" data-type="{{ form_mode|default('add') }}" data-unsaved-changes>
+<input type="hidden" name="REQUEST_TOKEN" value="{{ contao.request_token }}">
+<div class="flex gap-2 mt-4 wrap">
+<div class="col-8 col-md-12 order-md-2">
+<div class="formbody mod_profiles">
+
+	{% block header %}
+	<div class="bg-kulturnetz p-4 mb-4">
+		<h3>{{ headline|default }}</h3>
+		{% block header_content %}{% endblock %}
+	</div>
+	{% endblock %}
+
+	{% block fields %}{% endblock %}
+
+</div>
+</div>
+<div class="col-4 col-md-12 bg-primary p-4 mb-2">
+	{% block help %}
+		{% include '@Contao/kulturnetz/form/_help.html.twig' with {help_key: help_key|default('')} only %}
+	{% endblock %}
+</div>
+</div>
+
+<div class="formbody">
+	<div class="widget widget-checkbox">
+		<input type="checkbox" id="confirmation" required>
+		<label for="confirmation">{% block consent_label %}Ich versichere, alle Urheberrechte beachtet zu haben.{% endblock %}</label>
+	</div>
+</div>
+
+<div>
+	<button class="btn-primary" type="submit"><i class="fa-regular fa-floppy-disk"></i> Angaben speichern</button>
+	<a href="{{ cancel_url|default(kulturnetz_page_url('own_profiles')) }}" class="btn btn-outline">Abbrechen & zurück</a>
+</div>
+</form>
+{% block after_form %}{% endblock %}
+
+<div id="loader">
+	<div class="inner">
+	<i class="fa-solid fa-spinner"></i>
+	<span>Ihre Angaben werden überprüft</span>
+	</div>
+</div>
+{% add 'kulturnetz_unsaved_changes_js' to body %}<script src="{{ kulturnetz_asset('js/unsaved-changes.js') }}" defer></script>{% endadd %}

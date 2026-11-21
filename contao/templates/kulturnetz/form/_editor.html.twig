@@ -1,0 +1,15 @@
+{#
+    Frontend-Editor der Mitgliederformulare (HugeRTE aus dem Theme-Build, bisher
+    templates/se-kultur-de/tinyMCE.html5 mit TinyMCE). Werkzeugleiste, Optik und
+    Hilfetexte beim Fokus wie bisher; Einstellungen in files/se-kultur.de/js/editor.js.
+
+    Variablen:
+      selector   CSS-Selektor der Textfelder (Standard '.textarea.useEditorFrontend')
+
+    Das Partial gibt kein Markup aus, sondern bindet HugeRTE und js/editor.js ein
+    (defer, je Seite einmal). editor.js liest Selektor und Pfad der Bibliothek aus den
+    data-Attributen seines eigenen script-Elements.
+#}
+{% set hugerte_src = kulturnetz_asset('vendor/hugerte/hugerte.min.js') %}
+{% add 'kulturnetz_hugerte_js' to body %}<script src="{{ hugerte_src }}" defer></script>{% endadd %}
+{% add 'kulturnetz_editor_js' to body %}<script src="{{ kulturnetz_asset('js/editor.js') }}" data-hugerte-src="{{ hugerte_src }}" data-selector="{{ selector|default('.textarea.useEditorFrontend') }}" defer></script>{% endadd %}
