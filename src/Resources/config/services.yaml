@@ -1,0 +1,17 @@
+# Service-Konfiguration des KulturNetz-Bundles.
+#
+# Registriert ausschließlich die Migrationen unter src/Migration/. Contao
+# versieht Klassen mit MigrationInterface per Autokonfiguration mit dem Tag
+# contao.migration; neue Migrationsdateien in diesem Verzeichnis werden ohne
+# Änderung an dieser Datei erfasst.
+#
+# Bewusst kein Autowiring über das ganze src/-Verzeichnis: Dort liegen nicht
+# registrierte Entwicklungsreste (src/Controller/, src/EventListener/) mit
+# Debug-Ausgaben und Verweisen auf nicht vorhandene Klassen.
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    SeKultur\ContaoKulturnetzBundle\Migration\:
+        resource: ../../Migration/
