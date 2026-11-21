@@ -43,6 +43,11 @@ class ArtistsModel extends Model
 			];
 			
 			$data = static::findAll($arrOptions);
+			// findAll() liefert ohne Treffer null; ohne diese Prüfung meldet
+			// PHP 8 bei foreach() eine Warnung. Rückgabe bleibt wie bisher null.
+			if ($data === null) {
+				return null;
+			}
 			foreach($data as &$artist) {
 				$artist = static::formatData($artist);
 			}
@@ -84,6 +89,11 @@ class ArtistsModel extends Model
 		//exit;
 		
 		$data = static::findAll($arrOptions);
+		// findAll() liefert ohne Treffer null; ohne diese Prüfung meldet
+		// PHP 8 bei foreach() eine Warnung. Rückgabe bleibt wie bisher null.
+		if ($data === null) {
+			return null;
+		}
 		foreach($data as &$artist) {
 			$artist = static::formatData($artist);
 		}
@@ -92,9 +102,12 @@ class ArtistsModel extends Model
 		//return static::findAll($arrOptions);
     }
 	
-	public static function findById($id)
+	// Contao\Model::findById() ist seit Contao 5 eine echte Methode (in 4.13
+	// lief der Aufruf über __callStatic). Die Signatur muss deshalb
+	// kompatibel sein, sonst bricht PHP schon beim Laden der Klasse ab.
+	public static function findById($intId, array $arrOptions = array())
 	{
-		$rawdata = parent::findById($id);
+		$rawdata = parent::findById($intId, $arrOptions);
 		$data = static::formatData($rawdata);
 		
 		return $data;
