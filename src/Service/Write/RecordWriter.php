@@ -1,0 +1,173 @@
+<?php
+
+declare(strict_types=1);
+
+namespace SeKultur\ContaoKulturnetzBundle\Service\Write;
+
+use Contao\CoreBundle\Monolog\ContaoContext;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
+use Psr\Clock\ClockInterface;
+use Psr\Log\LoggerInterface;
+use SeKultur\ContaoKulturnetzBundle\Service\Mail\NotificationMailer;
+use SeKultur\ContaoKulturnetzBundle\Service\Text\AliasGenerator;
+use SeKultur\ContaoKulturnetzBundle\Service\Write\Value\CreatedRecord;
+use SeKultur\ContaoKulturnetzBundle\Service\Write\Value\RecordSchema;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+
+/**
+ * Legt Profile und Veranstaltungen aus dem Frontend an und ändert sie
+ * (Ersatz für files/se-kultur.de/code/insert<Typ>.php).
+ *
+ * Anlegen: Mitglied aus der Sitzung (nicht aus dem Formular), disable "1"
+ * (Freischaltung durch die Redaktion), created und tstamp, eindeutiger Alias über
+ * AliasGenerator (E32), danach die Hinweismail an die Redaktion. Ein Fehler beim
+ * Mailversand wird protokolliert; der Datensatz ist dann schon gespeichert, das
+ * Anlegen gilt deshalb als erfolgreich.
+ *
+ * Bearbeiten: nur die Whitelist-Felder, tstamp wird gesetzt (E33; bisher blieb er
+ * unverändert), Alias, disable, member_id und created bleiben. Besitz und
+ * Schreibschutz prüft der Aufrufer vorher (OwnershipChecker).
+ */
+final class RecordWriter
+{
+    public function __construct(
+        private readonly Connection $connection,
+        private readonly RecordInputMapper $mapper,
+        private readonly AliasGenerator $aliasGenerator,
+        private readonly NotificationMailer $notificationMailer,
+        private readonly ClockInterface $clock,
+        #[Autowire(service: 'monolog.logger.contao.error')]
+        private readonly LoggerInterface $errorLogger,
+    ) {
+    }
+
+    /**
+     * Gespeicherte Zeile oder null.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function find(RecordSchema $schema, int $id): array|null
+    {
+        if ($id < 1) {
+            return null;
+        }
+
+        $row = $this->connection->fetchAssociative(
+            \sprintf('SELECT * FROM %s WHERE id = ?', $schema->table()),
+            [$id],
+            [ParameterType::INTEGER],
+        );
+
+        return false === $row ? null : $row;
+    }
+
+    /**
+     * Legt einen Datensatz für das Mitglied an.
+     *
+     * @param array<string, mixed> $input POST-Daten
+     *
+     * @throws RecordValidationException
+     */
+    public function create(RecordSchema $schema, array $input, int $memberId): CreatedRecord
+    {
+        $values = $this->mapper->map($schema, $input, $memberId);
+        $now = $this->clock->now()->getTimestamp();
+        $alias = $this->aliasGenerator->generate($schema->type, (string) ($values[$schema->nameField] ?? ''));
+
+        $row = [
+            'member_id' => $memberId,
+            'alias' => $alias,
+            'tstamp' => $now,
+            'created' => $now,
+            'disable' => '1',
+            ...$values,
+        ];
+
+        $columns = array_keys($row);
+
+        $this->connection->executeStatement(
+            \sprintf(
+                'INSERT INTO %s (%s) VALUES (%s)',
+                $schema->table(),
+                implode(', ', array_map($this->quote(...), $columns)),
+                implode(', ', array_fill(0, \count($columns), '?')),
+            ),
+            array_values($row),
+            $this->types($row),
+        );
+
+        $id = (int) $this->connection->lastInsertId();
+
+        return new CreatedRecord($id, $alias, $this->notify($schema->type, $alias));
+    }
+
+    /**
+     * Ändert einen Datensatz.
+     *
+     * @param array<string, mixed> $current gespeicherte Zeile (find())
+     * @param array<string, mixed> $input   POST-Daten
+     *
+     * @throws RecordValidationException
+     */
+    public function update(RecordSchema $schema, array $current, array $input, int $memberId): void
+    {
+        $values = $this->mapper->map($schema, $input, $memberId, $current);
+        $values['tstamp'] = $this->clock->now()->getTimestamp();
+
+        $columns = array_keys($values);
+
+        $this->connection->executeStatement(
+            \sprintf(
+                'UPDATE %s SET %s WHERE id = ?',
+                $schema->table(),
+                implode(', ', array_map(fn (string $column): string => $this->quote($column).' = ?', $columns)),
+            ),
+            [...array_values($values), (int) $current['id']],
+            [...$this->types($values), ParameterType::INTEGER],
+        );
+    }
+
+    private function notify(string $type, string $alias): bool
+    {
+        try {
+            return $this->notificationMailer->notifyNewRecord($type, $alias);
+        } catch (\Throwable $exception) {
+            // Der Datensatz ist gespeichert; ein Fehler beim Versand darf das Anlegen
+            // nicht als gescheitert melden (das Mitglied würde erneut absenden).
+            $this->errorLogger->error(
+                \sprintf('KulturNetz: Redaktionsmail zum neuen Datensatz "%s" (%s) fehlgeschlagen: %s', $alias, $type, $exception->getMessage()),
+                ['contao' => new ContaoContext(__METHOD__, ContaoContext::ERROR), 'exception' => $exception],
+            );
+
+            return false;
+        }
+    }
+
+    private function quote(string $column): string
+    {
+        return $this->connection->getDatabasePlatform()->quoteSingleIdentifier($column);
+    }
+
+    /**
+     * Parametertypen zu den Spaltenwerten: Titelbild binär, Zahlen als Ganzzahl.
+     *
+     * @param array<string, string|int|null> $row
+     *
+     * @return list<ParameterType>
+     */
+    private function types(array $row): array
+    {
+        $types = [];
+
+        foreach ($row as $column => $value) {
+            $types[] = match (true) {
+                'avatar' === $column => ParameterType::BINARY,
+                \is_int($value) => ParameterType::INTEGER,
+                default => ParameterType::STRING,
+            };
+        }
+
+        return $types;
+    }
+}
