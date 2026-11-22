@@ -11,6 +11,9 @@ use Contao\DC_Table;
 $GLOBALS['TL_DCA']['tl_postings'] = [
     'config' => [        
         'dataContainer' => DC_Table::class,
+        // Beiträge entstehen nur im Frontend (PostingService); "Neu" im Backend
+        // legte eine Zeile ohne profile_id an und endete mit HTTP 500.
+        'notCreatable' => true,
         'sql' => [
             'keys' => [
                 'id' => 'primary',
