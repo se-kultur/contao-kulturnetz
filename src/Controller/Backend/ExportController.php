@@ -18,7 +18,7 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 /**
  * Exporte der Redaktion als Backend-Routen (bisher die Skripte csvArtists.php,
  * csvHosts.php, csvLocations.php, csvMembers.php, csvEvents.php und
- * pdfEvents.php unter files/se-kultur.de/code, ohne Anmeldung erreichbar).
+ * pdfEvents.php unter files/se-kultur.de/code).
  *
  * Die Routen liegen unter dem Backend-Pfad (Firewall contao_backend, Anmeldung
  * als Backend-Benutzer erforderlich) und prüfen zusätzlich das Recht auf das

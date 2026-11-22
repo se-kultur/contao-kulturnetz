@@ -15,8 +15,7 @@ use SeKultur\ContaoKulturnetzBundle\Service\Text\TextNormalizer;
  * autocompleteLocations.php).
  *
  * Gesucht wird im Namen; gefunden werden freigeschaltete Profile und die eigenen
- * gesperrten Profile des angemeldeten Mitglieds (bisher steuerte ein frei
- * wählbarer URL-Parameter member_id, wessen gesperrte Profile erscheinen).
+ * gesperrten Profile des angemeldeten Mitglieds (Mitglied aus der Sitzung).
  * Höchstens 15 Treffer in Reihenfolge der ID.
  *
  * Antwortobjekte mit denselben Schlüsseln wie bisher, alle Werte als Text ohne

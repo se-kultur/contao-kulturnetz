@@ -13,12 +13,11 @@ use SeKultur\ContaoKulturnetzBundle\Service\Text\TextNormalizer;
 /**
  * Setzt in den Preisen der Veranstaltungen "u20ac" wieder zu "€" zusammen.
  *
- * Die früheren Skripte insertEvent.php und insertSekEvent.php haben das JSON der
- * Preise ohne Maskierung in das SQL eingesetzt; MySQL hat dabei den Backslash von
- * "€" verschluckt, gespeichert wurde z. B. "15,00 u20ac". Templates und
- * Exporte haben das mit str_replace('u20ac', '€', ...) überdeckt, das
- * Bearbeiten-Formular zeigte "u20ac" roh an. Die neuen Endpunkte speichern "€"
- * direkt (TextNormalizer::encodeJson()).
+ * Im JSON der Preise fehlt bei den Altdaten der Backslash der Maskierung von "€",
+ * gespeichert ist z. B. "15,00 u20ac". Templates und Exporte haben das mit
+ * str_replace('u20ac', '€', ...) überdeckt, das Bearbeiten-Formular zeigte
+ * "u20ac" roh an. Die neuen Endpunkte speichern "€" direkt
+ * (TextNormalizer::encodeJson()).
  *
  * Erfasst sind tl_events.prices, tl_sekevents.prices und die Spalte prices der
  * Archivtabellen tl_sekevents_<Jahr>. Die Archive nimmt die Website per

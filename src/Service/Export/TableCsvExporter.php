@@ -13,16 +13,15 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * CSV-Exporte der Künstler, Veranstalter, Locations und Mitglieder (bisher
  * csvArtists.php, csvHosts.php, csvLocations.php, csvMembers.php).
  *
- * Wie bisher: alle Spalten der Tabelle in der Reihenfolge der Datenbank mit den
- * Spaltennamen als Kopfzeile, alle Datensätze, Zeitstempel als Unix-Zeit,
- * Dateiname "<JJJJMMTT>_<Name>.csv". Bei den Profilen bleiben die Spalten
- * multiSRC, orderSRC und avatar leer.
+ * Spalten der Tabelle in der Reihenfolge der Datenbank mit den Spaltennamen als
+ * Kopfzeile, alle Datensätze, Zeitstempel als Unix-Zeit, Dateiname
+ * "<JJJJMMTT>_<Name>.csv". Bei den Profilen bleiben die Spalten multiSRC,
+ * orderSRC und avatar leer. Der Mitglieder-Export lässt die Zugangs- und
+ * Sicherheitsfelder von tl_member aus (Liste "exclude", Entscheidung E22).
  *
- * Abweichungen (Entscheidungen E21, E22):
+ * Abweichungen (Entscheidung E21):
  *  - Text steht als Klartext in der CSV (Umlaute und Sonderzeichen statt
  *    HTML-Entities); HTML-Felder (Langbeschreibung) bleiben unverändert.
- *  - Der Mitglieder-Export enthält keine Zugangs- und Sicherheitsdaten
- *    (Passwort-Hash, Sitzung, Zwei-Faktor-Daten, Sperrstatus, Home-Verzeichnis).
  *  - Formelinjektion ist entschärft (CsvResponseFactory).
  */
 final class TableCsvExporter

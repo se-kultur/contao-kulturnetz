@@ -351,8 +351,8 @@ final class RecordInputMapper
     /**
      * Titelbild: nur eine Datei im Mitgliedsordner oder das bisherige Titelbild des
      * Datensatzes (z. B. von der Redaktion gesetzt). Leere, unbekannte oder fremde
-     * Dateien ergeben NULL (bisher wurde jede UUID ungeprüft übernommen, eine leere
-     * als 16 Null-Byte).
+     * Dateien ergeben NULL (eine leere Angabe wurde bisher als 16 Null-Byte
+     * gespeichert).
      */
     private function mapAvatar(string $raw, int $memberId, mixed $currentAvatar): string|null
     {
