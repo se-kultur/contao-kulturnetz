@@ -111,8 +111,10 @@ $GLOBALS['TL_DCA']['tl_hosts'] = [
 			'exclude'                 => true,
 			'search'                  => true,
 			'inputType'               => 'text',
-			'eval'                    => array('mandatory'=>true, 'maxlength'=>255, 'tl_class'=>'w50'),
-			'sql'                     => "varchar(255) BINARY NOT NULL default ''",
+			'eval'                    => array('mandatory'=>true, 'doNotCopy'=>true, 'maxlength'=>255, 'tl_class'=>'w50'),
+			// NULL statt '': unfertige Entwürfe ("Neu") und Kopien blockieren den eindeutigen
+			// Index nicht (EmptyAliasToNullMigration, RecordCopyListener).
+			'sql'                     => "varchar(255) BINARY NULL",
 		],
 		'avatar' => [
             'exclude' => false,

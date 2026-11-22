@@ -20,6 +20,13 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * Contao-Meldungen ERR.aliasNumeric bzw. ERR.aliasExists abgelehnt. Neu: Ein
  * erzeugter Alias, der schon vergeben ist, bekommt wie im Contao-Kern einen
  * Zähler ("-2", "-3"), statt beim Speichern am eindeutigen Index zu scheitern.
+ *
+ * Die Spalte alias ist nullable: Ein noch nicht gespeicherter Datensatz ("Neu")
+ * hat den Alias NULL, damit mehrere unfertige Entwürfe den eindeutigen Index
+ * nicht blockieren. Ergibt der Name keinen Alias, gibt der Rückruf einen
+ * Leerstring zurück; DC_Table schreibt dafür den leeren Wert der Spalte (NULL).
+ *
+ * generateUniqueAlias() nutzt auch der RecordCopyListener für Kopien.
  */
 #[AsCallback(table: 'tl_artists', target: 'fields.alias.save')]
 #[AsCallback(table: 'tl_hosts', target: 'fields.alias.save')]
@@ -28,7 +35,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 #[AsCallback(table: 'tl_sekevents', target: 'fields.alias.save')]
 final class AliasListener
 {
-    private const TABLES = ['tl_artists', 'tl_hosts', 'tl_locations', 'tl_events', 'tl_sekevents'];
+    public const TABLES = ['tl_artists', 'tl_hosts', 'tl_locations', 'tl_events', 'tl_sekevents'];
 
     public function __construct(
         private readonly Connection $connection,
@@ -43,28 +50,45 @@ final class AliasListener
         $value = (string) $value;
         $recordId = (int) $dc->id;
 
-        $aliasExists = fn (string $alias): bool => false !== $this->connection->fetchOne(
-            "SELECT id FROM $table WHERE alias = ? AND id != ?",
-            [$alias, $recordId],
-            [ParameterType::STRING, ParameterType::INTEGER],
-        );
-
         // Wie bisher (!$varValue) gilt auch "0" als leer.
         if ('' === $value || '0' === $value) {
-            $name = (string) ($dc->getCurrentRecord()['name'] ?? '');
-
-            return $this->slug->generate($name, [], $aliasExists);
+            return $this->generateUniqueAlias($table, (string) ($dc->getCurrentRecord()['name'] ?? ''), $recordId);
         }
 
         if (preg_match('/^[1-9]\d*$/', $value)) {
             throw new \RuntimeException($this->translator->trans('ERR.aliasNumeric', [$value], 'contao_default'));
         }
 
-        if ($aliasExists($value)) {
+        if ($this->aliasExists($table, $value, $recordId)) {
             throw new \RuntimeException($this->translator->trans('ERR.aliasExists', [$value], 'contao_default'));
         }
 
         return $value;
+    }
+
+    /**
+     * Eindeutiger Alias aus dem Namen (Contao-Slug, bei Bedarf mit Zähler "-2",
+     * "-3"). $recordId nimmt den eigenen Datensatz von der Prüfung aus. Ein Name
+     * ohne verwertbare Zeichen ergibt einen Leerstring.
+     */
+    public function generateUniqueAlias(string $table, string $name, int $recordId): string
+    {
+        $table = $this->assertTable($table);
+
+        return $this->slug->generate(
+            $name,
+            [],
+            fn (string $alias): bool => '' !== $alias && $this->aliasExists($table, $alias, $recordId),
+        );
+    }
+
+    private function aliasExists(string $table, string $alias, int $recordId): bool
+    {
+        return false !== $this->connection->fetchOne(
+            "SELECT id FROM $table WHERE alias = ? AND id != ?",
+            [$alias, $recordId],
+            [ParameterType::STRING, ParameterType::INTEGER],
+        );
     }
 
     /**
