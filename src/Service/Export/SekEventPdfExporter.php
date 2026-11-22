@@ -33,6 +33,12 @@ use Symfony\Component\HttpFoundation\Response;
  *    Originaldatei (<name>_ori mit echter Endung, bei Altbeständen meist .png);
  *    fehlt sie, entfällt der Link.
  *  - Texte werden escaped ausgegeben (kein HTML aus Nutzereingaben im PDF).
+ *    Kodiert wird nach HTML 4.01 ("&#039;" statt "&apos;"), weil die PDF-Engine
+ *    Entities mit html_entity_decode(..., ENT_QUOTES) auflöst und "&apos;" sonst
+ *    als Text erschiene.
+ *  - Titelbilder werden auf die Druckgröße verkleinert und als JPEG eingebettet
+ *    (PdfImageProcessor) statt im Original; Links "Bild downloaden" und
+ *    "Original downloaden" führen weiter auf die Originaldateien.
  *  - Ohne Veranstaltungen entsteht eine Seite mit Hinweis statt eines Fehlers.
  */
 final class SekEventPdfExporter
@@ -47,10 +53,17 @@ final class SekEventPdfExporter
      */
     private const IMAGE_SIZE = 224;
 
+    /**
+     * Auflösung der eingebetteten Titelbilder: 224 px bei 96 dpi ergeben 59,3 mm,
+     * bei 300 dpi Druckauflösung sind das 700 Pixel Kantenlänge.
+     */
+    private const PRINT_DPI = 300;
+
     public function __construct(
         private readonly SekEventExportData $data,
         private readonly PageUrlResolver $pageUrlResolver,
         private readonly FigureFactory $figureFactory,
+        private readonly PdfImageProcessor $imageProcessor,
         private readonly RequestStack $requestStack,
         private readonly ClockInterface $clock,
         #[Autowire(param: 'kernel.project_dir')]
@@ -76,9 +89,20 @@ final class SekEventPdfExporter
         $now ??= $this->clock->now()->getTimestamp();
         $this->defineFontPath();
 
+        $workDir = $this->imageProcessor->createWorkDir();
+
+        try {
+            return $this->renderPdf($now, $workDir);
+        } finally {
+            $this->imageProcessor->removeWorkDir($workDir);
+        }
+    }
+
+    private function renderPdf(int $now, string $workDir): string
+    {
         $pdf = new Tcpdf('mm', true, true, true, '', null, [
             'allowedPaths' => [$this->fontPath()],
-            'markupAllowedPaths' => [Path::join($this->projectDir, 'files')],
+            'markupAllowedPaths' => [Path::join($this->projectDir, 'files'), ...$this->imageProcessor->getReadablePaths($workDir)],
         ]);
 
         $pdf->setCreator('SE-KulturNetz');
@@ -101,13 +125,13 @@ final class SekEventPdfExporter
         foreach ($events as $event) {
             $pdf->addPage($this->pageSettings());
             $pdf->page->addContent($font['out']);
-            $pdf->addHTMLCell($this->eventHtml($event, $now), 10, 10, 190);
+            $pdf->addHTMLCell($this->eventHtml($event, $now, $workDir), 10, 10, 190);
         }
 
         return $pdf->getOutPDFString();
     }
 
-    private function eventHtml(array $event, int $now): string
+    private function eventHtml(array $event, int $now, string $workDir): string
     {
         $text = fn (mixed $value): string => $this->escape($this->data->text($value));
         $orDash = static fn (string $html): string => '' !== $html ? $html : '&mdash;';
@@ -149,7 +173,7 @@ final class SekEventPdfExporter
 
         return '<table><tr>'
             .'<td width="33%">'
-            .'<img src="'.$this->escape($image['file']).'" width="'.self::IMAGE_SIZE.'" height="'.self::IMAGE_SIZE.'">'
+            .'<img src="'.$this->escape($this->imageProcessor->prepare($image['file'], $this->printPixels(), $workDir)).'" width="'.self::IMAGE_SIZE.'" height="'.self::IMAGE_SIZE.'">'
             .'<h4>Bildtitel:</h4>'.$this->metaHtml($image['title']).'<br>'
             .'<h4>Copyright:</h4>'.$this->metaHtml($image['copyright']).'<br>'
             .'<br>'.$links.'<br><br>'
@@ -282,9 +306,22 @@ final class SekEventPdfExporter
         return implode(', ', array_filter([$freeText, $linkedNames], static fn (string $part): bool => '' !== $part));
     }
 
+    /**
+     * Kantenlänge der eingebetteten Titelbilder in Pixeln.
+     */
+    private function printPixels(): int
+    {
+        return (int) round(self::IMAGE_SIZE * self::PRINT_DPI / 96);
+    }
+
+    /**
+     * Kodiert Text für das HTML der PDF-Engine. HTML 4.01 statt HTML5: Die Engine
+     * löst Entities mit html_entity_decode(..., ENT_QUOTES) auf, kennt also
+     * "&#039;", aber nicht "&apos;".
+     */
     private function escape(string $value): string
     {
-        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'UTF-8');
     }
 
     /**
