@@ -7,7 +7,10 @@ namespace SeKultur\ContaoKulturnetzBundle\Controller\Endpoint\Write;
 use SeKultur\ContaoKulturnetzBundle\Http\JsonErrorResponse;
 use SeKultur\ContaoKulturnetzBundle\Security\CsrfRequestValidator;
 use SeKultur\ContaoKulturnetzBundle\Security\OwnershipChecker;
+use SeKultur\ContaoKulturnetzBundle\Service\Event\EventType;
 use SeKultur\ContaoKulturnetzBundle\Service\Member\FrontendMemberProvider;
+use SeKultur\ContaoKulturnetzBundle\Service\Page\SignupWindowChecker;
+use SeKultur\ContaoKulturnetzBundle\Service\Write\FormMessages;
 use SeKultur\ContaoKulturnetzBundle\Service\Write\RecordConflictException;
 use SeKultur\ContaoKulturnetzBundle\Service\Write\RecordCreationLimiter;
 use SeKultur\ContaoKulturnetzBundle\Service\Write\RecordSchemaRegistry;
@@ -36,6 +39,10 @@ use Symfony\Component\Routing\Attribute\Route;
  * 429 mit Retry-After (Ratenlimit je Mitglied, RecordCreationLimiter). Ein
  * unbekannter Typ passt auf keine Route (404 der Website).
  *
+ * SE-KulturTage-Events lassen sich nur anlegen, solange die Anmeldung offen ist
+ * (SignupWindowChecker::acceptsNewEvents()), sonst 403 mit Meldung; das
+ * Bearbeiten bestehender Events bleibt davon unberührt.
+ *
  * Der Contao-RequestTokenListener ist für die Routen abgeschaltet
  * (_token_check: false), weil er Ajax-Anfragen ohnehin überspringt und sonst eine
  * HTML-Fehlerseite statt der JSON-Antwort liefert; das Token prüft der Controller
@@ -59,6 +66,8 @@ final class RecordWriteController
         private readonly RecordSchemaRegistry $schemas,
         private readonly RecordWriter $writer,
         private readonly RecordCreationLimiter $creationLimiter,
+        private readonly SignupWindowChecker $signupWindow,
+        private readonly FormMessages $messages,
     ) {
     }
 
@@ -73,6 +82,10 @@ final class RecordWriteController
     {
         if (null !== $error = $this->checkRequest($request, $typ)) {
             return $error;
+        }
+
+        if (EventType::SekEvents->value === $typ && !$this->signupWindow->acceptsNewEvents()) {
+            return JsonErrorResponse::forbidden($this->messages->get('kulturnetz_signup_closed'));
         }
 
         $memberId = $this->memberProvider->getMemberId();

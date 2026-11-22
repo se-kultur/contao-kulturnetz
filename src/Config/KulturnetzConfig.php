@@ -303,8 +303,10 @@ final class KulturnetzConfig
     }
 
     /**
-     * Größte zulässige Uploaddatei in Byte; null heißt keine eigene Grenze
-     * (dann gelten upload_max_filesize und post_max_size von PHP).
+     * Größte zulässige Uploaddatei in Byte laut Konfiguration (Standard 20 MB);
+     * null heißt keine eigene Grenze. Die wirksame Grenze (höchstens die
+     * PHP-Grenzen upload_max_filesize und post_max_size) liefert
+     * Service\Media\MediaUploadValidator::getMaxFileSize().
      */
     public function getUploadMaxFileSize(): int|null
     {

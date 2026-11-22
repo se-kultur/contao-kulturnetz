@@ -6,7 +6,8 @@
 #}
 {% import '@Contao/kulturnetz/profile/_widgets.html.twig' as w %}
 {% add 'kulturnetz_multiselect_js' to body %}<script src="{{ kulturnetz_asset('js/multiselect.js') }}" defer></script>{% endadd %}
-{% set stage_types = ['keine Bühne vorhanden', 'Bühne fest eingebaut', 'flexible Podeste', 'Zuschauerplätze als Tribühne', 'ebenerdig', 'Guckkastenbühne', 'flexible Position', 'sonstiges'] %}
+{# Bühnentypen aus derselben Liste, gegen die der Server prüft (Service\Write\FormChoices) #}
+{% set stage_types = constant('SeKultur\\ContaoKulturnetzBundle\\Service\\Write\\FormChoices::STAGE_TYPES') %}
 	<fieldset>
 		<legend>Allgemeine Daten</legend>
 

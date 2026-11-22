@@ -17,7 +17,7 @@
 		<div class="profile-form-main">
 			{{ w.text('kuenstlername', 'Künstler*innenname', record, {field: 'name', required: true}) }}
 
-			{{ w.multiselect('sparten', 'Sparte(n)', record, categories, {marked: true, required_message: 'Geben Sie bitte mindestens eine Sparte an.'}) }}
+			{{ w.multiselect('sparten', 'Sparte(n)', record, categories, {marked: true, required_message: constant('SeKultur\\ContaoKulturnetzBundle\\Service\\Write\\RecordSchemaRegistry::MESSAGE_SPARTEN')}) }}
 		</div>
 
 		{{ w.text('themen', 'Künstlerische Themenschwerpunkte', record, {required: true}) }}

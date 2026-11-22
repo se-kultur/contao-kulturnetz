@@ -11,7 +11,7 @@
 
 		{{ w.text('zitat', 'Ihr persönliches Kultur-Zitat', record, mode == 'add' ? {placeholder: 'Kultur ist ...'} : {}) }}
 
-		{{ w.textarea('kurzbeschreibung', 'Kurzbeschreibung', record, {maxlength: 255, class: 'nobreaks', required: true}) }}
+		{{ w.textarea('kurzbeschreibung', 'Kurzbeschreibung', record, {maxlength: constant('SeKultur\\ContaoKulturnetzBundle\\Service\\Write\\RecordSchemaRegistry::SHORT_DESCRIPTION_MAX_LENGTH'), class: 'nobreaks', required: true}) }}
 
 		{{ w.textarea('beschreibung', 'Lange Beschreibung', record, {class: 'textarea useEditorFrontend'}) }}
 

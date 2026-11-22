@@ -23,8 +23,6 @@ final class MediaException extends \RuntimeException
 
     public const MESSAGE_NO_FILE = 'Bitte wählen Sie eine Datei aus!';
 
-    public const MESSAGE_FILE_TOO_LARGE = 'Die gewählte Datei ist zu groß.';
-
     public const MESSAGE_COPYRIGHT_MISSING = 'Bitte geben Sie das Copyright an.';
 
     public const MESSAGE_INVALID_INPUT = 'Die Angaben sind unvollständig oder ungültig.';

@@ -29,6 +29,7 @@ final class MediaAccessGuard
         private readonly OwnershipChecker $ownershipChecker,
         private readonly RecordMediaRepository $records,
         private readonly MemberMediaStorage $storage,
+        private readonly MediaUploadValidator $validator,
     ) {
     }
 
@@ -49,7 +50,7 @@ final class MediaAccessGuard
         }
 
         if (0 === $request->request->count() && 0 === $request->files->count() && (int) $request->server->get('CONTENT_LENGTH') > 0) {
-            throw MediaException::unprocessable(MediaException::MESSAGE_FILE_TOO_LARGE);
+            throw MediaException::unprocessable($this->validator->getFileTooLargeMessage());
         }
 
         if (!$this->csrfValidator->isValid($request)) {

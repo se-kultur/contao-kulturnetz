@@ -6,26 +6,29 @@
  # Variablen:
  #   row            {date, start, end, comment}
  #   first          erste Zeile (Verschieben und Löschen gesperrt)
- #   required       Pflichtfelder (nur beim Bearbeiten)
  #   year_suffix    Jahr hinter dem Datum (SE-KulturTage speichern Termine ohne Jahr), sonst leer
+ #
+ # Datum, Beginn und Ende sind beim Anlegen und Bearbeiten Pflicht (required), wie bei der
+ # Prüfung des Servers (RecordInputMapper): Ein Termin ohne Beginn erscheint in keiner Liste.
+ # Eine leere zusätzliche Zeile wird über "Terminzeile löschen" entfernt.
  #}
 <div class="event-item">
 	<div class="widget widget-text eventdate">
 		<label class="mandatory">Datum<span class="mandatory">*</span></label>
 		<div class="inputgroup">
-			<input type="text" name="eventdate[]" value="{{ row.date }}"{% if required %} required{% endif %}>
+			<input type="text" name="eventdate[]" value="{{ row.date }}" required>
 			{% if year_suffix|default %}<span>{{ year_suffix }}</span>{% endif %}
 		</div>
 	</div>
 
 	<div class="widget widget-text eventtime">
 		<label class="mandatory">Beginn<span class="mandatory">*</span></label>
-		<input type="text" name="eventtimestart[]" value="{{ row.start }}"{% if required %} required{% endif %}>
+		<input type="text" name="eventtimestart[]" value="{{ row.start }}" required>
 	</div>
 
 	<div class="widget widget-text eventtime">
 		<label class="mandatory">Ende<span class="mandatory">*</span></label>
-		<input type="text" name="eventtimeend[]" value="{{ row.end }}"{% if required %} required{% endif %}>
+		<input type="text" name="eventtimeend[]" value="{{ row.end }}" required>
 	</div>
 
 	<div class="widget widget-text eventcomment">

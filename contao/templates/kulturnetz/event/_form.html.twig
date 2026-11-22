@@ -52,7 +52,7 @@
 		{{ include('@Contao/kulturnetz/event/_form_price_row.html.twig', {row: {pricetag: '', price: ''}, first: false}, with_context: false) }}
 	</template>
 	<template class="eventform-date-template">
-		{{ include('@Contao/kulturnetz/event/_form_date_row.html.twig', {row: {date: '', start: '', end: '', comment: ''}, first: false, required: is_edit, year_suffix: is_sekevents ? current_year : ''}, with_context: false) }}
+		{{ include('@Contao/kulturnetz/event/_form_date_row.html.twig', {row: {date: '', start: '', end: '', comment: ''}, first: false, year_suffix: is_sekevents ? current_year : ''}, with_context: false) }}
 	</template>
 
 	<fieldset>
@@ -90,7 +90,7 @@
 		<div class="widget widget-text">
 			<label class="mandatory">Kulturform(en)<span class="mandatory">*</span></label>
 			<input type="hidden" name="sparten" value="{{ values.sparten }}">
-			<span class="spartenselector" data-multiselect="sparten" data-required-message="Geben Sie bitte mindestens eine Sparte an." data-value="{{ values.sparten }}" data-options="{{ kulturnetz_profile_categories()|filter((label, value) => 'Alle' != value)|keys|json_encode }}"></span>
+			<span class="spartenselector" data-multiselect="sparten" data-required-message="{{ constant('SeKultur\\ContaoKulturnetzBundle\\Service\\Write\\RecordSchemaRegistry::MESSAGE_SPARTEN') }}" data-value="{{ values.sparten }}" data-options="{{ kulturnetz_profile_categories()|filter((label, value) => 'Alle' != value)|keys|json_encode }}"></span>
 		</div>
 
 		{% block format_field %}{% endblock %}
@@ -98,7 +98,7 @@
 		<div class="widget widget-text">
 			<label class="mandatory">Zielgruppe(n)<span class="mandatory">*</span></label>
 			<input type="hidden" name="zielgruppen" value="{{ values.zielgruppen }}">
-			<span class="zielgruppenselector" data-multiselect="zielgruppen" data-value="{{ values.zielgruppen }}" data-options="{{ ['für Erwachsene', 'für Jugendliche', 'für Kinder', 'für Familien']|json_encode }}"></span>
+			<span class="zielgruppenselector" data-multiselect="zielgruppen" data-value="{{ values.zielgruppen }}" data-options="{{ constant('SeKultur\\ContaoKulturnetzBundle\\Service\\Write\\FormChoices::AUDIENCES')|json_encode }}"></span>
 		</div>
 
 		<div class="widget widget-text ui-widget">
@@ -159,7 +159,7 @@
 		<legend>Termin(e) / Öffnungszeiten</legend>
 
 		{% for row in values.date_rows %}
-		{{ include('@Contao/kulturnetz/event/_form_date_row.html.twig', {row: row, first: loop.first, required: is_edit, year_suffix: is_sekevents ? current_year : ''}, with_context: false) }}
+		{{ include('@Contao/kulturnetz/event/_form_date_row.html.twig', {row: row, first: loop.first, year_suffix: is_sekevents ? current_year : ''}, with_context: false) }}
 		{% endfor %}
 
 		<div>
@@ -189,7 +189,7 @@
 
 		<div class="widget widget-text postal">
 			<label class="mandatory">Postleitzahl<span class="mandatory">*</span></label>
-			<input type="text" name="location_plz" maxlength="5" value="{{ values.location_plz }}">
+			<input type="text" name="location_plz" maxlength="{{ constant('SeKultur\\ContaoKulturnetzBundle\\Service\\Write\\RecordSchemaRegistry::POSTAL_CODE_LENGTH') }}" value="{{ values.location_plz }}">
 		</div>
 
 		<div class="widget widget-text city">
@@ -239,7 +239,7 @@
 
 		<div class="widget widget-text postal">
 			<label class="mandatory">Postleitzahl<span class="mandatory">*</span></label>
-			<input type="text" name="host_plz" maxlength="5" value="{{ values.host_plz }}">
+			<input type="text" name="host_plz" maxlength="{{ constant('SeKultur\\ContaoKulturnetzBundle\\Service\\Write\\RecordSchemaRegistry::POSTAL_CODE_LENGTH') }}" value="{{ values.host_plz }}">
 		</div>
 
 		<div class="widget widget-text city">
@@ -268,7 +268,7 @@
 
 		<div class="widget widget-textarea">
 			<label class="mandatory">Event-Kurzbeschreibung<span class="mandatory">*</span></label>
-			<textarea maxlength="255" name="kurzbeschreibung" class="nobreaks" required>{{ values.kurzbeschreibung }}</textarea>
+			<textarea maxlength="{{ constant('SeKultur\\ContaoKulturnetzBundle\\Service\\Write\\RecordSchemaRegistry::SHORT_DESCRIPTION_MAX_LENGTH') }}" name="kurzbeschreibung" class="nobreaks" required>{{ values.kurzbeschreibung }}</textarea>
 		</div>
 
 		<div class="widget widget-textarea">

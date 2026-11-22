@@ -19,6 +19,6 @@
 		{{ w.text('email', 'E-Mail Adresse', record, {type: 'email'}) }}
 		{{ w.text('telefon', 'Telefon- oder Handynummer', record, {type: 'tel'}) }}
 		{{ w.text('adresse', 'Straße und Hausnummer', record, {marked: marked}) }}
-		{{ w.text('plz', 'Postleitzahl', record, {class: 'postal', maxlength: 5, marked: marked}) }}
+		{{ w.text('plz', 'Postleitzahl', record, {class: 'postal', maxlength: constant('SeKultur\\ContaoKulturnetzBundle\\Service\\Write\\RecordSchemaRegistry::POSTAL_CODE_LENGTH'), marked: marked}) }}
 		{{ w.text('ort', 'Ort', record, {class: 'city', marked: marked}) }}
 	</fieldset>

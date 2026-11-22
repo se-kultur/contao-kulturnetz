@@ -7,14 +7,16 @@ namespace SeKultur\ContaoKulturnetzBundle\Service\Media;
 use Imagine\Image\ImagineInterface;
 use SeKultur\ContaoKulturnetzBundle\Config\KulturnetzConfig;
 use SeKultur\ContaoKulturnetzBundle\Service\Media\Value\ValidatedImage;
+use SeKultur\ContaoKulturnetzBundle\Service\Write\FormMessages;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
  * Prüft die Eingaben der Uploads nach Inhalt statt nach Angaben des Clients.
  *
- * - Original: erfolgreich hochgeladen, Größe innerhalb der Grenze aus der
- *   Bundle-Konfiguration (kulturnetz.upload.max_file_size, 0 = nur PHP-Grenzen),
+ * - Original: erfolgreich hochgeladen, Größe innerhalb der wirksamen Grenze
+ *   (getMaxFileSize(): kleinster Wert aus kulturnetz.upload.max_file_size,
+ *   upload_max_filesize und post_max_size; Meldung nennt die Grenze),
  *   MIME-Typ am Inhalt erkannt (fileinfo) und in kulturnetz.upload.mime_types
  *   enthalten, Bildkopf lesbar (getimagesize) und vom selben Typ. Die Endung der
  *   gespeicherten Datei folgt dem erkannten Typ, nicht dem Dateinamen. Daten
@@ -26,6 +28,9 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
  * - Texte: Copyright ist Pflicht. Beide Texte höchstens TEXT_MAX_LENGTH Zeichen;
  *   die engere Grenze des Formulars (maxlength 50 bei der Bildbeschreibung) gilt
  *   nur im Browser, damit ältere, längere Bestandswerte weiter speicherbar sind.
+ *   Beide Texte sind Klartext (die Ausgabe maskiert sie): HTML-Tags wie
+ *   <a href="…"> werden mit Meldung abgelehnt, statt später als sichtbare Tags zu
+ *   erscheinen. Ein einzelnes "<" ohne Tag (z. B. "<3") bleibt zulässig.
  */
 final class MediaUploadValidator
 {
@@ -49,6 +54,13 @@ final class MediaUploadValidator
     private const CROP_DATA_URL_PREFIX = 'data:image/png;base64,';
 
     /**
+     * Öffnendes oder schließendes HTML-Tag (wie es ein Browser als Tag liest).
+     */
+    private const HTML_TAG_PATTERN = '#</?[a-z][^>]*>#i';
+
+    private const BYTES_PER_MEGABYTE = 1024 * 1024;
+
+    /**
      * Bildende fehlt oder Aufbau defekt (Stil der übrigen Upload-Meldungen).
      */
     public const MESSAGE_DAMAGED = 'Die gewählte Datei ist beschädigt oder unvollständig. Bitte wählen Sie eine andere Datei aus.';
@@ -57,7 +69,42 @@ final class MediaUploadValidator
         private readonly KulturnetzConfig $config,
         #[Autowire(service: 'contao.image.imagine')]
         private readonly ImagineInterface $imagine,
+        private readonly FormMessages $messages,
     ) {
+    }
+
+    /**
+     * Wirksame Größengrenze einer Uploaddatei in Byte: die Bundle-Grenze, höchstens
+     * aber die PHP-Grenzen upload_max_filesize und post_max_size (größere Dateien
+     * erreichen den Server gar nicht).
+     */
+    public function getMaxFileSize(): int
+    {
+        $phpLimit = (int) min(UploadedFile::getMaxFilesize(), \PHP_INT_MAX);
+
+        return min($this->config->getUploadMaxFileSize() ?? $phpLimit, $phpLimit);
+    }
+
+    /**
+     * Größengrenze für Formular und Meldungen, z. B. "20 MB".
+     */
+    public function getMaxFileSizeLabel(): string
+    {
+        $bytes = $this->getMaxFileSize();
+
+        if (0 === $bytes % self::BYTES_PER_MEGABYTE) {
+            return number_format(intdiv($bytes, self::BYTES_PER_MEGABYTE), 0, ',', '.').' MB';
+        }
+
+        return number_format($bytes / self::BYTES_PER_MEGABYTE, 1, ',', '.').' MB';
+    }
+
+    /**
+     * Meldung "Datei zu groß" mit der wirksamen Grenze.
+     */
+    public function getFileTooLargeMessage(): string
+    {
+        return $this->messages->get('kulturnetz_file_too_large', [$this->getMaxFileSizeLabel()]);
     }
 
     /**
@@ -73,17 +120,16 @@ final class MediaUploadValidator
 
         if (!$file->isValid()) {
             throw MediaException::unprocessable(match ($file->getError()) {
-                \UPLOAD_ERR_INI_SIZE, \UPLOAD_ERR_FORM_SIZE => MediaException::MESSAGE_FILE_TOO_LARGE,
+                \UPLOAD_ERR_INI_SIZE, \UPLOAD_ERR_FORM_SIZE => $this->getFileTooLargeMessage(),
                 \UPLOAD_ERR_NO_FILE => MediaException::MESSAGE_NO_FILE,
                 default => MediaException::MESSAGE_INVALID_INPUT,
             });
         }
 
-        $maxSize = $this->config->getUploadMaxFileSize();
         $size = $file->getSize();
 
-        if (null !== $maxSize && (false === $size || $size > $maxSize)) {
-            throw MediaException::unprocessable(MediaException::MESSAGE_FILE_TOO_LARGE);
+        if (false === $size || $size > $this->getMaxFileSize()) {
+            throw MediaException::unprocessable($this->getFileTooLargeMessage());
         }
 
         $path = $file->getPathname();
@@ -158,6 +204,8 @@ final class MediaUploadValidator
             throw MediaException::unprocessable(MediaException::MESSAGE_INVALID_INPUT);
         }
 
+        $this->assertPlainText($title);
+
         return trim($title);
     }
 
@@ -174,7 +222,19 @@ final class MediaUploadValidator
             throw MediaException::unprocessable(MediaException::MESSAGE_INVALID_INPUT);
         }
 
+        $this->assertPlainText($copyright);
+
         return trim($copyright);
+    }
+
+    /**
+     * @throws MediaException 422, wenn der Text ein HTML-Tag enthält
+     */
+    private function assertPlainText(string $text): void
+    {
+        if (1 === preg_match(self::HTML_TAG_PATTERN, $text)) {
+            throw MediaException::unprocessable($this->messages->get('kulturnetz_media_plain_text'));
+        }
     }
 
     /**

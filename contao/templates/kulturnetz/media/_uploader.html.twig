@@ -16,6 +16,10 @@
     data-Attribute am Element .fileuploader; die Felder member_id, security und alias
     der früheren Fassung entfallen (der Server ermittelt Mitglied und Besitz selbst).
     Die nötigen Skripte bindet das Partial selbst ein (defer, je Seite einmal).
+
+    Die Hinweise nennen die wirksame Größengrenze (MediaUploadValidator::getMaxFileSize(),
+    dieselbe Grenze prüft der Server) und dass Bildbeschreibung und Copyright reiner Text
+    sind (HTML-Tags lehnt der Server ab).
 #}
 {% set upload = upload|default('avatar') %}
 {% set is_gallery = upload == 'gallery' %}
@@ -51,6 +55,8 @@
 		<label for="fileuploader"><i class="fa-solid fa-folder-open fa-2x"></i>{{ upload == 'avatar' ? 'Datei' : 'Datei(en)' }} vom Computer auswählen oder direkt hier hereinschieben...</label>
 		<input id="fileuploader" type="file" name="files[]"{% if is_gallery %} multiple{% endif %}>
 
+		<p class="info">{{ is_gallery ? 'Jede Datei' : 'Die Datei' }} darf höchstens {{ settings.max_file_size_label }} groß sein. Bildbeschreibung und Copyright bitte als reinen Text angeben (keine Links, kein HTML).</p>
+
 		<div class="selected-files"></div>
 
 		<div class="progress"></div>
@@ -79,6 +85,8 @@
 		{% endif %}
 
 		<div class="selected-files"></div>
+
+		<p class="info">Bildbeschreibung und Copyright bitte als reinen Text angeben (keine Links, kein HTML).</p>
 
 		<button class="btn btn-primary" type="submit">Speichern</button>
 		<button class="btn btn-outline" type="reset">Abbrechen</button>
