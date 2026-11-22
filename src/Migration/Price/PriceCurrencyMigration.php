@@ -20,16 +20,27 @@ use SeKultur\ContaoKulturnetzBundle\Service\Text\TextNormalizer;
  * Bearbeiten-Formular zeigte "u20ac" roh an. Die neuen Endpunkte speichern "€"
  * direkt (TextNormalizer::encodeJson()).
  *
- * Erfasst sind tl_events.prices und tl_sekevents.prices, nicht die Archivtabellen
- * (tl_sekevents_<Jahr>). Ersetzt wird in den Zeichenketten des dekodierten JSON;
+ * Erfasst sind tl_events.prices, tl_sekevents.prices und die Spalte prices der
+ * Archivtabellen tl_sekevents_<Jahr>. Die Archive nimmt die Website per
+ * doctrine.dbal.schema_filter vom Schemaabgleich aus; sie werden über
+ * information_schema gesucht (Muster wie der Filter: genau vier Ziffern) und
+ * repariert, damit aus einem Archiv zurückkopierte Datensätze in Frontend und
+ * Exporten "€" zeigen. Ersetzt wird in den Zeichenketten des dekodierten JSON;
  * geschrieben wird im Format der übrigen Schreibwege (TextNormalizer::encodeJson(),
  * konvergent mit der BundleTextEncodingMigration). Ungültiges JSON bleibt
  * unverändert und steht in der Ergebnismeldung. Idempotent: Nach einem Lauf
- * enthält kein gültiger Wert mehr "u20ac".
+ * enthält kein gültiger Wert mehr "u20ac". Die Tabellen werden bei jedem Aufruf
+ * neu ermittelt.
  */
 class PriceCurrencyMigration extends AbstractMigration
 {
     private const TABLES = ['tl_events', 'tl_sekevents'];
+
+    /**
+     * Archivtabellen der SE-KulturTage, gleiches Muster wie doctrine.dbal.schema_filter
+     * der Website (tl_sekevents_\d{4}).
+     */
+    private const ARCHIVE_TABLE_PATTERN = '^tl_sekevents_[0-9]{4}$';
 
     private const LOST_ESCAPE = 'u20ac';
 
@@ -150,26 +161,31 @@ class PriceCurrencyMigration extends AbstractMigration
     private function fetchCandidates(string $table): array
     {
         return $this->connection->fetchAllAssociative(
-            "SELECT id, prices FROM $table WHERE prices LIKE ? ORDER BY id",
+            \sprintf('SELECT id, prices FROM %s WHERE prices LIKE ? ORDER BY id', $this->connection->quoteSingleIdentifier($table)),
             ['%'.self::LOST_ESCAPE.'%'],
         );
     }
 
     /**
-     * Vorhandene Tabellen mit Spalte prices (bei einer frischen Installation fehlen
-     * sie vor dem Schema-Abgleich).
+     * Vorhandene Tabellen mit den Spalten id und prices (bei einer frischen
+     * Installation fehlen sie vor dem Schema-Abgleich): zuerst tl_events und
+     * tl_sekevents, dann die Archive aufsteigend nach Name.
      *
      * @return list<string>
      */
     private function getTables(): array
     {
         $existing = $this->connection->fetchFirstColumn(
-            "SELECT TABLE_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND COLUMN_NAME = 'prices' AND TABLE_NAME IN (?, ?)",
-            self::TABLES,
+            'SELECT TABLE_NAME FROM information_schema.COLUMNS'
+            ." WHERE TABLE_SCHEMA = DATABASE() AND COLUMN_NAME IN ('id', 'prices')"
+            .' AND (TABLE_NAME IN (?, ?) OR TABLE_NAME REGEXP ?)'
+            .' GROUP BY TABLE_NAME HAVING COUNT(DISTINCT COLUMN_NAME) = 2 ORDER BY TABLE_NAME',
+            [...self::TABLES, self::ARCHIVE_TABLE_PATTERN],
         );
 
-        $existing = array_map('strtolower', array_map('strval', $existing));
+        $existing = array_map('strval', $existing);
+        $archives = array_values(array_diff($existing, self::TABLES));
 
-        return array_values(array_filter(self::TABLES, static fn (string $table): bool => \in_array($table, $existing, true)));
+        return [...array_values(array_intersect(self::TABLES, $existing)), ...$archives];
     }
 }

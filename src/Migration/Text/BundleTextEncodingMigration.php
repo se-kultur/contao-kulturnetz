@@ -24,19 +24,35 @@ use SeKultur\ContaoKulturnetzBundle\Service\Text\TextNormalizer;
  *
  * Erfasst sind die Klartextfelder, die die Altskripte schreiben (research/13,
  * Abschnitt 1.3 und 1.5), in tl_artists, tl_hosts, tl_locations, tl_events,
- * tl_sekevents und tl_postings. In den JSON-Feldern prices und dates werden die
- * Zeichenketten nach der Regel für Felder mit "decodeEntities" normalisiert.
+ * tl_sekevents und tl_postings sowie in den Archivtabellen tl_sekevents_<Jahr>
+ * (gleiche Felder wie tl_sekevents, soweit vorhanden). In den JSON-Feldern prices
+ * und dates werden die Zeichenketten nach der Regel für Felder mit
+ * "decodeEntities" normalisiert.
+ *
+ * Die Archivtabellen nimmt die Website per doctrine.dbal.schema_filter vom
+ * Schemaabgleich aus; sie werden deshalb über information_schema gesucht
+ * (Muster wie der Filter: genau vier Ziffern). Normalisiert werden sie, damit
+ * Datensätze, die die Redaktion aus einem Archiv nach tl_sekevents zurückkopiert,
+ * im selben Format vorliegen wie die übrigen. Die Darstellung ändert sich dadurch
+ * nicht (die Kodierung wird beim Auslesen wieder aufgelöst).
+ *
  * Nicht erfasst:
  *  - HTML-Felder (beschreibung): Sie werden nicht dekodiert, sondern beim
  *    Speichern über Service\Text\HtmlSanitizer gefiltert.
  *  - Felder, die nur das Backend schreibt (comment, lat, lon), Aliase und die
  *    Zahlenlisten linked_*.
- *  - Archivtabellen (tl_sekevents_<Jahr>).
+ *
+ * Tabellen, Spalten und Spaltenlängen werden bei jedem Aufruf von shouldRun()
+ * und run() neu gelesen. contao:migrate prüft die Migrationen nach dem
+ * Schemaabgleich im selben Prozess erneut; erst dann sind die verbreiterten
+ * Spalten (z. B. varchar(1024) für Webadressen) sichtbar, und Werte, die vorher
+ * nicht in die Spalte passten, werden im selben Aufruf umgewandelt.
  *
  * Idempotent und konvergent: Die Migration läuft, solange ein Wert vom
- * normalisierten Wert abweicht. Erzeugt die BasicEntitiesMigration des Bundles
- * danach neue Entities, gleicht ein weiterer Durchlauf sie an; eine feste
- * Reihenfolge ist deshalb nicht nötig. Ungültiges JSON bleibt unverändert.
+ * normalisierten Wert abweicht und in die Spalte passt. Erzeugt die
+ * BasicEntitiesMigration des Bundles danach neue Entities, gleicht ein weiterer
+ * Durchlauf sie an; eine feste Reihenfolge ist deshalb nicht nötig. Ungültiges
+ * JSON bleibt unverändert.
  */
 class BundleTextEncodingMigration extends AbstractMigration
 {
@@ -55,17 +71,10 @@ class BundleTextEncodingMigration extends AbstractMigration
     private const EVENT_JSON_FIELDS = ['prices', 'dates'];
 
     /**
-     * @var array<string, array{text: list<string>, json: list<string>}>|null
+     * Archivtabellen der SE-KulturTage, gleiches Muster wie doctrine.dbal.schema_filter
+     * der Website (tl_sekevents_\d{4}).
      */
-    private array|null $targets = null;
-
-    /**
-     * Höchstlänge je Tabelle und Spalte: varchar in Zeichen, TEXT-Spalten in Byte
-     * (negativer Wert), null ohne bekannte Grenze.
-     *
-     * @var array<string, array<string, int|null>>
-     */
-    private array $lengths = [];
+    private const ARCHIVE_TABLE_PATTERN = '^tl_sekevents_[0-9]{4}$';
 
     public function __construct(
         private readonly Connection $connection,
@@ -133,10 +142,10 @@ class BundleTextEncodingMigration extends AbstractMigration
     /**
      * Geänderte Werte einer Zeile (Spalte => neuer Wert).
      *
-     * @param array<string, mixed>                          $row
-     * @param array{text: list<string>, json: list<string>} $fields
-     * @param list<string>                                  $invalidJson
-     * @param list<string>                                  $tooLong
+     * @param array<string, mixed>                                                                 $row
+     * @param array{text: list<string>, json: list<string>, lengths: array<string, int|null>} $fields
+     * @param list<string>                                                                         $invalidJson
+     * @param list<string>                                                                         $tooLong
      *
      * @return array<string, string>
      */
@@ -160,7 +169,7 @@ class BundleTextEncodingMigration extends AbstractMigration
             // Die Kodierung verlängert den Wert (z. B. "=" in URLs wird "&#61;"). Passt er
             // nicht mehr in die Spalte, bleibt er unverändert; der alte Wert ist gültiges
             // UTF-8 und wird weiter korrekt ausgegeben.
-            $maxLength = $this->lengths[$table][$field] ?? null;
+            $maxLength = $fields['lengths'][$field] ?? null;
 
             $length = null !== $maxLength && $maxLength < 0 ? \strlen($normalized) : mb_strlen($normalized);
 
@@ -197,7 +206,7 @@ class BundleTextEncodingMigration extends AbstractMigration
     }
 
     /**
-     * @param array{text: list<string>, json: list<string>} $fields
+     * @param array{text: list<string>, json: list<string>, lengths: array<string, int|null>} $fields
      *
      * @return list<array<string, mixed>>
      */
@@ -208,29 +217,41 @@ class BundleTextEncodingMigration extends AbstractMigration
             ['id', ...$fields['text'], ...$fields['json']],
         );
 
-        return $this->connection->fetchAllAssociative(\sprintf('SELECT %s FROM %s ORDER BY id', implode(', ', $columns), $table));
+        return $this->connection->fetchAllAssociative(\sprintf(
+            'SELECT %s FROM %s ORDER BY id',
+            implode(', ', $columns),
+            $this->connection->quoteSingleIdentifier($table),
+        ));
     }
 
     /**
-     * Tabellen und vorhandene Spalten; fehlende Tabellen oder Spalten werden
-     * übersprungen (z. B. bei einer frischen Installation vor dem Schema-Abgleich).
+     * Tabellen mit vorhandenen Spalten und deren Höchstlängen, bei jedem Aufruf
+     * frisch aus information_schema (kein Zwischenspeicher, siehe Klassenkommentar).
+     * Fehlende Tabellen oder Spalten werden übersprungen (z. B. bei einer frischen
+     * Installation vor dem Schemaabgleich). Ein Archiv ohne Spalte "id" wird
+     * ebenfalls übersprungen, weil Zeilen nur über die ID aktualisiert werden.
      *
-     * @return array<string, array{text: list<string>, json: list<string>}>
+     * Höchstlänge je Spalte: varchar/char in Zeichen, TEXT-Spalten in Byte
+     * (negativer Wert), null ohne bekannte Grenze.
+     *
+     * @return array<string, array{text: list<string>, json: list<string>, lengths: array<string, int|null>}>
      */
     private function getTargets(): array
     {
-        if (null !== $this->targets) {
-            return $this->targets;
-        }
+        $eventFields = ['text' => self::EVENT_FIELDS, 'json' => self::EVENT_JSON_FIELDS];
 
         $wanted = [
             'tl_artists' => ['text' => [...self::PROFILE_FIELDS, 'sparten'], 'json' => []],
             'tl_hosts' => ['text' => self::PROFILE_FIELDS, 'json' => []],
             'tl_locations' => ['text' => [...self::PROFILE_FIELDS, 'barrierefreiheit', 'auftrittsflaeche', 'gesamtflaeche', 'buehnentyp', 'technik', 'sitzplaetze', 'stehplaetze'], 'json' => []],
-            'tl_events' => ['text' => self::EVENT_FIELDS, 'json' => self::EVENT_JSON_FIELDS],
-            'tl_sekevents' => ['text' => self::EVENT_FIELDS, 'json' => self::EVENT_JSON_FIELDS],
+            'tl_events' => $eventFields,
+            'tl_sekevents' => $eventFields,
             'tl_postings' => ['text' => ['content'], 'json' => []],
         ];
+
+        foreach ($this->findArchiveTables() as $archive) {
+            $wanted[$archive] = $eventFields;
+        }
 
         $targets = [];
 
@@ -244,30 +265,28 @@ class BundleTextEncodingMigration extends AbstractMigration
                 [$table],
             );
 
-            if ([] === $rows) {
-                continue;
-            }
-
-            $columns = [];
+            $lengths = [];
 
             foreach ($rows as $row) {
-                $name = strtolower((string) $row['COLUMN_NAME']);
-                $columns[] = $name;
                 $length = $row['CHARACTER_MAXIMUM_LENGTH'];
 
                 // varchar/char zählen in Zeichen, TEXT-Typen in Byte (negativer Wert)
-                $this->lengths[$table][$name] = null === $length
+                $lengths[strtolower((string) $row['COLUMN_NAME'])] = null === $length
                     ? null
                     : (\in_array(strtolower((string) $row['DATA_TYPE']), ['varchar', 'char'], true) ? (int) $length : -(int) $length);
             }
 
-            $filter = static fn (array $list): array => array_values(array_filter($list, static fn (string $column): bool => \in_array(strtolower($column), $columns, true)));
+            if (!\array_key_exists('id', $lengths)) {
+                continue;
+            }
 
-            $existing = ['text' => $filter($fields['text']), 'json' => $filter($fields['json'])];
+            $filter = static fn (array $list): array => array_values(array_filter($list, static fn (string $column): bool => \array_key_exists(strtolower($column), $lengths)));
+
+            $existing = ['text' => $filter($fields['text']), 'json' => $filter($fields['json']), 'lengths' => []];
 
             // Spaltennamen der Längenliste wie im DCA schreiben (Schema liefert Kleinschreibung).
             foreach ([...$existing['text'], ...$existing['json']] as $field) {
-                $this->lengths[$table][$field] = $this->lengths[$table][strtolower($field)] ?? null;
+                $existing['lengths'][$field] = $lengths[strtolower($field)];
             }
 
             if ([] !== $existing['text'] || [] !== $existing['json']) {
@@ -275,6 +294,20 @@ class BundleTextEncodingMigration extends AbstractMigration
             }
         }
 
-        return $this->targets = $targets;
+        return $targets;
+    }
+
+    /**
+     * Vorhandene Archivtabellen tl_sekevents_<Jahr>, aufsteigend nach Name.
+     *
+     * @return list<string>
+     */
+    private function findArchiveTables(): array
+    {
+        return array_map('strval', $this->connection->fetchFirstColumn(
+            "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE'"
+            .' AND TABLE_NAME REGEXP ? ORDER BY TABLE_NAME',
+            [self::ARCHIVE_TABLE_PATTERN],
+        ));
     }
 }
