@@ -6,10 +6,12 @@ Contao-Erweiterung zur Vernetzung von Kulturakteur\*innen: Profile von Künstler
 
 | Bundle-Version | Contao | PHP | Status |
 | --- | --- | --- | --- |
-| 2.0.0 | 5.7 LTS (`contao/core-bundle` `^5.7`) | >= 8.3 | in Arbeit, **noch nicht veröffentlicht** (kein Tag) |
+| 2.0.0 | 5.7 LTS (`contao/core-bundle` `^5.7`) | >= 8.3 | Branch `upgrade/contao-5.7`, **noch nicht in `main`, kein Tag** (Abnahme der Website steht aus) |
 | 1.0.0 | 4.13 LTS | >= 8.1 | letzter Stand für Contao 4.13 |
 
-Version 2.0.0 wird erst nach der Testphase der Website getaggt (Go-live-Checkliste, Abschnitt 1.4). Bis dahin bindet die Website das Bundle über ein Composer-`path`-Repository aus dem Geschwisterordner `../contao-kulturnetz-bundle` ein (siehe README der Website). Eine Zwischenstufe zwischen 1.x und 2.x gibt es nicht: Bundle und Contao werden gemeinsam angehoben.
+Der Stand 2.0.0 liegt bis zur Abnahme der Website auf dem Branch `upgrade/contao-5.7`; `main` bleibt auf dem letzten 4.13-Stand, den die alte Live-Instanz nutzt. Die Website bezieht das Bundle per Composer über das GitHub-`vcs`-Repository mit dem Constraint `dev-upgrade/contao-5.7`; der Lock hält den Commit fest (Go-live-Checkliste, Abschnitt 1.5). Nach der Abnahme wird der Branch per Fast-Forward nach `main` übernommen, die Website wechselt auf `dev-main` und hebt den Lock an. Ein Tag `2.0.0` ist danach optional. Wird er gesetzt, nie verschieben, weil der Lock der Website den Commit festhält. Eine Zwischenstufe zwischen 1.x und 2.x gibt es nicht: Bundle und Contao werden gemeinsam angehoben.
+
+Lokale Bundle-Entwicklung: Die Website liefert das Bundle als Git-Checkout unter `vendor/se-kultur/contao-kulturnetz`. Um am Bundle zu arbeiten, bindet die gitignorierte `compose.override.yaml` der Website den Geschwisterordner `../contao-kulturnetz-bundle` über dieses Verzeichnis (Volume `../contao-kulturnetz-bundle:/var/www/html/vendor/se-kultur/contao-kulturnetz`, Vorlage `compose.override.yaml.example`, Einzelheiten im README der Website). Änderungen wirken dann sofort (danach `cache:clear`). `composer install` und `composer update` laufen mit dem Overlay nicht, weil Composer den eingehängten Ordner nicht ersetzen kann; sie laufen im Container ohne Override (`docker compose -f compose.yaml run --rm --no-deps web composer ...`).
 
 Der Stand 2.0.0 ist auf Contao 5.7 ohne Legacy-Pfade gebaut: Fragment-Controller mit Twig statt `Contao\Module` und `.html5`, Services mit Autowiring statt statischer Helfer, Doctrine DBAL statt `$this->Database`, DCA-Callbacks als Services, Routen statt Skripten unter `files/`. Was sich in 5.7 nicht ablösen lässt, steht unter „Contao-6-Hinweise“.
 
@@ -223,7 +225,7 @@ Die Migrationen prüfen das Schema über `information_schema` bzw. `quoteSingleI
 
 ## Contao-6-Hinweise
 
-Der Stand erzeugt im Dev-Modus keine Deprecation aus eigenem Code. Gemessen am 2026-11-22 (Bundle `8dd02fb`, Website `85d17b6`):
+Der Stand erzeugt im Dev-Modus keine Deprecation aus eigenem Code. Gemessen am 2026-11-22 (Bundle `6321710`, Website `85d17b6`):
 `deprecations.sh --login all` über 183 Seiten der Website im Dev-Container, einmal mit `DOCTRINE_DEPRECATIONS=trigger`, dazu
 `contao:migrate --dry-run` mit Trigger: 0 Einträge aus Bundle- und Projektcode, der Rest stammt aus Core und Vendor. Beim Umstieg
 auf Contao 6 sind die folgenden Stellen zu prüfen (Nummern aus der Restpunktliste des Upgrade-Projekts, `CONTAO6-BEREITSCHAFT.md`,
