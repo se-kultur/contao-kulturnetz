@@ -8,7 +8,6 @@ use Contao\CoreBundle\Exception\PageNotFoundException;
 use Contao\CoreBundle\Twig\FragmentTemplate;
 use Contao\ModuleModel;
 use SeKultur\ContaoKulturnetzBundle\Config\KulturnetzConfig;
-use SeKultur\ContaoKulturnetzBundle\Security\UnpublishedRecordAccess;
 use SeKultur\ContaoKulturnetzBundle\Service\Event\EventRepository;
 use SeKultur\ContaoKulturnetzBundle\Service\Event\EventType;
 use SeKultur\ContaoKulturnetzBundle\Service\Gallery\GalleryViewBuilder;
@@ -23,10 +22,11 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * Die Veranstaltung kommt per Alias oder ID aus der URL (auto_item). Eine
  * unbekannte Veranstaltung und eine URL ohne Alias ergeben 404. Nicht
- * freigeschaltete Veranstaltungen (disable = 1) liefert die Seite nur an das
- * besitzende Mitglied, an angemeldete Backend-Benutzer und an Vorschaulinks mit
- * unveröffentlichten Inhalten aus (Security\UnpublishedRecordAccess), allen anderen
- * mit 404 wie bei einem unbekannten Alias. Für die Berechtigten tragen sie
+ * freigeschaltete Veranstaltungen (disable = 1) sind wie in Version 1.x per
+ * Direktlink für alle erreichbar: Verknüpfungen aus Profilen, der Link der
+ * Redaktionsmail und Lesezeichen auf SE-KulturTage-Events, die am Saisonende
+ * deaktiviert werden, bleiben gültig. Die Listen blenden sie weiterhin aus.
+ * Gesperrte Veranstaltungen tragen
  * "noindex,nofollow" im Meta-Tag robots (HtmlHeadBag der Antwort); damit nehmen
  * weder Suchmaschinen noch die Contao-Suche (SearchIndexListener) sie auf.
  * Besitzer:innen sehen zusätzlich die Aktionen zum Bearbeiten, Hochladen und
@@ -41,7 +41,6 @@ abstract class AbstractEventDetailController extends AbstractEventController
         private readonly GalleryViewBuilder $galleryViewBuilder,
         private readonly EventViewFactory $viewFactory,
         private readonly KulturnetzConfig $config,
-        private readonly UnpublishedRecordAccess $unpublishedAccess,
     ) {
     }
 
@@ -51,12 +50,11 @@ abstract class AbstractEventDetailController extends AbstractEventController
         $alias = $this->autoItemResolver->resolve($request);
         $event = null !== $alias ? $this->repository->findByAliasOrId($type, $alias) : null;
 
-        // Gesperrte Veranstaltungen ohne Berechtigung wie unbekannte behandeln.
-        if (null === $event || !$this->unpublishedAccess->canView($event)) {
+        if (null === $event) {
             throw new PageNotFoundException(\sprintf('%s nicht gefunden: %s', EventType::Events === $type ? 'Veranstaltung' : 'SE-Kultur-Event', $alias));
         }
 
-        if ($this->unpublishedAccess->isUnpublished($event)) {
+        if ((int) ($event['disable'] ?? 0) > 0) {
             $this->getHtmlHeadBag()?->setMetaRobots('noindex,nofollow');
         }
 
