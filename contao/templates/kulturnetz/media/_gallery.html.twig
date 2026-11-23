@@ -20,10 +20,18 @@
     Attribut-Escaper des Contao-Cores ruft ord() auf mehrbyteigen Zeichen wie "©" auf und
     löst unter PHP 8.5 je Folie eine Deprecation aus. Die Schriftgröße der Urheberangabe in
     der Lightbox setzt die Klasse lightbox-caption-small (Theme-LESS image_container.less).
+
+    Der Container trägt die Klasse "swiper-carousel" schon im Markup, obwohl der Effekt
+    EffectCarousel sie bei der Initialisierung selbst setzt (containerModifierClass
+    "swiper-" + "carousel"; classList.add vergibt sie nicht doppelt). Grund: Die Folienmaße
+    aus swiper.less (.swiper-carousel .swiper-slide, Breite 50 %, Seitenverhältnis 4:3)
+    müssen gelten, bevor die Bilder geladen sind. Ist ein Bild vor dem Start des Skripts
+    geladen, rechnet WebKit (Safari) seine Höhe sonst mit der vollen Wrapper-Breite und
+    korrigiert sie danach nicht (r7-crossbrowser F1: 799 statt 450 px).
 #}
 {% if gallery is defined and gallery and not gallery.isEmpty %}
 <div class="ce_gallery" id="{{ anchor_id|default('galerie') }}">
-	<div class="swiper">
+	<div class="swiper swiper-carousel">
 	  <div class="swiper-wrapper">
 	  {% for slide in gallery.slides %}
 		{% set caption_html = slide.title|e('html') ~ '<br><span class="lightbox-caption-small">© ' ~ slide.caption|e('html') ~ '</span>' %}
