@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use SeKultur\ContaoKulturnetzBundle\Config\KulturnetzConfig;
 use SeKultur\ContaoKulturnetzBundle\Service\Event\Value\EventCriteria;
 use SeKultur\ContaoKulturnetzBundle\Service\Event\Value\EventDateFilter;
+use SeKultur\ContaoKulturnetzBundle\Service\Search\SavedRecord;
 
 /**
  * Lesezugriff auf die Veranstaltungstabellen über Doctrine DBAL mit gebundenen
@@ -18,6 +19,9 @@ use SeKultur\ContaoKulturnetzBundle\Service\Event\Value\EventDateFilter;
  * liefern Ergebnisse des EventFormatter. Listen sind wie bisher nach dem Schlüssel
  * "<Zeitstempel>_<ID>" sortiert; der Zeitstempel ist der nächste Termin (bei
  * events dessen Tag), Veranstaltungen ohne künftigen Termin stehen vorn.
+ *
+ * Keine Methode liefert unfertige Datensätze (tstamp = 0, "Neu" im Backend ohne
+ * Speichern), siehe Service\Search\SavedRecord.
  */
 final class EventRepository
 {
@@ -44,12 +48,12 @@ final class EventRepository
         // andere ein Alias, der binär (groß-/kleinschreibungsabhängig) verglichen wird.
         if (preg_match('/^[1-9]\d*$/', $aliasOrId)) {
             $row = $this->connection->fetchAssociative(
-                'SELECT * FROM '.$type->table().' WHERE id = ? LIMIT 1',
+                'SELECT * FROM '.$type->table().' WHERE id = ? AND '.SavedRecord::CONDITION.' LIMIT 1',
                 [(int) $aliasOrId],
             );
         } else {
             $row = $this->connection->fetchAssociative(
-                'SELECT * FROM '.$type->table().' WHERE alias = CAST(? AS BINARY) LIMIT 1',
+                'SELECT * FROM '.$type->table().' WHERE alias = CAST(? AS BINARY) AND '.SavedRecord::CONDITION.' LIMIT 1',
                 [$aliasOrId],
             );
         }
@@ -66,7 +70,7 @@ final class EventRepository
     public function findByMemberId(EventType $type, int $memberId, int|null $now = null): array
     {
         $rows = $this->connection->fetchAllAssociative(
-            'SELECT * FROM '.$type->table().' WHERE member_id = ? ORDER BY id ASC',
+            'SELECT * FROM '.$type->table().' WHERE member_id = ? AND '.SavedRecord::CONDITION.' ORDER BY id ASC',
             [$memberId],
         );
 
@@ -96,7 +100,7 @@ final class EventRepository
         $column = 'linked_'.$profileType;
 
         $candidates = $this->connection->fetchAllAssociative(
-            'SELECT * FROM '.$type->table().' WHERE '.$column." LIKE ? ESCAPE '!' ORDER BY id ASC",
+            'SELECT * FROM '.$type->table().' WHERE '.$column." LIKE ? ESCAPE '!' AND ".SavedRecord::CONDITION.' ORDER BY id ASC',
             ['%'.$profileId.'%'],
         );
 
@@ -126,6 +130,7 @@ final class EventRepository
             ->from($type->table())
             ->where('disable != :disabled')
             ->setParameter('disabled', '1')
+            ->andWhere(SavedRecord::CONDITION)
             ->orderBy('id', 'DESC');
 
         if (null !== $limit) {
@@ -171,7 +176,7 @@ final class EventRepository
     public function findActiveForFacets(EventType $type): array
     {
         return $this->connection->fetchAllAssociative(
-            'SELECT id, dates, location_ort, location_adresse, location_plz FROM '.$type->table()." WHERE disable != ? ORDER BY id ASC",
+            'SELECT id, dates, location_ort, location_adresse, location_plz FROM '.$type->table()." WHERE disable != ? AND ".SavedRecord::CONDITION.' ORDER BY id ASC',
             ['1'],
         );
     }

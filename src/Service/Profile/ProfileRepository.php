@@ -9,6 +9,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use SeKultur\ContaoKulturnetzBundle\Config\KulturnetzConfig;
 use SeKultur\ContaoKulturnetzBundle\Service\Profile\Value\ProfileFilter;
+use SeKultur\ContaoKulturnetzBundle\Service\Search\SavedRecord;
 use SeKultur\ContaoKulturnetzBundle\Service\Search\SuggestionTerm;
 
 /**
@@ -23,6 +24,9 @@ use SeKultur\ContaoKulturnetzBundle\Service\Search\SuggestionTerm;
  *
  * Alle Methoden liefern die Tabellenzeilen als assoziative Arrays mit den
  * Spaltennamen als Schlüssel; "avatar" ist die binäre UUID wie in der Datenbank.
+ *
+ * Keine Methode liefert unfertige Datensätze (tstamp = 0, "Neu" im Backend ohne
+ * Speichern), siehe Service\Search\SavedRecord.
  */
 final class ProfileRepository
 {
@@ -51,13 +55,13 @@ final class ProfileRepository
 
         if (preg_match('/^[1-9]\d*$/', $aliasOrId)) {
             $row = $this->connection->fetchAssociative(
-                "SELECT * FROM $table WHERE id = ? LIMIT 1",
+                "SELECT * FROM $table WHERE id = ? AND ".SavedRecord::CONDITION.' LIMIT 1',
                 [(int) $aliasOrId],
                 [ParameterType::INTEGER],
             );
         } else {
             $row = $this->connection->fetchAssociative(
-                "SELECT * FROM $table WHERE alias = CAST(? AS BINARY) LIMIT 1",
+                "SELECT * FROM $table WHERE alias = CAST(? AS BINARY) AND ".SavedRecord::CONDITION.' LIMIT 1',
                 [$aliasOrId],
             );
         }
@@ -73,7 +77,7 @@ final class ProfileRepository
     public function findById(ProfileType $type, int $id): array|null
     {
         $row = $this->connection->fetchAssociative(
-            "SELECT * FROM {$type->table()} WHERE id = ? LIMIT 1",
+            "SELECT * FROM {$type->table()} WHERE id = ? AND ".SavedRecord::CONDITION.' LIMIT 1',
             [$id],
             [ParameterType::INTEGER],
         );
@@ -95,7 +99,7 @@ final class ProfileRepository
         }
 
         return $this->connection->fetchAllAssociative(
-            "SELECT * FROM {$type->table()} WHERE id IN (?) ORDER BY id",
+            "SELECT * FROM {$type->table()} WHERE id IN (?) AND ".SavedRecord::CONDITION.' ORDER BY id',
             [array_values(array_map(intval(...), $ids))],
             [ArrayParameterType::INTEGER],
         );
@@ -110,7 +114,7 @@ final class ProfileRepository
     public function findByMemberId(ProfileType $type, int $memberId): array
     {
         return $this->connection->fetchAllAssociative(
-            "SELECT * FROM {$type->table()} WHERE member_id = ? ORDER BY id",
+            "SELECT * FROM {$type->table()} WHERE member_id = ? AND ".SavedRecord::CONDITION.' ORDER BY id',
             [$memberId],
             [ParameterType::INTEGER],
         );
@@ -138,6 +142,7 @@ final class ProfileRepository
             ->from($type->table())
             ->where('disable != :disabled')
             ->setParameter('disabled', '1')
+            ->andWhere(SavedRecord::CONDITION)
             ->orderBy('(id = :sample)', 'DESC')
             ->addOrderBy('id', 'DESC')
             ->setParameter('sample', $type->sampleProfileId($this->config), ParameterType::INTEGER)

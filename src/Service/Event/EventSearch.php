@@ -13,7 +13,8 @@ use SeKultur\ContaoKulturnetzBundle\Service\Event\Value\EventDateFilter;
  * Suche der öffentlichen Veranstaltungsübersichten (bisher
  * EventsModel::findAllEvents() und SekEventsModel::findAllSekEvents()).
  *
- * Gesucht wird unter den aktiven Veranstaltungen (disable ungleich 1), neueste ID
+ * Gesucht wird unter den aktiven Veranstaltungen (disable ungleich 1, ohne
+ * unfertige Datensätze mit tstamp = 0, siehe EventRepository), neueste ID
  * zuerst, mit den Limits aus der Bundle-Konfiguration (limits.event_directory,
  * limits.sekevent_directory; das Limit greift wie bisher auf die Datensätze,
  * bevor die Termine ausgewertet werden). Danach wird jeder Termin einzeln

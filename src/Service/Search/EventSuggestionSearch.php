@@ -14,7 +14,8 @@ use SeKultur\ContaoKulturnetzBundle\Service\Text\TextNormalizer;
  * files/se-kultur.de/code/autocompleteEvents.php und autocompleteSekevents.php).
  *
  * Gesucht wird in name und location_ort der freigeschalteten Veranstaltungen
- * (disable != "1"). Wie bisher erscheint je Ort höchstens ein Vorschlag (das
+ * (disable != "1", ohne unfertige Datensätze mit tstamp = 0, siehe SavedRecord).
+ * Wie bisher erscheint je Ort höchstens ein Vorschlag (das
  * Altskript gruppierte nach location_ort): der Datensatz mit der kleinsten ID je
  * Ort, sortiert nach Ort, höchstens 15. Passt der Name, ist es ein
  * Veranstaltungsvorschlag (label, alias, id, avatar, column "name"), sonst ein
@@ -52,7 +53,7 @@ final class EventSuggestionSearch
             FROM $table
             WHERE id IN (
                 SELECT MIN(id) FROM $table
-                WHERE (name LIKE ? ESCAPE '$escape' OR location_ort LIKE ? ESCAPE '$escape') AND disable != '1'
+                WHERE (name LIKE ? ESCAPE '$escape' OR location_ort LIKE ? ESCAPE '$escape') AND disable != '1' AND ".SavedRecord::CONDITION."
                 GROUP BY location_ort
             )
             ORDER BY location_ort, id

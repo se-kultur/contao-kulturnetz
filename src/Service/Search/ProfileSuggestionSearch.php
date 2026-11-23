@@ -16,6 +16,7 @@ use SeKultur\ContaoKulturnetzBundle\Service\Text\TextNormalizer;
  *
  * Gesucht wird im Namen; gefunden werden freigeschaltete Profile und die eigenen
  * gesperrten Profile des angemeldeten Mitglieds (Mitglied aus der Sitzung).
+ * Unfertige Datensätze (tstamp = 0) erscheinen nie (SavedRecord).
  * Höchstens 15 Treffer in Reihenfolge der ID.
  *
  * Antwortobjekte mit denselben Schlüsseln wie bisher, alle Werte als Text ohne
@@ -53,10 +54,11 @@ final class ProfileSuggestionSearch
 
         $rows = $this->connection->fetchAllAssociative(
             \sprintf(
-                "SELECT %s FROM %s WHERE name LIKE ? ESCAPE '%s' AND (disable != '1' OR member_id = ?) ORDER BY id LIMIT %d",
+                "SELECT %s FROM %s WHERE name LIKE ? ESCAPE '%s' AND (disable != '1' OR member_id = ?) AND %s ORDER BY id LIMIT %d",
                 implode(', ', $columns),
                 $type->table(),
                 $escape,
+                SavedRecord::CONDITION,
                 SuggestionTerm::LIMIT,
             ),
             [$this->term->containsPattern($term), $memberId],
