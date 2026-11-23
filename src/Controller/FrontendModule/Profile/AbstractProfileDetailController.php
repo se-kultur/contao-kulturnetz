@@ -7,6 +7,7 @@ namespace SeKultur\ContaoKulturnetzBundle\Controller\FrontendModule\Profile;
 use Contao\CoreBundle\Exception\PageNotFoundException;
 use Contao\CoreBundle\Twig\FragmentTemplate;
 use Contao\ModuleModel;
+use SeKultur\ContaoKulturnetzBundle\Security\UnpublishedRecordAccess;
 use SeKultur\ContaoKulturnetzBundle\Service\Gallery\GalleryViewBuilder;
 use SeKultur\ContaoKulturnetzBundle\Service\Member\FrontendMemberProvider;
 use SeKultur\ContaoKulturnetzBundle\Service\Page\AutoItemResolver;
@@ -21,8 +22,11 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * Das Profil kommt über Alias oder ID aus der URL (auto_item). Fehlt der
  * Parameter oder gibt es das Profil nicht, antwortet die Seite mit 404. Gesperrte
- * Profile (disable = 1) sind wie bisher per Direktlink sichtbar; nur der Besitzer
- * sieht dazu den Hinweis "Nicht öffentlich" (Entscheidung E39). Die Seite trägt dann
+ * Profile (disable = 1) liefert die Seite nur an das besitzende Mitglied, an
+ * angemeldete Backend-Benutzer und an Vorschaulinks mit unveröffentlichten Inhalten
+ * aus (Security\UnpublishedRecordAccess), allen anderen mit 404 wie bei einem
+ * unbekannten Alias (bis Runde 7 per Direktlink für alle sichtbar, E39). Nur der
+ * Besitzer sieht dazu den Hinweis "Nicht öffentlich". Die Seite trägt dann
  * "noindex,nofollow" im Meta-Tag robots (HtmlHeadBag der Antwort), wodurch weder
  * Suchmaschinen noch die Contao-Suche (SearchIndexListener) sie aufnehmen.
  *
@@ -44,6 +48,7 @@ abstract class AbstractProfileDetailController extends AbstractProfileController
         private readonly AutoItemResolver $autoItem,
         private readonly SocialViewFactory $socialViewFactory,
         private readonly GalleryViewBuilder $galleryViewBuilder,
+        private readonly UnpublishedRecordAccess $unpublishedAccess,
     ) {
         parent::__construct($memberProvider, $profiles, $views);
     }
@@ -54,11 +59,12 @@ abstract class AbstractProfileDetailController extends AbstractProfileController
         $alias = $this->autoItem->resolve($request);
         $profile = null !== $alias ? $this->profiles->findByAliasOrId($type, $alias) : null;
 
-        if (null === $profile) {
+        // Gesperrte Profile ohne Berechtigung wie unbekannte behandeln.
+        if (null === $profile || !$this->unpublishedAccess->canView($profile)) {
             throw new PageNotFoundException(\sprintf('%s nicht gefunden: %s', $type->label(), $alias ?? '(ohne Alias)'));
         }
 
-        if ((int) ($profile['disable'] ?? 0) > 0) {
+        if ($this->unpublishedAccess->isUnpublished($profile)) {
             $this->getHtmlHeadBag()?->setMetaRobots('noindex,nofollow');
         }
 
