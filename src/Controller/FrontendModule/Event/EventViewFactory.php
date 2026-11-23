@@ -237,6 +237,7 @@ final class EventViewFactory
     {
         $days = [];
         $currentDate = null;
+        $images = [];
 
         foreach ($events as $key => $event) {
             $keyStamp = (int) explode('_', (string) $key)[0];
@@ -248,9 +249,16 @@ final class EventViewFactory
                 $currentDate = $label;
             }
 
+            // Eine mehrtägige Veranstaltung steht an jedem ihrer Tage mit demselben
+            // Datensatz. Das Bild über das Image Studio ist der teure Teil dieser
+            // Schleife, es wird deshalb je Titelbild einmal ermittelt und für die
+            // weiteren Tage wiederverwendet.
+            $avatar = $event['avatar'] ?? null;
+            $imageKey = \is_string($avatar) ? $avatar : '';
+
             $days[array_key_last($days)]['entries'][] = [
                 'event' => $event,
-                'image' => $this->image($event['avatar'] ?? null, ImageSize::List),
+                'image' => $images[$imageKey] ??= $this->image($avatar, ImageSize::List),
                 'times' => $this->dayTimes($event, $dayStart),
             ];
         }
