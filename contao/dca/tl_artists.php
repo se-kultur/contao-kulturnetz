@@ -283,6 +283,10 @@ $GLOBALS['TL_DCA']['tl_artists'] = [
 			'reverseToggle'           => true,
 			'filter'                  => true,
 			'inputType'               => 'checkbox',
+			// "Neu" im Backend beginnt gesperrt, wie der Hilfetext verspricht.
+			// Frontend-Anlagen setzen disable selbst (RecordWriter), die Spalte
+			// behält ihren Standardwert.
+			'default'                 => '1',
 			'sql'                     => "char(1) NOT NULL default ''",
 		],
 		'comment' => [
