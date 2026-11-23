@@ -24,7 +24,9 @@
  # Die Lightbox setzt data-caption als HTML ein: Titel und Copyright werden zuerst für HTML
  # und der Gesamtwert dann für das Attribut maskiert (|e('html'), nicht 'html_attr': der
  # Attribut-Escaper des Contao-Cores ruft ord() auf mehrbyteigen Zeichen wie "©" auf und
- # löst unter PHP 8.5 eine Deprecation aus).
+ # löst unter PHP 8.5 eine Deprecation aus). Die Urheberangabe erscheint als reiner Text,
+ # auch wenn Mitglieder dort HTML eingetragen haben (Pixabay-Links): dekodieren, Tags
+ # entfernen, maskieren (wie kulturnetz/media/_gallery).
  #
  # Texte liegen im Contao-Format vor; der Contao-Escaper kodiert vorhandene Entities
  # nicht doppelt. Die Langbeschreibung ist HTML und läuft durch den Contao-Sanitizer.
@@ -55,14 +57,15 @@
 
 <div class="artist-details flex gap-2 space-between mb-4 wrap">
 	<div class="sidebar col-3 col-md-4 col-sm-12">
-		{% set caption_html = title_image.title|e('html') ~ '<br><span class="lightbox-caption-small">© ' ~ title_image.caption|e('html') ~ '</span>' %}
+		{% set copyright_text = title_image.caption|input_encoded_to_plain_text(true)|striptags %}
+		{% set caption_html = title_image.title|e('html') ~ '<br><span class="lightbox-caption-small">© ' ~ copyright_text|e('html') ~ '</span>' %}
 		<figure class="avatar">
 			<a href="{{ title_image.lightbox_src }}" data-fslightbox data-caption="{{ caption_html|e('html') }}">
 				<img src="{{ title_image.src }}" alt="{{ title_image.alt }}">
 			</a>
 			<figcaption>
 				<span class="title">{{ title_image.title }}</span>
-				<span class="copyright">&copy; {{ title_image.caption }}</span>
+				<span class="copyright">&copy; {{ copyright_text }}</span>
 			</figcaption>
 		</figure>
 

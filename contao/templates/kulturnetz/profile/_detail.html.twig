@@ -26,7 +26,9 @@
 {% set member_id = social.member_id %}
 {% set list_url = kulturnetz_page_url(profile_type ~ '.list') %}
 {# Lightbox-Beschriftung: HTML, dessen Texte vorab maskiert sind, danach als Attributwert maskiert (e('html_attr') meldet unter PHP 8.5 bei Nicht-ASCII-Zeichen wie dem Copyright-Zeichen eine Deprecation aus dem Core); Schriftgröße der Urheberangabe über die Klasse lightbox-caption-small #}
-{% set caption_html = avatar.title|e('html') ~ '<br><span class="lightbox-caption-small">© ' ~ avatar.caption|e('html') ~ '</span>' %}
+{# Urheberangabe als reiner Text, auch wenn dort HTML eingetragen wurde: dekodieren, Tags entfernen, maskieren (wie kulturnetz/media/_gallery) #}
+{% set copyright_text = avatar.caption|input_encoded_to_plain_text(true)|striptags %}
+{% set caption_html = avatar.title|e('html') ~ '<br><span class="lightbox-caption-small">© ' ~ copyright_text|e('html') ~ '</span>' %}
 
 <div class="artist-headline mt-4">
 {% if is_owner %}
@@ -53,7 +55,7 @@
 			</a>
 			<figcaption>
 				<span class="title">{{ avatar.title }}</span>
-				<span class="copyright">&copy; {{ avatar.caption }}</span>
+				<span class="copyright">&copy; {{ copyright_text }}</span>
 			</figcaption>
 		</figure>
 

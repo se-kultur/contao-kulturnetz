@@ -21,6 +21,11 @@
     löst unter PHP 8.5 je Folie eine Deprecation aus. Die Schriftgröße der Urheberangabe in
     der Lightbox setzt die Klasse lightbox-caption-small (Theme-LESS image_container.less).
 
+    Die Urheberangabe wird als reiner Text ausgegeben: Mitglieder haben dort teils HTML
+    eingetragen (Pixabay-Quellenangaben mit <a>). Sie liegt kodiert vor, deshalb erst
+    input_encoded_to_plain_text (dekodiert, Insert-Tags entfernt), dann striptags; danach
+    maskiert der Escaper wie oben. Ungefiltertes HTML erreicht weder Lightbox noch Seite.
+
     Der Container trägt die Klasse "swiper-carousel" schon im Markup, obwohl der Effekt
     EffectCarousel sie bei der Initialisierung selbst setzt (containerModifierClass
     "swiper-" + "carousel"; classList.add vergibt sie nicht doppelt). Grund: Die Folienmaße
@@ -34,7 +39,8 @@
 	<div class="swiper swiper-carousel">
 	  <div class="swiper-wrapper">
 	  {% for slide in gallery.slides %}
-		{% set caption_html = slide.title|e('html') ~ '<br><span class="lightbox-caption-small">© ' ~ slide.caption|e('html') ~ '</span>' %}
+		{% set copyright_text = slide.caption|input_encoded_to_plain_text(true)|striptags %}
+		{% set caption_html = slide.title|e('html') ~ '<br><span class="lightbox-caption-small">© ' ~ copyright_text|e('html') ~ '</span>' %}
 		<div class="swiper-slide">
 			<div class="swiper-carousel-animate-opacity">
 				<figure class="image_container">
@@ -43,7 +49,7 @@
 					</a>
 					<figcaption>
 						<span class="title">{{ slide.title }}</span>
-						<span class="copyright">&copy; {{ slide.caption }}</span>
+						<span class="copyright">&copy; {{ copyright_text }}</span>
 					</figcaption>
 				</figure>
 			</div>
