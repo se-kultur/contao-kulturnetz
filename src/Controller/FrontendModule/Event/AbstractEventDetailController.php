@@ -27,7 +27,7 @@ use Symfony\Component\HttpFoundation\Response;
  * Redaktionsmail und Lesezeichen auf SE-KulturTage-Events, die am Saisonende
  * deaktiviert werden, bleiben gültig. Die Listen blenden sie weiterhin aus.
  * Gesperrte Veranstaltungen tragen
- * "noindex,nofollow" im Meta-Tag robots (HtmlHeadBag der Antwort); damit nehmen
+ * "noindex,follow" im Meta-Tag robots (HtmlHeadBag der Antwort); damit nehmen
  * weder Suchmaschinen noch die Contao-Suche (SearchIndexListener) sie auf.
  * Besitzer:innen sehen zusätzlich die Aktionen zum Bearbeiten, Hochladen und
  * Verwalten von Fotos sowie die Hinweise "Nicht öffentlich".
@@ -55,7 +55,7 @@ abstract class AbstractEventDetailController extends AbstractEventController
         }
 
         if ((int) ($event['disable'] ?? 0) > 0) {
-            $this->getHtmlHeadBag()?->setMetaRobots('noindex,nofollow');
+            $this->getHtmlHeadBag()?->setMetaRobots('noindex,follow');
         }
 
         $memberId = $this->memberProvider->getMemberId();

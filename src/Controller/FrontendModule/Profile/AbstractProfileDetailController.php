@@ -25,7 +25,7 @@ use Symfony\Component\HttpFoundation\Response;
  * (E39): Verknüpfungen aus Veranstaltungen und der Link der Redaktionsmail
  * bleiben gültig, die Listen blenden sie weiterhin aus. Nur der
  * Besitzer sieht dazu den Hinweis "Nicht öffentlich". Die Seite trägt dann
- * "noindex,nofollow" im Meta-Tag robots (HtmlHeadBag der Antwort), wodurch weder
+ * "noindex,follow" im Meta-Tag robots (HtmlHeadBag der Antwort), wodurch weder
  * Suchmaschinen noch die Contao-Suche (SearchIndexListener) sie aufnehmen.
  *
  * Template-Variablen:
@@ -61,7 +61,7 @@ abstract class AbstractProfileDetailController extends AbstractProfileController
         }
 
         if ((int) ($profile['disable'] ?? 0) > 0) {
-            $this->getHtmlHeadBag()?->setMetaRobots('noindex,nofollow');
+            $this->getHtmlHeadBag()?->setMetaRobots('noindex,follow');
         }
 
         $social = $this->socialViewFactory->createProfileContext($type, $profile, $this->memberProvider->getMemberId());
