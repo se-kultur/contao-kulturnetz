@@ -47,8 +47,9 @@ use SeKultur\ContaoKulturnetzBundle\Service\Write\Value\RecordSchema;
  * speicherbar, damit ein Mitglied eine Änderung an anderer Stelle nicht wegen
  * eines Altwertes verliert. Verglichen wird im Speicherformat.
  *
- * Beim Bearbeiten bleiben Text-, Zahlen-, Bild- und Verknüpfungsfelder, die die
- * Anfrage nicht enthält, unverändert. Checkboxen, Preise und Termine werden immer
+ * Beim Bearbeiten bleiben optionale Text-, Zahlen-, Bild- und Verknüpfungsfelder,
+ * die die Anfrage nicht enthält, unverändert; ein fehlendes Pflichtfeld wird wie
+ * ein leeres abgelehnt. Checkboxen, Preise und Termine werden immer
  * geschrieben, weil ein Formular sie bei "aus" bzw. ohne Zeilen nicht sendet.
  */
 final class RecordInputMapper
@@ -94,6 +95,7 @@ final class RecordInputMapper
         private readonly KulturnetzConfig $config,
         private readonly FormMessages $messages,
         private readonly ClockInterface $clock,
+        private readonly EventDateRange $dateRange,
     ) {
     }
 
@@ -167,7 +169,7 @@ final class RecordInputMapper
             FieldKind::Dates => [$this->checkLength($schema, $field, $this->mapDates($schema, $input, $current))],
             default => match (true) {
                 $present => [$this->mapValue($schema, $field, $raw, $memberId, $current)],
-                $creating => [$this->defaultValue($field)],
+                $creating, null !== $field->requiredMessage => [$this->defaultValue($field)],
                 default => null,
             },
         };
@@ -196,8 +198,10 @@ final class RecordInputMapper
     }
 
     /**
-     * Wert eines beim Anlegen fehlenden Feldes (wie bisher leer bzw. 0, Titelbild NULL).
-     * Pflichtfelder und die Beschreibung lösen die Meldung aus dem Formular-JS aus.
+     * Wert eines fehlenden Feldes (wie bisher leer bzw. 0, Titelbild NULL). Ein
+     * fehlendes Pflichtfeld zählt wie ein leeres und löst die Meldung aus dem
+     * Formular aus, beim Anlegen wie beim Bearbeiten (die Formulare senden
+     * Pflichtfelder immer mit, auch wenn sie leer sind).
      */
     private function defaultValue(FieldDefinition $field): string|int|null
     {
@@ -455,7 +459,8 @@ final class RecordInputMapper
      * records.max_dates Zeilen.
      *
      * Jede Zeile braucht ein gültiges Datum (Veranstaltungen TT.MM.JJJJ,
-     * SE-KulturTage TT.MM., beide mit Kalenderprüfung) sowie Beginn und Ende im
+     * SE-KulturTage TT.MM., beide mit Kalenderprüfung; bei Veranstaltungen
+     * zusätzlich im Zeitraum des Datepickers, EventDateRange) sowie Beginn und Ende im
      * Format HH:MM von 00:00 bis 23:59. Ende vor Beginn bleibt erlaubt
      * (Veranstaltungen über Mitternacht). Ohne Beginn erscheint ein Termin in
      * keiner Liste (Event\Date\*Dates), deshalb sind beide Zeiten Pflicht.
@@ -533,8 +538,15 @@ final class RecordInputMapper
     {
         $errors = [];
 
-        if (!$this->isValidDate(self::trimText($row['date']), $yearless)) {
+        $date = self::trimText($row['date']);
+
+        if (!$this->isValidDate($date, $yearless)) {
             $errors['eventdate[]'] = $this->messages->get($yearless ? 'kulturnetz_date_yearless' : 'kulturnetz_date');
+        } elseif (!$yearless && !$this->dateRange->contains($date)) {
+            $errors['eventdate[]'] = $this->messages->get('kulturnetz_date_range', [
+                $this->dateRange->getMin()->format('d.m.Y'),
+                $this->dateRange->getMax()->format('d.m.Y'),
+            ]);
         }
 
         foreach (['start' => 'eventtimestart[]', 'end' => 'eventtimeend[]'] as $key => $formName) {

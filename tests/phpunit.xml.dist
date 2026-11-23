@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Aufruf: phpunit -c tests/phpunit.xml.dist (Hinweise in tests/bootstrap.php) -->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.0/phpunit.xsd"
+         bootstrap="bootstrap.php"
+         colors="true"
+         failOnWarning="true"
+         failOnRisky="true">
+    <testsuites>
+        <testsuite name="kulturnetz">
+            <directory>.</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

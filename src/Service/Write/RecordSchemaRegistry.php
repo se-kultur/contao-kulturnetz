@@ -20,8 +20,9 @@ use SeKultur\ContaoKulturnetzBundle\Service\Write\Value\RecordSchema;
  *    "eventdate[]" usw. für dates).
  *
  * Pflichtangaben wie im Formular-JS (Sparte bei Künstler*innen und
- * Veranstaltungen, Beschreibung mit mindestens 30 Zeichen) und im DCA (Name, auch
- * nicht nur aus Leerzeichen); bei Veranstaltungen mindestens ein Termin
+ * Veranstaltungen, Beschreibung mit mindestens 30 Zeichen, Themenschwerpunkte der
+ * Profile als required-Feld) und im DCA (Name, auch nicht nur aus Leerzeichen);
+ * ein fehlendes Pflichtfeld zählt wie ein leeres (RecordInputMapper); bei Veranstaltungen mindestens ein Termin
  * (RecordInputMapper::mapDates()).
  * Die Meldungstexte sind wortgleich zu den Formular-JS-Dateien.
  *
@@ -30,7 +31,8 @@ use SeKultur\ContaoKulturnetzBundle\Service\Write\Value\RecordSchema;
  * aus den Listen der Formulare (FormChoices), Kurzbeschreibung Pflicht und
  * höchstens SHORT_DESCRIPTION_MAX_LENGTH Zeichen. Die Templates lesen
  * SHORT_DESCRIPTION_MAX_LENGTH und POSTAL_CODE_LENGTH als maxlength aus diesen
- * Konstanten. Die Meldungen der neuen Regeln stehen in den Sprachdateien
+ * Konstanten, Kommentar zu Preisen und Kooperationspartner tragen ebenfalls die
+ * Höchstlänge des Formulars. Die Meldungen der neuen Regeln stehen in den Sprachdateien
  * (FormMessages).
  */
 final class RecordSchemaRegistry
@@ -50,6 +52,16 @@ final class RecordSchemaRegistry
      * Höchstlänge der Kurzbeschreibung (Formular: maxlength, Spalte text).
      */
     public const SHORT_DESCRIPTION_MAX_LENGTH = 255;
+
+    /**
+     * Höchstlänge des Kommentars zu den Preisen (Formular: maxlength, Spalte text).
+     */
+    public const PRICE_COMMENT_MAX_LENGTH = 1000;
+
+    /**
+     * Höchstlänge der Kooperationspartner (Formular: maxlength, Spalte text).
+     */
+    public const COOPERATION_PARTNER_MAX_LENGTH = 255;
 
     /**
      * Länge der Postleitzahl (Formular: maxlength, Prüfung FieldFormat::PostalCode).
@@ -130,21 +142,24 @@ final class RecordSchemaRegistry
                 $this->description(),
                 ...$this->contactFields(),
                 FieldDefinition::choice('sparten', $this->choices->categories(), self::MESSAGE_SPARTEN),
-                ...$this->texts(['themen', 'zitat']),
+                $this->topics(),
+                ...$this->texts(['zitat']),
                 FieldDefinition::avatar(),
             ],
             'hosts' => [
                 FieldDefinition::text('name', null, self::MESSAGE_NAME),
                 $this->description(),
                 ...$this->contactFields(),
-                ...$this->texts(['themen', 'zitat']),
+                $this->topics(),
+                ...$this->texts(['zitat']),
                 FieldDefinition::avatar(),
             ],
             'locations' => [
                 FieldDefinition::text('name', null, self::MESSAGE_NAME),
                 $this->description(),
                 ...$this->contactFields(),
-                ...$this->texts(['themen', 'zitat', ...self::LOCATION_FIELDS]),
+                $this->topics(),
+                ...$this->texts(['zitat', ...self::LOCATION_FIELDS]),
                 FieldDefinition::choice('buehnentyp', $this->choices->stageTypes()),
                 ...array_map(FieldDefinition::number(...), self::LOCATION_NUMBER_FIELDS),
                 FieldDefinition::avatar(),
@@ -188,7 +203,7 @@ final class RecordSchemaRegistry
             FieldDefinition::linkedIds('linked_artists', 'artists'),
             FieldDefinition::checkbox('eintrittfrei'),
             FieldDefinition::prices(),
-            FieldDefinition::text('pricecomment'),
+            FieldDefinition::limitedText('pricecomment', self::PRICE_COMMENT_MAX_LENGTH),
             FieldDefinition::checkbox('spenden'),
             FieldDefinition::checkbox('anmeldung'),
             FieldDefinition::text('anmeldestelle'),
@@ -200,7 +215,7 @@ final class RecordSchemaRegistry
             FieldDefinition::text('hosts'),
             FieldDefinition::linkedIds('linked_hosts', 'hosts'),
             ...$this->eventAddressFields('host_'),
-            FieldDefinition::text('kooperationspartner'),
+            FieldDefinition::limitedText('kooperationspartner', self::COOPERATION_PARTNER_MAX_LENGTH),
             FieldDefinition::avatar(),
         ];
     }
@@ -211,6 +226,15 @@ final class RecordSchemaRegistry
     private function shortDescription(): FieldDefinition
     {
         return FieldDefinition::requiredText('kurzbeschreibung', $this->messages->get('kulturnetz_short_description'), self::SHORT_DESCRIPTION_MAX_LENGTH);
+    }
+
+    /**
+     * Künstlerische Themenschwerpunkte: in allen drei Profilformularen Pflicht
+     * (Attribut required), ohne maxlength im Formular.
+     */
+    private function topics(): FieldDefinition
+    {
+        return FieldDefinition::text('themen', null, $this->messages->get('kulturnetz_required'));
     }
 
     /**

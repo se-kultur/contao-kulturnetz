@@ -62,6 +62,14 @@ final class FieldDefinition
     }
 
     /**
+     * Optionaler Freitext mit Höchstlänge des Formulars (maxlength).
+     */
+    public static function limitedText(string $column, int $maxLength): self
+    {
+        return new self($column, $column, FieldKind::Text, maxLength: $maxLength);
+    }
+
+    /**
      * Klartextfeld mit Formatprüfung (E-Mail, Postleitzahl, Telefon, Internetadresse).
      */
     public static function formatted(string $column, FieldFormat $format): self
